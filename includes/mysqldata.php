@@ -1,7 +1,7 @@
 <?php
 $dbhost = 'localhost';
-$dbusername = '';
-$dbpasswd = '';
+$dbusername = 'aurora';
+$dbpasswd = 'PASSWORD HERE';
 $database_name = "aurora";
 $connection = mysql_connect($dbhost, $dbusername, $dbpasswd);
 if(!$connection){
