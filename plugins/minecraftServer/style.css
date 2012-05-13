@@ -1,0 +1,26 @@
+.minecraftServer_playersList{
+    border: solid 1px #000000;    
+}
+.minecraftServerPlayerCount{
+    font-family: Minecraft Regular;
+    color: #FFFFFF;
+    font-size: 12pt;
+    float: right;
+    padding: 5px;
+    background-color: #000000;
+    opacity: 0.5;
+}
+.minecraftServerPlayerList{
+    font-family: Minecraft Regular;
+    color: #FFFFFF;
+    font-size: 12pt;
+    float: right;
+    padding: 5px;
+    background-color: #000000;
+    opacity: 0.5;   
+    overflow: auto;
+}
+.mcServer_playerListSmallPlayerName{
+    width: 50%;
+    float: left;
+}

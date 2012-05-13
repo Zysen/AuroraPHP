@@ -1,0 +1,10 @@
+phpmyadmin
+#includes/mysqldata.php
+
+# OS generated files #
+######################
+.DS_Store*
+ehthumbs.db
+Icon?
+Thumbs.db
+.git

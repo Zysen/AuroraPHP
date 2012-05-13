@@ -1,0 +1,77 @@
+.chatroom{
+    color:#000000;
+    background-color: #F0F0F0;
+    border: solid 1px #000000;
+    padding: 5px;
+}
+.chatroom_body{
+    height: 450px;
+    margin-right: 250px;
+    border: solid 1px #C5C5C5;
+    border-right: 0;
+    background-color: #EAEAEA;
+    overflow: auto;
+    font-size: 10pt;
+    font-family: verdana;
+}
+.chatroom_send{
+    margin-right: 250px;
+    height: 49px;
+    border: solid 1px #C5C5C5;
+    border-top: 0;
+    border-right: 0;
+}
+.chatroom_users{
+    float: right;
+    height: 500px;
+    width: 248px;
+    border: solid 1px #C5C5C5;
+    overflow: auto;
+    background-color: #EAEAEA;
+    
+    -webkit-user-select: none;
+-khtml-user-select: none;
+-moz-user-select: none;
+-o-user-select: none;
+user-select: none;
+cursor: default;
+}
+.chatroomWidget_userAvatar{
+    float: left;
+    margin-right: 5px;
+}
+.chatroom_sendButton{
+    height: 49px;
+    width: 49px;
+    text-align:center;
+    color: #20B7FF;
+    border: solid 1px #20B7FF;
+    float: right;
+    line-height: 49px;
+    font-size: 10pt;
+    font-weight: bold;
+    cursor: pointer;
+    background-color: #EAEAEA;
+}
+.chatroom_sendButton:hover{
+    border: solid 1px #939393;
+    background-color: #FFFFFF;
+}
+.chatroom_sendText{
+    width: 100%;
+    height: 45px;
+    
+}
+.chatroom_sendTextSurround{
+    margin-right: 57px;
+    height: 45px;
+}
+.chatroomWidget_userEntry{
+    clear: both;
+    font-size: 10pt;
+    font-family: verdana;
+    line-height: 50px;
+}
+.chatroomWidget_userEntry:hover{
+    background-color: #99c6d0;
+}

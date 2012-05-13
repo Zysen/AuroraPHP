@@ -1,0 +1,11 @@
+.imageGallery_gallery img{
+    margin: 10px;
+    display: inline-block;    
+}
+.imageGallery_fileDragBox{
+    width: 500px;
+    height: 200px;
+    border: solid 1px #000000;
+    background-color: #FFFFFF;
+    margin: 0 auto;    
+}
