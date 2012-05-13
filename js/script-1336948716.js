@@ -1278,32 +1278,46 @@ var Behavior = function(eventStream, initialValue, downstreamTransformation, ups
       
 	var upstreamEvent = receiverE(); 
 	upstreamEvent.mapE(function(value){
-		//log("Message: "+behave.last+" = "+value);
-		behave.last = value;
-		if(upstreamTransformation!=undefined){
-			//log("M2");
-			
-			upstreamValues = upstreamTransformation(value);
-			c=0;
-			for(index in parents){
-				var parent = parents[index];
-				if(parent instanceof Behavior){
-                   //log("PARENT SEND EVENT");
-                   if(upstreamValues!=undefined)
-					parent.sendEvent(upstreamValues[c]);
-					c++;
+	behave.last = value;
+	if(upstreamTransformation!=undefined){
+		var upstreamValues = upstreamTransformation(value);
+		if(upstreamValues!=undefined){
+			//log("upstreamValues Length: "+upstreamValues.length);
+			//log(upstreamValues);
+			if(upstreamValues.length==parents.length){
+				//log("Matching Return count");
+				for(index in parents){
+					//log("Loop for index "+index + " "+ upstreamValues + value);
+					var parent = parents[index];
+					if(parent instanceof Behavior){
+						if(upstreamValues[index]!=undefined){
+ 							//log("Sending Event "+upstreamValues[index]);
+							parent.sendEvent(upstreamValues[index]);
+							//log("Finished Sending Event");
+						}				
+						else{
+							//log("upstream value "+index+" is undefined"); 
+						}	
+					}
+					else{
+						log("Parent "+index+" is not a behaviour");
+					}
 				}
 			}
-			behave.sendBehavior(value);			
+			else{
+				log("Upstream transform returned wrong number of arguments was "+upstreamValues.length+" should be "+parents.length);		
+			}
 		}
 		else{
-        //showObj(eventStream);
-		    eventStream.sendEvent(value);
+			log("Upstream transformation returned undefined");		
+		}
+		behave.sendBehavior(value);			
+	}
+	else{
+        	eventStream.sendEvent(value);
         }
-        //log("FLINT OF THE FLAG!: "+downstreamTransformation(value));
         
-        //log("FLAPJAX INVERSE, 488: "+value);
-		
+        	
 	});
 	
 	this.sendEvent = function(message){
@@ -1891,8 +1905,8 @@ var constantB = function (val) {
 };
 
 var liftBI = function (functionDown, functionUp, parents) {
-	  //var args = slice(arguments, 1);
-	var args = parents;  
+	  var parents = slice(arguments, 2);
+	args = parents; 
 	//dependencies
 	  var constituentsE =
 	    map(changes,
@@ -1924,12 +1938,12 @@ var liftBI = function (functionDown, functionUp, parents) {
 	      return doNotPropagate;
 	    }
 	  });
-	  log("Behaviour with multiple parents detected");
+	  //log("Behaviour with multiple parents detected");
 	  return new Behavior(mid,getRes(),getRes, functionUp, parents);
 	};
 
 	Behavior.prototype.liftBI = function(functionDown, functionUp, parents) {		
-		return liftBI.apply(this,[functionDown, functionUp, [this].concat(parents)]);
+		return liftBI.apply(this,[functionDown, functionUp].concat([this]).concat(parents));
 	};
 	
 var liftB = function (fn  /*behaves*/ ) {
@@ -4618,6 +4632,7 @@ window.flapjax[ix] = impl[ix];
 
 
 
+
 (function ($, flapjax) {
     var methods = {
         'clicksE': function () {
@@ -4742,7 +4757,8 @@ String.prototype.replaceAll = function(replace, with_this) {
 };
 
 function RemoteData(key, context, initialValue, pollRate){
-    this.hash = "HASH";
+   
+this.hash = "HASH";
     this.eventE = receiverE();
     this.event = this.eventE;
     this.originBehaviour = this.event.startsWith(initialValue);
@@ -4753,14 +4769,12 @@ function RemoteData(key, context, initialValue, pollRate){
             return value;
         },
         function(value){
-        	log("Upstream Event "+key);
-        	log(value);
-        	log("POST");
-            parent.data = value;
+            //log("Upstream Event: "+key);
+	    parent.data = value;
             parent.hash = null;
             parent.dirty=true;
         },
-        [this.originBehaviour]);
+        this.originBehaviour);
     this.requiresPoll = function(){
         return ((new Date().getTime())>(this.lastUpdated+this.pollRate)||this.lastUpdated==0);
     }
@@ -4776,7 +4790,7 @@ function RemoteData(key, context, initialValue, pollRate){
     this.key = key;
     this.dirty = false;
     this.data = initialValue;
-    this.context = context;
+    this.context = (context==undefined)?"":context;
     this.remote = true;
     this.newData=null;
     var parent = this;
@@ -4799,7 +4813,6 @@ function BehaviourManager(){
         }
         initialValue = (initialValue==undefined)?NOT_READY:initialValue;
         pollRate = (pollRate==undefined)?0:pollRate;
-        //log(this.data[key2]);
         if(this.data[key2]==undefined)
             this.data[key2] =  new RemoteData(key, context, initialValue, pollRate);
         else if(this.data[key2].pollRate<pollRate)
@@ -4809,14 +4822,6 @@ function BehaviourManager(){
     this.registerRemote=function(key){
         this.availableRemotes.push(key);
     }
-    /*this.registerRemote=function(remoteData){
-        var key = new CompositKey(remoteData.key, remoteData.context).getKey();
-        if(this.data[key]!=null&&this.data[key]!='undefined'){
-            return this.data[key];
-        }
-        this.data[key] = remoteData;
-        return remoteData; 
-    }*/     
     this.register=function(key, context, behaviour){
         context = (context==undefined||context.length==0)?"_":context;
         if(this.localData[key]!=undefined&&this.localData[key][context]!=undefined)
@@ -4871,12 +4876,13 @@ function BehaviourManager(){
         var nowB = timerB(500); // current time, 500ms granularity
         var lastRespTmB = respE.snapshotE(nowB).startsWith(nowB.valueNow());
         var requestOkayB = liftB(function(now, lastRespTm) {
+		//log("Request OK");
             return (now > (lastRespTm + requestEvery));                               
         }, nowB, lastRespTmB);
         var requestReadyE = requestOkayB.changes().filterE(function(x) { return x; }).filterE(function(x){return !DATA.isEmpty()}); 
         var dataRequestReady = requestReadyE.snapshotE(nowB).mapE(function(x){return DATA.getDataRequest();}); 
         var serverResponseE = getAjaxRequestE(dataRequestReady, SETTINGS.scriptPath+'getBehaviours');
-        var localSyncE = serverResponseE.mapE(function(retData){                   
+        var localSyncE = serverResponseE.mapE(function(retData){                  
             for(key in retData){
                 var dataRow = retData[key];
                 for(context in dataRow){
@@ -4893,6 +4899,7 @@ function BehaviourManager(){
         //respE.sendEvent(true);
     }
 }
+
 
 function WidgetManager(){
     this.widgets = new Array();
@@ -4928,7 +4935,6 @@ var WIDGET = {
 
 var widgets=new Array();
 jQuery(document).ready(function() {
-    log("Loaded");
     var pageB = receiverE().startsWith(SETTINGS.page);
     var themeB = receiverE().startsWith(SETTINGS.theme);
     var pageReadyB = pageB.liftB(function(page, theme){
@@ -4938,7 +4944,7 @@ jQuery(document).ready(function() {
         page = pageData[0];
         theme = pageData[1];
         WIDGETS.clear();
-        log("Rendering Page "+page+" "+theme);
+        //log("Rendering Page "+page+" "+theme);
         jQuery("#body").html(renderPage(theme.html));   // Using the body div and not body because ckeditor doesnt like the body tag
         jQuery("#content").html(renderPage(page.html));
         
@@ -4950,11 +4956,11 @@ jQuery(document).ready(function() {
         document.getElementById("body").style.display = 'block';   // Page data is output in php pre JS render but the body div is hidden so its not visible. This is for SEO
     });
     DATA.startPolling();
-    log("Polling");
 });
 
 
 //})(jQuery);
+
 
 function renderPage(data){
     widgets=Array();    
@@ -4966,7 +4972,6 @@ function renderPage(data){
         var i=0; 
                                                                     
         var widgetPlaceholders = getElementsByClassName("widget_"+key, "img", elm);
-        //log(widgetPlaceholders);
         for (var index in widgetPlaceholders) {
             i++;
             var widgetPlaceholder = widgetPlaceholders[index];     
@@ -5038,6 +5043,7 @@ function isBase(){
 }
 
 
+
 function aurora_ui(){
     this.active = false;
     
@@ -5090,9 +5096,8 @@ function aurora_ui(){
 
 /* BASE WIDGETS */           
 function GroupsManagerWidget(instanceId, data){
-    
     this.loader=function(){
-        var dataR = DATA.getRemote("aurora_groups", "");  //, NOT_READY, POLL_RATES.SLOW    
+        var dataR = DATA.getRemote("aurora_groups", "", NOT_READY, POLL_RATES.VERY_FAST);  //, NOT_READY, POLL_RATES.SLOW    
         tableB = TableWidgetB(instanceId+"_table", data, dataR.behaviour);    
         insertDomB(tableB, instanceId+"_container");
     
@@ -5109,7 +5114,7 @@ widgetTypes['GroupsManagerWidget']=GroupsManagerWidget;
 function PluginManagerWidget(instanceId, data){
     
     this.loader=function(){
-        var dataR = DATA.getRemote("aurora_plugins", "");  //, NOT_READY, POLL_RATES.SLOW
+        var dataR = DATA.getRemote("aurora_plugins", "", NOT_READY, POLL_RATES.VERY_FAST);  //, NOT_READY, POLL_RATES.SLOW
         tableB = TableWidgetB(instanceId+"_table", data, dataR.behaviour);    
         insertDomB(tableB, instanceId+"_container");
     }
@@ -5124,21 +5129,25 @@ widgetTypes['PluginManagerWidget']=PluginManagerWidget;
 function BehaviourPermissionsWidget(instanceId, data){
     
     this.loader=function(){
-    	var groupsR = DATA.getRemote("aurora_groups", "");
-    	var behavioursR = DATA.getRemote("aurora_behaviours", "");  //, NOT_READY, POLL_RATES.SLOW
-        var behaviourPermissionsR = DATA.getRemote("aurora_behaviour_permissions", "");  //, NOT_READY, POLL_RATES.SLOW 
+    	var groupsR = DATA.getRemote("aurora_groups", "", NOT_READY, POLL_RATES.VERY_FAST);
+    	var behavioursR = DATA.getRemote("aurora_behaviours", "", NOT_READY, POLL_RATES.VERY_FAST);  //, NOT_READY, POLL_RATES.SLOW
+        var behaviourPermissionsR = DATA.getRemote("aurora_behaviour_permissions", "", NOT_READY, POLL_RATES.VERY_FAST);  //, NOT_READY, POLL_RATES.SLOW 
         //var behaviourPermissionsTableB = JoinTableB(behavioursR.behaviour, behaviourPermissionsR.behaviour, "behaviourId");
         
-        var newTableB = liftBI(function(behaviourPermissions, groups, behaviours){
-        	if(groups==NOT_READY||behaviours==NOT_READY||behaviourPermissions==NOT_READY)
+	var groupsB = groupsR.behaviour;
+
+var behavioursB = behavioursR.behaviour;
+
+        var newTableB = liftBI(function(behaviourPermissions, groups, behaviours){   	
+	if(groups==NOT_READY||behaviours==NOT_READY||behaviourPermissions==NOT_READY)
         		return NOT_READY;
-        	log(behaviourPermissions);
+        	//log(behaviourPermissions);
         	var columns = [{reference: "behaviour", display: "", type: "string", visible:true, readOnly: false}];
         	var groupColMap = new Array();
         	var count = 1;
         	for(groupIndex in groups.DATA){
         		var group = groups.DATA[groupIndex];
-        		columns.push({reference: group[0], display: group[1], type: "string", visible:true, readOnly: false});
+        		columns.push({reference: group[0], display: group[1], type: "readWrite", visible:true, readOnly: false});
         		groupColMap[group[0]+""] = count++;
         	}
         	var data = [];
@@ -5149,16 +5158,18 @@ function BehaviourPermissionsWidget(instanceId, data){
         	for(behaviourIndex in behaviours.DATA){
         		var behaviour = behaviours.DATA[behaviourIndex];
         		var behaviourId = getTableValue(behaviours, behaviourIndex, "behaviourId");
-            	var dataRow = [behaviour[1]];
-            	var cellMetaDataRow = [];
+            		var dataRow = [behaviour[1]];
+            		var cellMetaDataRow = [];
         		for(permissionIndex in behaviourPermissions.DATA){
-        			var bPermissionId = getTableValue(behaviourPermissions, permissionIndex, "behaviourId");
-        			if(behaviourId==bPermissionId){
+        			var bPermissionsBehaviourId = getTableValue(behaviourPermissions, permissionIndex, "behaviourId");
+        			if(behaviourId==bPermissionsBehaviourId){
         				var bPermission = behaviourPermissions.DATA[permissionIndex];
-            			var bPermissionGroupId = getTableValue(behaviourPermissions, permissionIndex, "groupId");
-            			var bPermissionPermission = getTableValue(behaviourPermissions, permissionIndex, "permissions");
+					var bPermissionId = getTableValue(behaviourPermissions, permissionIndex, "bPermissionId");
+            				var bPermissionGroupId = getTableValue(behaviourPermissions, permissionIndex, "groupId");
+            				var bPermissionPermission = getTableValue(behaviourPermissions, permissionIndex, "permissions");
         				var colIndex = groupColMap[bPermissionGroupId+""];
         				dataRow[colIndex] = bPermissionPermission;
+                        //log("Setting "+bPermissionId);
         				cellMetaDataRow[colIndex-1] = {permissionId: bPermissionId};
         			}
         		}
@@ -5166,7 +5177,8 @@ function BehaviourPermissionsWidget(instanceId, data){
         		data.push(dataRow);
         		rowMetaData.push(behaviourId);
         	}
-        	var table = {DATA: data, COLUMNS: columns, TABLEMETADATA: {originalColumns: behaviourPermissions.COLUMNS}, ROWMETADATA: rowMetaData, CELLMETADATA: cellMetaData, COLUMNMETADATA: columnMetaData, SOURCETABLES: {groups: groups, behaviours: behaviours,  behaviourPermissions: behaviourPermissions}};
+	//log(cellMetaData);        	
+var table = {DATA: data, COLUMNS: columns, TABLEMETADATA: {originalColumns: behaviourPermissions.COLUMNS, permissions: {canAdd: false, canDelete: false, canEdit: true}}, ROWMETADATA: rowMetaData, CELLMETADATA: cellMetaData, COLUMNMETADATA: columnMetaData, SOURCETABLES: {groups: groups, behaviours: behaviours,  behaviourPermissions: behaviourPermissions}};
         	return table;
         },
         function(value){
@@ -5186,20 +5198,19 @@ function BehaviourPermissionsWidget(instanceId, data){
         			var column = value.COLUMNS[colIndex];
         			var groupId = column.reference;
         			var dataCell = row[colIndex];
-        			log(column.display+" "+column.reference);
-        			if(dataCell!=undefined && dataCell.length!=0){
+        			//log(column.display+" "+column.reference);
+        			if(dataCell!=undefined){
         				//log(dataCell);
-        				var id=(value.CELLMETADATA[rowIndex][colIndex]!=undefined)?value.CELLMETADATA[rowIndex][colIndex].permissionId:"NULL";
+        				var id=(value.CELLMETADATA[rowIndex][colIndex-1]!=undefined)?value.CELLMETADATA[rowIndex][colIndex-1].permissionId:"NULL";
         				newData.push([id, behaviourId, groupId, , dataCell]);
         			}
         		}		
         	}
-        	var newTable = {DATA: newData, COLUMNS: value.TABLEMETADATA.originalColumns, TABLEMETADATA: {}, ROWMETADATA: [], CELLMETADATA: [], COLUMNMETADATA: []};
-        	log(newTable);
-        	return [newTable, value.SOURCETABLES.groups,value.SOURCETABLES.behaviours];
-        	//return [,,newTable];
+        	var newTable = {DATA: newData, COLUMNS: value.TABLEMETADATA.originalColumns, TABLEMETADATA: {permissions: {canAdd: false, canDelete: false, canEdit: true}}, ROWMETADATA: [], CELLMETADATA: [], COLUMNMETADATA: []};
+		return [newTable, undefined,undefined];		
+		//return [newTable, undefined,undefined];
         },
-        [behaviourPermissionsR.behaviour, groupsR.behaviour, behavioursR.behaviour]);
+        behaviourPermissionsR.behaviour, groupsB, behavioursB);
         
         
         tableB = TableWidgetB(instanceId+"_table", data, newTableB);    
@@ -5215,11 +5226,14 @@ function BehaviourPermissionsWidget(instanceId, data){
 }     
 widgetTypes['BehaviourPermissionsWidget']=BehaviourPermissionsWidget; 
 
-function AuroraUserGroupColumn(groups, columnIndex){
-    this.columnIndex = columnIndex; //This is required
+function AuroraUserGroupColumn(groups){
     this.groups = groups;
-    this.getCellRenderer = function(value, cell){
-        return new AuroraGroupCellRenderer(groups, value, cell);    
+    this.getCellRenderer = function(value, cell, width){
+	if(cell==undefined){
+		//alert("caller is " + arguments.callee.caller.toString());
+		return null;
+	}	     
+return new AuroraGroupCellRenderer(groups, value, cell, width);    
     }
 }
 function AuroraGroupCellRenderer(groups, value, cell, width){
@@ -5264,10 +5278,8 @@ function AuroraGroupCellRenderer(groups, value, cell, width){
 function UsersManagerWidget(instanceId, data){
     
     this.loader=function(){
-        
-        
-        var dataR = DATA.getRemote("aurora_users", "");  //, NOT_READY, POLL_RATES.SLOW
-        var groupsR = DATA.getRemote("aurora_groups", ""); //, NOT_READY, POLL_RATES.SLOW
+        var dataR = DATA.getRemote("aurora_users", "", NOT_READY, POLL_RATES.VERY_FAST);  //, NOT_READY, POLL_RATES.SLOW
+        var groupsR = DATA.getRemote("aurora_groups", "", NOT_READY, POLL_RATES.VERY_FAST); //, NOT_READY, POLL_RATES.SLOW
         var renderedTableB = liftBI(function(data, groups){
             if(data==NOT_READY||groups==NOT_READY)
                 return NOT_READY;
@@ -5283,7 +5295,7 @@ function UsersManagerWidget(instanceId, data){
             return data;
         },function(value){
             return [value, null];
-        }, [dataR.behaviour, groupsR.behaviour]);
+        }, dataR.behaviour, groupsR.behaviour);
     
     tableB = TableWidgetB(instanceId+"_table", data, renderedTableB);    
     insertDomB(tableB, instanceId+"_container");
@@ -5303,7 +5315,7 @@ function auroraBaseFindCustomRendererForCol(renderers, colIndex){
             return renderers[index];
     }
     return undefined;
-}           
+}          
 widgetTypes['UsersManagerWidget']=UsersManagerWidget;        
      
 StringBuilderEx = function(){
@@ -5746,7 +5758,7 @@ widgetTypes['webpageSettingsStringFormatter']=WebpageSettingsStringFormatter;
 
 var tableBackgroundColor = "#FFFFFF";
 var tableBackgroundColorSelected = "#b3ddf8";
-var CELL_RENDERERS = {"boolean":BooleanCellRenderer, "string":StringCellRenderer, "int":IntegerCellRenderer, "gender":GenderColumn, "date":DateColumn};
+var CELL_RENDERERS = {"boolean":BooleanCellRenderer, "string":StringCellRenderer, "int":IntegerCellRenderer, "gender":GenderColumn, "date":DateColumn, "readWrite": ReadWriteColumn};
 function DefaultCellRenderer(value, cell, width){
     this.render = function(){
         cell.innerHTML = value;
@@ -5811,6 +5823,63 @@ function BooleanCellRenderer(value, cell, width){
     }
     this.getUpdateEvent = function(){
         return extractValueE(checkbox);
+    }
+}
+function ReadWriteColumn(value, cell, width){
+    value = (value==undefined||value==null||value=="")?"":value;
+    var select = document.createElement("select");
+    
+noneOption=document.createElement("OPTION");
+    noneOption.appendChild(document.createTextNode("--"));
+    noneOption.value = "";
+    select.appendChild(noneOption)
+
+readOption=document.createElement("OPTION");
+    readOption.appendChild(document.createTextNode("Read"));
+    readOption.value = "R";
+    select.appendChild(readOption);
+
+    writeOption=document.createElement("OPTION");
+    writeOption.appendChild(document.createTextNode("Write"));
+    writeOption.value = "W";
+    select.appendChild(writeOption)
+
+rwOption=document.createElement("OPTION");
+    rwOption.appendChild(document.createTextNode("Read+Write"));
+    rwOption.value = "RW";
+    select.appendChild(rwOption); 
+    select.className="TableWidgetPermissionsCell";
+    select.value = value;
+     cell.className="TableWidgetCell"; 
+           
+    this.render = function(){
+        cell.removeChildren();
+        select.disabled = true; 
+        cell.appendChild(select);
+    }
+    this.renderEditor = function(){
+        cell.removeChildren();
+        cell.appendChild(select);
+        select.disabled = false;            
+    }
+    this.setSelected = function(selected){
+        if(selected){
+            cell.className="TableWidgetCellSelected"; 
+            //cell.style.backgroundColor=tableBackgroundColorSelected; 
+        }
+        else                                                         {
+            cell.className="TableWidgetCell"; 
+            //cell.style.backgroundColor=tableBackgroundColor; 
+        }
+    }
+    this.getValue = function(){
+        return select.value;
+    }
+    this.setValue = function(newValue){
+        select.value = newValue;
+    }
+    this.getUpdateEvent = function(){
+        return extractValueE(select);
     }
 }
 function GenderColumn(value, cell, width){
@@ -6114,8 +6183,8 @@ function TableWidgetB(instanceId, widgetData, dataB){
             table.appendChild(element);
             return [new Array(), table, new Array(), document.createElement("div")];
         }  
-        
-        
+	//log("TABLE DATA");
+        //log(tableData);
         var headingTableRow = document.createElement("tr");
         var visibleColumnCount = 0;
         var columns = tableData.COLUMNS;
@@ -6138,7 +6207,7 @@ function TableWidgetB(instanceId, widgetData, dataB){
         
         //If ready render the table
         var tableMetaData = tableData.TABLEMETADATA;
-        var tablePermissions = (tableMetaData==undefined)?"RW":(tableMetaData.permissions==undefined?"RW":tableMetaData.permissions); 
+        var tablePermissions = (tableMetaData!=undefined&&tableMetaData.permissions!=undefined&&tableMetaData.permissions.canEdit!=undefined)?tableMetaData.permissions.canEdit:true; 
         var data = tableData.DATA;
         renderedTable = new Array(); 
         for(index in data){
@@ -6156,16 +6225,18 @@ function TableWidgetB(instanceId, widgetData, dataB){
                 var cellPermissions = cellMetaData==undefined||cellMetaData.permissions==undefined?"RW":cellMetaData.permissions; 
                 var rowNumber = parseInt(cellIndex)+1;
                 var cell = document.createElement("td");
+		
                 var column = columns[cellIndex];
-                var customRenderer = (columnMetaData!=undefined&&columnMetaData.renderer!=undefined)?columnMetaData.renderer:(rowMetaData!=undefined&&rowMetaData.renderer!=undefined)?rowMetaData.renderer:(cellMetaData!=undefined&&cellMetaData.renderer!=undefined)?cellMetaData.renderer:undefined;
+		var customRenderer = (rowMetaData!=undefined&&rowMetaData.renderer!=undefined)?rowMetaData.renderer:(columnMetaData!=undefined&&columnMetaData.renderer!=undefined)?columnMetaData.renderer:(cellMetaData!=undefined&&cellMetaData.renderer!=undefined)?cellMetaData.renderer:undefined;
+
                 if(customRenderer==undefined){
                     var renderClass = (CELL_RENDERERS[column.type]==undefined)?DefaultCellRenderer:CELL_RENDERERS[column.type];
                     renderer = new renderClass(dataRow[cellIndex], cell, column.width);
                 }
                 else
                     renderer = customRenderer.getCellRenderer(dataRow[cellIndex], cell, column.width);  
-                //alert(tablePermissions+" "+rowPermissions+" "+columnPermissions+" "+cellPermissions);
-                if(tablePermissions=="RW"&&rowPermissions=="RW"&&columnPermissions=="RW"&&cellPermissions=="RW")
+                
+		if(tablePermissions==true&&rowPermissions=="RW"&&columnPermissions=="RW"&&cellPermissions=="RW")
                     renderer.renderEditor();    
                 else
                     renderer.render();
@@ -6188,15 +6259,14 @@ function TableWidgetB(instanceId, widgetData, dataB){
                 var rowNumber = parseInt(cellIndex)+1;
                 var cell = document.createElement("td");
                 var column = columns[cellIndex];
-                var customRenderer = (columnMetaData!=undefined&&columnMetaData.renderer!=undefined)?columnMetaData.renderer:undefined;
-                if(customRenderer==undefined){
-                    
-                    var renderClass = (CELL_RENDERERS[column.type]==undefined)?DefaultCellRenderer:CELL_RENDERERS[column.type];
-                    renderer = new renderClass(undefined, cell, column.width);
+                var customRenderer = (columnMetaData!=undefined&&columnMetaData.renderer!=undefined)?columnMetaData.renderer:undefined;	
+		if(customRenderer==undefined){                           
+			var renderClass = (CELL_RENDERERS[column.type]!=undefined)?CELL_RENDERERS[column.type]:DefaultCellRenderer;
+                    	renderer = new renderClass(undefined, cell, column.width);
                 }
-                else
-                    renderer = customRenderer.getCellRenderer(undefined, cell, column.width);  
-                
+                else{                   
+			renderer = customRenderer.getCellRenderer(undefined, cell, column.width);  
+                }
                 renderer.renderEditor();
                 if(newRowsRenderedTable[0]==undefined)
                     newRowsRenderedTable[0] = new Array();
@@ -6206,18 +6276,12 @@ function TableWidgetB(instanceId, widgetData, dataB){
                 }
             }                                                                                           
             table.appendChild(addRow);
-            table.appendChild(controlsRow); 
+            table.appendChild(controlsRow);
         return [renderedTable, table, tableData, newRowsRenderedTable];
         // Table of Cell Renderers, The Dom Table, the raw table data
     },function(value){
         return [value];
-    }, [dataB]);
-    
-   /* var cellFOcusedE = extractEventE(table,"click").mapE(function(ev){
-        var cell = (ev.target==undefined)?ev.srcElement:ev.target;
-        cell.focus();
-        return cell;
-    }).filterE(function(v){return v!=NOT_READY;}); */
+    }, dataB);
     
     var filteredRowSelectionsB = liftB(function(rowSelections, pageRendered){
         var renderedTable = pageRendered[0]
@@ -6234,15 +6298,12 @@ function TableWidgetB(instanceId, widgetData, dataB){
     
     
     var renderedRowSelectionsB = liftB(function(tableData, rowSelections){
-        
         if(tableData==NOT_READY||rowSelections==NOT_READY)
             return NOT_READY; 
-        //log(rowSelections);
         var c = document.createElement("div");
             for(index in tableData[0]){   
                 var isSelected = arrayContains(rowSelections, parseInt(index)+1);
                 for(cellIndex in tableData[0][index]){
-                    //tableData[0][index][cellIndex].renderer.renderEditor();
                     tableData[0][index][cellIndex].renderer.setSelected(isSelected);
                 }
             }
@@ -6250,13 +6311,25 @@ function TableWidgetB(instanceId, widgetData, dataB){
     
     
     var domTableB = liftB(function(pageRendered){
+	//log("domTableB");
         return pageRendered[1];
     }, pageRenderedB);    
     
+    var tableAllowsAddB = pageRenderedB.liftB(function(data){
+	//log("tableAllowsAddB");
+	var tableData = data[2];
+	return (tableData.TABLEMETADATA!=undefined&&tableData.TABLEMETADATA.permissions!=undefined&&tableData.TABLEMETADATA.permissions.canAdd!=undefined)?tableData.TABLEMETADATA.permissions.canAdd:true;
+    });
+    var tableAllowsDeleteB = pageRenderedB.liftB(function(data){
+	//log(tableAllowsDeleteB);
+	var tableData = data[2];
+	return (tableData.TABLEMETADATA!=undefined&&tableData.TABLEMETADATA.permissions!=undefined&&tableData.TABLEMETADATA.permissions.canDelete!=undefined)?tableData.TABLEMETADATA.permissions.canDelete:true;
+    });
     
     var tableDataChangedB = pageRenderedB.liftB(function(pageRendered){
         if(pageRendered==NOT_READY||pageRendered[0].length==0)
             return receiverE().startsWith(NOT_READY);
+	//log("tableDataChangedB");
         var rendererTable = pageRendered[0];
         var domTable = pageRendered[1];
         var dataTable = pageRendered[2][0];
@@ -6301,10 +6374,13 @@ function TableWidgetB(instanceId, widgetData, dataB){
     insertValueB(ifB(userDataChangeB, 'inline', 'none'),saveButton, 'style', 'display');
     insertValueB(ifB(userDataChangeB, 'inline', 'none'),cancelButton, 'style', 'display');
     insertValueB(ifB(showAddRowsB, 'table-row', 'none'),addRow, 'style', 'display');
-    insertValueB(ifB(notB(showAddRowsB), 'inline', 'none'),addRowButton, 'style', 'display');
+  
+    insertValueB(ifB(andB(notB(showAddRowsB), tableAllowsAddB), 'inline', 'none'),addRowButton, 'style', 'display');
     insertValueB(ifB(rowSelectionsEmptyB, 'auto', 'pointer'),deleteRowButton, 'style', 'cursor');
+    insertValueB(ifB(tableAllowsDeleteB, 'inline', 'none'),deleteRowButton, 'style', 'display');
     insertValueB(ifB(notB(rowSelectionsEmptyB), SETTINGS.theme.path+'delete.png', SETTINGS.theme.path+'delete_disabled.png'),deleteRowButton, 'src');
-      
+ 
+
     /*
     Save Rows
     */
@@ -6313,7 +6389,8 @@ function TableWidgetB(instanceId, widgetData, dataB){
         dataB.sendEvent(data); 
     });
     saveButtonPressedE.snapshotE(liftB(function(pageRendered, showAddRows){return [pageRendered, showAddRows]}, pageRenderedB,showAddRowsB)).mapE(function(data){
-        var renderedTable = data[0][0];
+//log("saveButtonPressedE");        
+	var renderedTable = data[0][0];
         var dataTable = data[0][2].DATA;
         var columns = data[0][2].COLUMNS;
         var newRenderedTable = data[0][3];  
@@ -6367,13 +6444,15 @@ function TableWidgetB(instanceId, widgetData, dataB){
     Delete Rows
     */
     var pageDataAndRowSelectionsB = liftB(function(renderedData, rowSelections){
-        if(renderedData==NOT_READY||rowSelections==NOT_READY)
+//log(pageDataAndRowSelectionsB);        
+if(renderedData==NOT_READY||rowSelections==NOT_READY)
             return NOT_READY;
         return {renderedData: renderedData, rowSelections: rowSelections};
     }, pageRenderedB, rowSelectionsB);
     var deleteTableRowsB = deleteButtonPressedE.snapshotE(pageDataAndRowSelectionsB).startsWith(NOT_READY);
     
     deleteTableRowsB.liftB(function(data){
+//log("deleteTableRowsB");
         if(data==NOT_READY || data.rowSelections.length==0)
             return;
         var rowSelections = data.rowSelections.reverse(); 
@@ -6443,8 +6522,9 @@ function JoinTableB(table1B, table2B, columnId){
     }, function(mergeTable){
     
         return [table1, table2];
-    }, [table1B, table2B]);
+    }, table1B, table2B);
 }
+
 
 /*
 Copyright (c) 2003-2011, CKSource - Frederico Knabben. All rights reserved.
@@ -6595,13 +6675,16 @@ function editPage(){
         showContentEditor(SETTINGS.page.html);
 }
 function deletePage(){
-    if(confirm('Are you sure you want to delete this page?')){
-    jQuery.ajax({type: "post",
-        url: SETTINGS.scriptPath +"request/deletePage",
-        data: {pageName: SETTINGS.page.name+""},
-        success: function(data){window.location=SETTINGS.scriptPath+SETTINGS.defaultPage;}
-        });    
-    }
+    UI.confirm("Delete Page", "Are you sure you wish to delete this page?", "Yes", function(val){
+            jQuery.ajax({type: "post",
+                url: SETTINGS.scriptPath +"request/deletePage",
+                data: {pageName: SETTINGS.page.name+""},
+                success: function(data){window.location=SETTINGS.scriptPath+SETTINGS.defaultPage;}
+                });  
+        }, "No",
+        function(val){
+            
+        });
 }
 function commitPageChanges(dataObj, editor){
     jQuery.ajax({type: "post",
@@ -6899,6 +6982,27 @@ function jsonSANITIZE(jsonString){
     };
 
 })( jQuery );
+
+
+function AnalogRegisterDisplay(instanceId, data){
+    this.device = data.device;
+    this.targetType = data.targetType;
+    this.targetRegister = data.targetRegister; 
+    this.units = data.units;
+    this.loader=function(){  
+	var pollRate = data.pollRate; 
+	var dataR = DATA.getRemote("scada_integer_register", this.device+"|"+this.targetType+"|"+this.targetRegister, NOT_READY, pollRate);  //, NOT_READY, POLL_RATES.SLOW       
+	var dataB = dataR.behaviour;        
+	insertDomB(dataB, instanceId+"_container");
+    }
+    this.destroy=function(){
+        DATA.deregister("scada_integer_register", this.targetRegister);
+    }
+    this.build=function(){
+        return "<span class=\"scada_analogDisplay\"><span id=\""+instanceId+"_container\">&nbsp;</span>"+this.units+"</span>";
+    }
+}     
+widgetTypes['AnalogRegisterDisplay']=AnalogRegisterDisplay;
 
 
 
