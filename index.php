@@ -3,6 +3,9 @@ error_reporting(E_ALL);
 header("Pragma: no-cache");
 header("Cache-Control: no-store, no-cache, must-revalidate");
 header("Cache-Control: post-check=0, pre-check=0", false);  
+
+$NO_PERMISSION = 978001;
+
 include("includes/mysqldata.php");
 include("includes/settings.php");
 include("includes/requestHandler.php");

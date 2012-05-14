@@ -5,8 +5,9 @@
     function getGroups($context){
         global $connection;
         global $current_user;
+        global $NO_PERMISSION;
         if(!$current_user->canReadBehaviour("aurora_groups"))
-            return array();
+            return $NO_PERMISSION;
         
         $ret = getEmptyTableDef();
         $ret["COLUMNS"] = array(
@@ -60,8 +61,9 @@
     function getUsers($context){
          global $connection;
          global $current_user;
+         global $NO_PERMISSION; 
         if(!$current_user->canReadBehaviour("aurora_users")){
-            return array();
+            return $NO_PERMISSION;
         }
         $ret = getEmptyTableDef();
         $ret["COLUMNS"] = array(
@@ -123,11 +125,11 @@
     
     $behaviourManager->registerBehaviour("aurora_plugins", "getPlugins", "setPlugins");
     function getPlugins($context){
-        
+        global $NO_PERMISSION; 
         global $connection;
         global $current_user;
         if(!$current_user->canReadBehaviour("aurora_plugins"))
-            return array();
+            return $NO_PERMISSION;
         $ret = getEmptyTableDef();
         $ret["COLUMNS"] = array(
             array("reference"=>"pluginId", "display"=>"Id", "type"=>"int", "visible"=>false, 'readonly'=>true),
@@ -171,8 +173,9 @@
     function getAuroraBehaviours($context){
         global $connection;
         global $current_user;
+        global $NO_PERMISSION; 
         if(!$current_user->canReadBehaviour("aurora_behaviours"))
-            return array();
+            return $NO_PERMISSION;
         
         $ret = getEmptyTableDef();
         $ret["COLUMNS"] = array(
@@ -197,8 +200,9 @@
     function getBPermmissions($context){
         global $connection;
         global $current_user;
+        global $NO_PERMISSION; 
         if(!$current_user->canReadBehaviour("aurora_behaviour_permissions"))
-            return array();
+            return $NO_PERMISSION;
         
         $ret = getEmptyTableDef();
         $ret["COLUMNS"] = array(                
@@ -235,9 +239,10 @@
             $userId = ($userId=="undefined")?'NULL':$userId; 
             $permissions = mysql_escape_string($setting[4]); 
             $query = "INSERT INTO `behaviour_permissions` (`behaviour_permissionId`, `behaviourId`, `group_id`, `user_id`, `permissions`) VALUES($permissionId, $behaviourId, $groupId, $userId, '$permissions') ON DUPLICATE KEY UPDATE `permissions`='$permissions'";
+            if(!($groupId==3&&($behaviourId==2||$behaviourId==4||$behaviourId==5))){   
+                 mysql_query($query, $connection);    
+            }
             
-            
-           mysql_query($query, $connection); 
 //echo $query."\n";
           //  echo mysql_error();
             

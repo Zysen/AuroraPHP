@@ -45,6 +45,8 @@ var behavioursB = behavioursR.behaviour;
         var newTableB = liftBI(function(behaviourPermissions, groups, behaviours){   	
 	if(groups==NOT_READY||behaviours==NOT_READY||behaviourPermissions==NOT_READY)
         		return NOT_READY;
+    if(groups==NO_PERMISSION||behaviours==NO_PERMISSION||behaviourPermissions==NO_PERMISSION)
+                return NO_PERMISSION;
         	//log(behaviourPermissions);
         	var columns = [{reference: "behaviour", display: "", type: "string", visible:true, readOnly: false}];
         	var groupColMap = new Array();

@@ -425,6 +425,15 @@ function TableWidgetB(instanceId, widgetData, dataB){
             table.appendChild(element);
             return [new Array(), table, new Array(), document.createElement("div")];
         }  
+        else if(tableData==NO_PERMISSION){
+            var element = document.createElement("td");
+            element.className = "TableWidgetCell";
+            jQuery(element).attr('colspan',visibleColumnCount);                                         
+            element.style.textAlign="center";
+            element.innerHTML = "<img src=\""+SETTINGS.theme.path+"noperm.png\" alt=\"\"/><br />No Permission";
+            table.appendChild(element);
+            return [new Array(), table, new Array(), document.createElement("div")];
+        }  
 	//log("TABLE DATA");
         //log(tableData);
         var headingTableRow = document.createElement("tr");
