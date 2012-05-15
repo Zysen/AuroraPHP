@@ -1,6 +1,12 @@
 var tableBackgroundColor = "#FFFFFF";
 var tableBackgroundColorSelected = "#b3ddf8";
-var CELL_RENDERERS = {"boolean":BooleanCellRenderer, "string":StringCellRenderer, "int":IntegerCellRenderer, "gender":GenderColumn, "date":DateColumn, "readWrite": ReadWriteColumn};
+var CELL_RENDERERS = {"boolean":BooleanCellRenderer, "string":StringCellRenderer, "int":IntegerCellRenderer, "gender":GenderColumn, "date":DateColumn, "RW": ReadWriteColumn, "readWrite": ReadWriteColumn};
+function BasicCellRenderer(type){
+    this.renderClass = CELL_RENDERERS[type]; 
+    this.getCellRenderer = function(value, cell, width){
+        return new this.renderClass(value, cell, width);
+    }
+}
 function DefaultCellRenderer(value, cell, width){
     this.render = function(){
         cell.innerHTML = value;
@@ -28,7 +34,8 @@ function DefaultCellRenderer(value, cell, width){
         return receiverE();
     }
 }
-function BooleanCellRenderer(value, cell, width){
+function BooleanCellRenderer(value, cell, width){    
+    var value = (value!=undefined&&(value=="1"||value==true||value=="true"))?true:false;
     var checkbox = document.createElement("input");
     checkbox.type='checkbox';
     checkbox.checked = (value==undefined||value==null||value=="")?false:value;  
@@ -465,8 +472,10 @@ function TableWidgetB(instanceId, widgetData, dataB){
             var domRow = document.createElement("tr");
             var dataRow = data[index];
             var rowMetaData = tableData.ROWMETADATA[index];
-            var rowPermissions = (rowMetaData!=undefined&&rowMetaData.permissions!=undefined)?rowMetaData.permissions:"RW";
+            /*if(rowMetaData!=undefined){
             
+            }*/
+            var rowPermissions = (rowMetaData!=undefined&&rowMetaData.permissions!=undefined)?rowMetaData.permissions:"RW";
             if(renderedTable[index]==undefined)
                 renderedTable[index] = new Array();
             for(cellIndex in columns){
@@ -476,7 +485,6 @@ function TableWidgetB(instanceId, widgetData, dataB){
                 var cellPermissions = cellMetaData==undefined||cellMetaData.permissions==undefined?"RW":cellMetaData.permissions; 
                 var rowNumber = parseInt(cellIndex)+1;
                 var cell = document.createElement("td");
-		
                 var column = columns[cellIndex];
 		var customRenderer = (rowMetaData!=undefined&&rowMetaData.renderer!=undefined)?rowMetaData.renderer:(columnMetaData!=undefined&&columnMetaData.renderer!=undefined)?columnMetaData.renderer:(cellMetaData!=undefined&&cellMetaData.renderer!=undefined)?cellMetaData.renderer:undefined;
 

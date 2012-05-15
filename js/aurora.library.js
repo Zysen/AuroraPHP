@@ -1,3 +1,8 @@
+function auroraParseBoolean(b){
+    if(b=="true"||b==true)
+        return true;
+    return false;
+}
 // Array Remove - By John Resig (MIT Licensed)
 
 /*Array.prototype.remove = function(from, to) {
