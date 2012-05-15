@@ -16,22 +16,22 @@
             $galleryTitle = $row['title'];
             //'imageId'=>$row['imageGallery_imageId'], 
             if(array_key_exists("upload_id", $row)&&$row['upload_id']!=null)
-                $images[count($images)] = array('caption'=>$row['caption'], 'upload_id'=>$row['upload_id'],'timestamp'=>$row['imageTimestamp'], 'rights'=>($row['imageOwner']==$current_user->get_SqlId()||$current_user->canAccessPlugin("imageGallery_admin")));
+                $images[count($images)] = array('caption'=>$row['caption'], 'upload_id'=>$row['upload_id'],'timestamp'=>$row['imageTimestamp'], 'rights'=>($row['imageOwner']==$current_user->get_SqlId()||$current_user->permissionContains("imageGallery_master", "true")));
             if($lastRow!=null&&$changed){
-                $galleries[count($galleries)] = array("title"=>$row['title'], "galleryId"=>$row['imageGallery_galleryId'], "timestamp"=>$row['galleryTimestamp'], 'rights'=>($row['galleryOwner']==$current_user->get_SqlId()||$current_user->canAccessPlugin("imageGallery_admin")), 'images'=>$images);
+                $galleries[count($galleries)] = array("title"=>$row['title'], "galleryId"=>$row['imageGallery_galleryId'], "timestamp"=>$row['galleryTimestamp'], 'rights'=>($row['galleryOwner']==$current_user->get_SqlId()||$current_user->permissionContains("imageGallery_master", "true")), 'images'=>$images);
                 $images = array();
             }
             $lastId = $row['imageGallery_galleryId'];
             $lastRow = $row;
         }                           
         if($lastRow!=null){
-            $galleries[count($galleries)] = array("title"=>$lastRow['title'], "galleryId"=>$lastRow['imageGallery_galleryId'], "timestamp"=>$lastRow['galleryTimestamp'], 'rights'=>($lastRow['galleryOwner']==$current_user->get_SqlId()||$current_user->canAccessPlugin("imageGallery_admin")), 'images'=>$images);
+            $galleries[count($galleries)] = array("title"=>$lastRow['title'], "galleryId"=>$lastRow['imageGallery_galleryId'], "timestamp"=>$lastRow['galleryTimestamp'], 'rights'=>($lastRow['galleryOwner']==$current_user->get_SqlId()||$current_user->permissionContains("imageGallery_master", "true")), 'images'=>$images);
         }
         return $galleries;
     }
     function setGalleries($data, $context){
         global $current_user;
-        if(!$current_user->canAccessPlugin("imageGallery_admin"))
+        if(!$current_user->permissionContains("imageGallery_master", "true"))
             return;
         foreach($data as $gallery){
             $title = $gallery['title'];

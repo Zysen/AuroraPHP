@@ -115,30 +115,29 @@ function getUserDisplay($username, $firstname, $lastname){
             else
                 return false;
         }
-        function getBehaviourPermissions($behaviour){
+        function getPermission($reference){
             global $connection;
-            $result = mysql_query("SELECT `permissions` FROM `behaviour_register` NATURAL JOIN `behaviour_permissions` WHERE `name`='$behaviour' AND (`user_id`=".$this->get_SqlId()." OR `group_id`=".$this->get_group_id().") LIMIT 1", $connection);
+            $result = mysql_query("SELECT `permissions` FROM `permission_register` NATURAL JOIN `permissions` WHERE `name`='$reference' AND (`user_id`=".$this->get_SqlId()." OR `group_id`=".$this->get_group_id().") LIMIT 1", $connection);
             if(mysql_num_rows($result)>0){
                 $row = mysql_fetch_array($result);
                 return $row['permissions'];
             }
             return false;
         }
-        function canReadBehaviour($behaviour){
-            $perms = $this->getBehaviourPermissions($behaviour);
-            if($perms==false||(!strstr($perms, "R")))  {
+        function permissionContains($behaviour, $search){
+            $perms = $this->getPermission($behaviour);
+            if($perms==false||(!strstr($perms, $search)))  {
                 return false;
             }
             else{
                 return true;
             }
         }
-        function canWriteBehaviour($behaviour){
-            $perms = $this->getBehaviourPermissions($behaviour);
-            if($perms==false||(!strstr($perms, "W")))
-                return false;
-            else
-                return true;
+        function canReadPermission($behaviour){
+            return $this->permissionContains($behaviour, "R");
+        }
+        function canWritePermission($behaviour){
+            return $this->permissionContains($behaviour, "W");
         }
         function canAccessPage($title){
             global $current_user;
@@ -146,7 +145,7 @@ function getUserDisplay($username, $firstname, $lastname){
             $result = mysql_query("SELECT * FROM `pages` WHERE `title`='$title' LIMIT 1;", $connection);
             if(mysql_num_rows($result)>0){
                 $row = mysql_fetch_array($result);
-                if($row['user_id']==$current_user->get_SqlId()||$current_user->canAccessPlugin("viewPage"))
+                if($row['user_id']==$current_user->get_SqlId()||$this->permissionContains("aurora_all_pages", "R"))
                     return $row;
                 $result2 = mysql_query("SELECT * FROM `page_permissions` WHERE `page_id`=".$row['page_id']." AND (`user_id`=".$this->get_SqlId()." OR `group_id`=".$this->get_group_id().") LIMIT 1;", $connection);                                
                 if(mysql_num_rows($result2)>0){
@@ -155,10 +154,6 @@ function getUserDisplay($username, $firstname, $lastname){
                 return 0;   //No Access
             }
             return -1;  //Sentinal for no page 
-        }
-        function canAccessPlugin($pluginReference){
-            global $connection;
-            return (($pluginReference != null) && mysql_num_rows(mysql_query("SELECT * FROM `plugin_permissions` WHERE `reference`='$pluginReference' AND (`group_id`=".$this->group_id." OR `user_id`=".$this->get_SqlId().");", $connection))>0);
         }
     }
     $blowfish = $settings['aurora_secret'];
@@ -174,9 +169,9 @@ session_start();
                 $password = mysql_escape_string(md5($_POST['password']));
             }
                                        //`user_id`, `validated`, `loggedIn`, `email`
-        $result = mysql_query("SELECT * FROM `users` WHERE email='$email' AND password='$password' LIMIT 1;", $connection);
+        $result = mysql_query("SELECT * FROM `users` WHERE email='$email' AND password='$password' LIMIT 1;", getPrimarySQLConnection());
         if(mysql_num_rows($result)==0)
-            $result = mysql_query("SELECT * FROM `users` WHERE email='$postEmail' AND password='$postPass' LIMIT 1;", $connection);
+            $result = mysql_query("SELECT * FROM `users` WHERE email='$postEmail' AND password='$postPass' LIMIT 1;", getPrimarySQLConnection());
         if(mysql_num_rows($result)>0){
             $row = mysql_fetch_array($result);
             if($settings['aurora_requireEmailValidation']==0||$row['validated']=="1"){

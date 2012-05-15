@@ -34,8 +34,8 @@ widgetTypes['PluginManagerWidget']=PluginManagerWidget;
 function BehaviourPermissionsWidget(instanceId, data){      
     this.loader=function(){
     	var groupsR = DATA.getRemote("aurora_groups", "", NOT_READY, POLL_RATES.VERY_FAST);
-    	var behavioursR = DATA.getRemote("aurora_behaviours", "", NOT_READY, POLL_RATES.VERY_FAST);
-        var behaviourPermissionsR = DATA.getRemote("aurora_behaviour_permissions", "", NOT_READY, POLL_RATES.VERY_FAST);  
+    	var behavioursR = DATA.getRemote("aurora_permissions", "", NOT_READY, POLL_RATES.VERY_FAST);
+        var behaviourPermissionsR = DATA.getRemote("aurora_permissions_set", "", NOT_READY, POLL_RATES.VERY_FAST);  
         
 	    var groupsB = groupsR.behaviour;
         var behavioursB = behavioursR.behaviour;
@@ -123,8 +123,8 @@ function BehaviourPermissionsWidget(instanceId, data){
     }
     this.destroy=function(){
         DATA.deregister("aurora_groups", "");
-        DATA.deregister("aurora_behaviours", "");
-        DATA.deregister("aurora_behaviour_permissions", "");
+        DATA.deregister("aurora_permissions", "");
+        DATA.deregister("aurora_permissions_set", "");
         
     }
     this.build=function(){

@@ -6,13 +6,13 @@
     $behaviourManager->registerBehaviour("aurora_groups", "getGroups", "setGroups"); 
     $behaviourManager->registerBehaviour("aurora_users", "getUsers", "setUsers");
     $behaviourManager->registerBehaviour("aurora_plugins", "getPlugins", "setPlugins");
-    $behaviourManager->registerBehaviour("aurora_behaviours", "getAuroraBehaviours", "setAuroraBehaviours");
-    $behaviourManager->registerBehaviour("aurora_behaviour_permissions", "getBPermmissions", "setBPermmissions");
+    $behaviourManager->registerBehaviour("aurora_permissions", "getAuroraPermissions", "setAuroraPermissions");
+    $behaviourManager->registerBehaviour("aurora_permissions_set", "getBPermmissions", "setBPermmissions");
     
    /* function getPluginPermissions($context){
         global $current_user;
         global $NO_PERMISSION;
-        if(!$current_user->canReadBehaviour("aurora_pluginPermissions"))
+        if(!$current_user->canReadPermission("aurora_pluginPermissions"))
             return $NO_PERMISSION;
         $ret = getEmptyTableDef();  
         $ret["COLUMNS"] = array(
@@ -31,7 +31,7 @@
     }
     function setPluginPermissions($data, $context){
         global $current_user;
-        if(!$current_user->canWriteBehaviour("aurora_pluginPermissions"))
+        if(!$current_user->canWritePermission("aurora_pluginPermissions"))
             return $data;
         $existing = getPluginPermissions($context);
         $existingData = $existing["DATA"];
@@ -55,10 +55,9 @@
     }   */
     
     function getGroups($context){
-        global $connection;
         global $current_user;
         global $NO_PERMISSION;
-        if(!$current_user->canReadBehaviour("aurora_groups"))
+        if(!$current_user->canReadPermission("aurora_groups"))
             return $NO_PERMISSION;
         
         $ret = getEmptyTableDef();
@@ -68,7 +67,7 @@
                 array("reference"=>"locked", 'display'=>"Locked", 'type'=>"boolean", 'visible'=>false, 'readonly'=>true)
         );
         
-        $result = mysql_query("SELECT * FROM `groups` WHERE `group_id`!=1 AND `group_id`!=3;", $connection);
+        $result = mysql_query("SELECT * FROM `groups` WHERE `group_id`!=1 AND `group_id`!=3;", getPrimarySQLConnection());
         $ret["DATA"]=array(array(1, "Public", 1));    
         $ret["ROWMETADATA"][0] = array("permissions"=>"R");
         while($row = mysql_fetch_array($result)){    
@@ -80,9 +79,8 @@
         return $ret;
     }
     function setGroups($newData, $context){
-        global $connection;
         global $current_user;
-        if(!$current_user->canWriteBehaviour("aurora_groups"))
+        if(!$current_user->canWritePermission("aurora_groups"))
             return $data;
         
         
@@ -106,16 +104,15 @@
             if($group_id==1||$group_id==3)
                 continue;
             $group_id = ($group_id=="undefined")?'NULL':$group_id;  
-            mysql_query("INSERT INTO `groups` (`group_id`, `name`, `locked`) VALUES ($group_id, '$name', $locked) ON DUPLICATE KEY UPDATE `name`='$name', `locked`=$locked;", $connection);
+            mysql_query("INSERT INTO `groups` (`group_id`, `name`, `locked`) VALUES ($group_id, '$name', $locked) ON DUPLICATE KEY UPDATE `name`='$name', `locked`=$locked;", getPrimarySQLConnection());
         }
         return getGroups($context);
     }
 
     function getUsers($context){
-         global $connection;
          global $current_user;
          global $NO_PERMISSION; 
-        if(!$current_user->canReadBehaviour("aurora_users")){
+        if(!$current_user->canReadPermission("aurora_users")){
             return $NO_PERMISSION;
         }
         $ret = getEmptyTableDef();
@@ -132,7 +129,7 @@
                 array("reference"=>"dob", 'display'=>"Date Of Birth", 'type'=>"date", 'visible'=>true, 'readonly'=>false, 'width'=>75)
         );
         //$ret["COLUMNMETADATA"][5] = array("permissions"=>"R");
-        $result = mysql_query("SELECT * FROM `users` ORDER BY `firstname` ASC;", $connection);
+        $result = mysql_query("SELECT * FROM `users` ORDER BY `firstname` ASC;", getPrimarySQLConnection());
         $ret["DATA"]=array();    
         while($row = mysql_fetch_array($result))
             $ret["DATA"][count($ret["DATA"])] = array((int)$row['user_id'], $row['firstname'], $row['lastname'], $row['username'], $row['email'],$row['password'], (int)$row['group_id'], (boolean)$row['validated'], $row['gender'], $row['dob']);
@@ -140,9 +137,8 @@
     }
     
     function setUsers($newData, $context){
-        global $connection;
         global $current_user;
-        if(!$current_user->canWriteBehaviour("aurora_users"))
+        if(!$current_user->canWritePermission("aurora_users"))
             return $data;
             
         $columns = $newData["COLUMNS"];    
@@ -171,7 +167,7 @@
             $gender = mysql_escape_string($setting[8]);
             $dob = mysql_escape_string($setting[9]);
             $query = "INSERT INTO `users` (`firstname`,`lastname`,`username`,`email`,`password`, `group_id`, `validated`, `gender`, `dob`, `user_id`) VALUES ('$firstname', '$lastname', '$username', '$emailaddress','$password', $group_id, $validated, '$gender', '$dob', $user_id) ON DUPLICATE KEY UPDATE `firstname`='$firstname',`lastname`='$lastname',`username`='$username',`email`='$emailaddress',`password`='$password',`group_id`=$group_id,`validated`=$validated,`gender`='$gender', `dob`='$dob';";
-            mysql_query($query, $connection);        
+            mysql_query($query, getPrimarySQLConnection());        
         }
         return getUsers($context);
     }
@@ -179,9 +175,8 @@
    
     function getPlugins($context){
         global $NO_PERMISSION; 
-        global $connection;
         global $current_user;
-        if(!$current_user->canReadBehaviour("aurora_plugins"))
+        if(!$current_user->canReadPermission("aurora_plugins"))
             return $NO_PERMISSION;    
         $ret = getEmptyTableDef();
         $ret["COLUMNS"] = array(
@@ -189,7 +184,7 @@
             array("reference"=>"reference", "display"=>"Reference", "type"=>"string", "visible"=>true, 'readonly'=>true),
             array("reference"=>"enabled", "display"=>"Enabled", "type"=>"boolean", "visible"=>true, 'readonly'=>false)
         );
-        $result = mysql_query("SELECT * FROM `plugins` ORDER BY `reference` ASC;", $connection);
+        $result = mysql_query("SELECT * FROM `plugins` ORDER BY `reference` ASC;", getPrimarySQLConnection());
         $ret["DATA"]=array();
         while($row = mysql_fetch_array($result))
             $settings[count($settings)] = array((int)$row['id'], $row['reference'], (boolean)$row['enabled']);
@@ -197,9 +192,8 @@
         return $ret;
     }
     function setPlugins($data, $context){
-        global $connection;
         global $current_user;
-        if(!$current_user->canWriteBehaviour("aurora_plugins"))  
+        if(!$current_user->canWritePermission("aurora_plugins"))  
             return $data;
         $settings = $data["DATA"];
         $existingPlugins = getPlugins($context);
@@ -212,7 +206,7 @@
             $enabled = mysql_escape_string($setting[2]);
             $enabled = ($enabled=='true'||$enabled=='1')?1:0;
             $query = "INSERT INTO `plugins` (`id`, `reference`, `enabled`) VALUES($id, '$reference', $enabled) ON DUPLICATE KEY UPDATE `reference`='$reference',`enabled`=$enabled;";
-            mysql_query($query, $connection); 
+            mysql_query($query, getPrimarySQLConnection()); 
         }
           return getPlugins($context);
     } 
@@ -223,11 +217,10 @@
 
     
     
-    function getAuroraBehaviours($context){
-        global $connection;
+    function getAuroraPermissions($context){
         global $current_user;
         global $NO_PERMISSION; 
-        if(!$current_user->canReadBehaviour("aurora_behaviours"))
+        if(!$current_user->canReadPermission("aurora_behaviours"))
             return $NO_PERMISSION;
     
         $ret = getEmptyTableDef();
@@ -239,24 +232,22 @@
                 array("reference"=>"type", 'display'=>"Type", 'type'=>"string", 'visible'=>false, 'readonly'=>true) 
         ); 
         
-        $result = mysql_query("SELECT * FROM `behaviour_register` ORDER BY `behaviourId` ASC;", $connection);
+        $result = mysql_query("SELECT * FROM `permission_register` ORDER BY `behaviourId` ASC;", getPrimarySQLConnection());
         $ret["DATA"]=array();
         while($row = mysql_fetch_array($result))
             $ret["DATA"][count($ret["DATA"])] = array((int)$row['behaviourId'], $row['name'],$row['description'], (int)$row['pluginId'], $row['type']);
         return $ret;
     }
-    function setAuroraBehaviours($data, $context){
-        global $connection;
+    function setAuroraPermissions($data, $context){
         global $current_user;    
           return getAuroraBehaviours($context);
     }
     
     
     function getBPermmissions($context){
-        global $connection;
         global $current_user;
         global $NO_PERMISSION; 
-        if(!$current_user->canReadBehaviour("aurora_behaviour_permissions"))
+        if(!$current_user->canReadPermission("aurora_behaviour_permissions"))
             return $NO_PERMISSION;
         
         $ret = getEmptyTableDef();
@@ -268,19 +259,18 @@
                 array("reference"=>"permissions", 'display'=>"Permissions", 'type'=>"string", 'visible'=>true, 'readonly'=>true)
         ); 
         
-        $result = mysql_query("SELECT * FROM `behaviour_permissions` ORDER BY `behaviourId` ASC;", getPrimarySQLConnection());
+        $result = mysql_query("SELECT * FROM `permissions` ORDER BY `behaviourId` ASC;", getPrimarySQLConnection());
         $ret["DATA"]=array();
         while($row = mysql_fetch_array($result))
             $ret["DATA"][count($ret["DATA"])] = array((int)$row['behaviour_permissionId'], (int)$row['behaviourId'], (int)$row['group_id'], (int)$row['user_id'], $row['permissions']);
         return $ret;
     }
     function setBPermmissions($data, $context){
-        global $connection;
         global $current_user;
         
         
         
-        if(!$current_user->canWriteBehaviour("aurora_behaviour_permissions"))
+        if(!$current_user->canWritePermission("aurora_behaviour_permissions"))
             return $data;
         $settings = $data["DATA"];
         $existingPlugins = getBPermmissions($context);
@@ -294,10 +284,10 @@
             $userId = mysql_escape_string($setting[3]); 
             $userId = ($userId=="undefined")?'NULL':$userId; 
             $permissions = mysql_escape_string($setting[4]); 
-            $query = "INSERT INTO `behaviour_permissions` (`behaviour_permissionId`, `behaviourId`, `group_id`, `user_id`, `permissions`) VALUES($permissionId, $behaviourId, $groupId, $userId, '$permissions') ON DUPLICATE KEY UPDATE `permissions`='$permissions'";
+            $query = "INSERT INTO `permissions` (`behaviour_permissionId`, `behaviourId`, `group_id`, `user_id`, `permissions`) VALUES($permissionId, $behaviourId, $groupId, $userId, '$permissions') ON DUPLICATE KEY UPDATE `permissions`='$permissions'";
             if(!($groupId==3&&($behaviourId==2||$behaviourId==4||$behaviourId==5))){   
                   //echo $query;
-                mysql_query($query, $connection);    
+                mysql_query($query, getPrimarySQLConnection());    
             }
         }   
         //exit;

@@ -3,7 +3,6 @@ $minifyAll = false;
 function getPageData($pageId){
     global $current_user;
     global $settings;
-    global $connection;
     global $path;
     
     $pageData = $current_user->canAccessPage($pageId);
@@ -18,17 +17,17 @@ function getPageData($pageId){
     if(array_key_exists("page_id", $pageData)){
         session_destroy("aurora_requestedPage");
         $pageId = $pageData['page_id'];
-        $result = mysql_query("SELECT * FROM `page_permissions` WHERE `page_id`=$pageId;", $connection);
+        $result = mysql_query("SELECT * FROM `page_permissions` WHERE `page_id`=$pageId;", getPrimarySQLConnection());
         $permissions = array();
         while($row = mysql_fetch_array($result)){
             $permissions[count($permissions)] = array("group_id"=>$row['group_id']);
         } 
         $owner = $pageData['user_id']==$current_user->get_SqlId();
-        $canDelete = ($pageData['title']!="login"&&$pageData['title']!=$settings['aurora_defaultAction'])&&($current_user->canAccessPlugin("deletePage")||$owner); 
-        $pageData['permissions'] = array("canEdit"=>($current_user->canAccessPlugin("editPage")||$owner), "canDelete"=>$canDelete, "changePermission"=>$owner, "groups"=>$permissions);
+        $canDelete = ($pageData['title']!="login"&&$pageData['title']!=$settings['aurora_defaultAction'])&&($current_user->permissionContains("aurora_all_pages", "W")||$owner); 
+        $pageData['permissions'] = array("canEdit"=>($current_user->permissionContains("aurora_all_pages", "W")||$owner), "canDelete"=>$canDelete, "changePermission"=>$owner, "groups"=>$permissions);
     }
     else
-        $pageData['permissions'] = array("canEdit"=>$current_user->canAccessPlugin("createPage"));
+        $pageData['permissions'] = array("canEdit"=>$current_user->permissionContains("aurora_pages", "true"));
     return $pageData;
 }
 class AuroraPage {
@@ -44,8 +43,7 @@ class AuroraPage {
         private $_themeName;
         
         public function __construct($name){
-            global $settings;
-            global $connection;  
+            global $settings;  
             global $scriptPath;
             $this->_name = $name;
             $this->_theme = $settings['aurora_theme'];
@@ -64,8 +62,7 @@ class AuroraPage {
            $this->registerScript("js/aurora_ui.js");             
         }                
         public function lookupThemeName($themeId){
-            global $connection;
-            $result = mysql_query("SELECT `theme_name` FROM `themes` WHERE `theme_id`=$themeId LIMIT 1;", $connection);
+            $result = mysql_query("SELECT `theme_name` FROM `themes` WHERE `theme_id`=$themeId LIMIT 1;", getPrimarySQLConnection());
             $row = mysql_fetch_array($result);
             return $row['theme_name'];
         }
@@ -120,8 +117,7 @@ class AuroraPage {
             $this->_styles[count($this->_styles)] = $style;
         }
         public function getThemeTemplate($themeId){
-            global $connection;
-            $result = mysql_query("SELECT `theme_content` FROM `themes` WHERE `theme_id`=$themeId LIMIT 1;", $connection);
+            $result = mysql_query("SELECT `theme_content` FROM `themes` WHERE `theme_id`=$themeId LIMIT 1;", getPrimarySQLConnection());
             $row = mysql_fetch_array($result);
             return $row['theme_content'];
         }
@@ -201,7 +197,6 @@ class AuroraPage {
             global $scriptPath;
             global $dowhat;
             global $current_user;
-            global $connection;
            
             $this->registerScript("themes/".$this->_themeName."/script.js");
             $this->registerCSS("themes/".$this->_themeName."/style.css");
@@ -215,11 +210,7 @@ class AuroraPage {
             
             
             
-            
-        /*
-            $deleteBit = ($pageName==$settings['aurora_defaultAction'])?"":"&nbsp;<a onclick=\"deletePage();\"><img src=\"".$scriptPath."themes/".$theme['name']."/delete.png\" alt=\"\" /></a>";
-            $adminPanel = ($current_user->canAccessPlugin("editPage")||$current_user->canAccessPlugin("deletePage")||$ownerId==$current_user->get_SqlId())?"<div id=\"aurora_adminPanel\"><a onclick=\"editPage();\"><img src=\"".$scriptPath."themes/".$theme['name']."/edit.png\" alt=\"\" /></a>$deleteBit</div>":"";                                */
-                                  
+                                   
             $noPage = $this->_content=="";
             $this->_content=$noPage?getNoPageTemplate():$this->_content;
             $messages = "";                                     
@@ -232,7 +223,7 @@ class AuroraPage {
             
             $groups = array();
             $groups[0] = array("group_id"=>1, "name"=>"Public");
-            $result = mysql_query("SELECT `name`, `group_id` FROM `groups` WHERE `group_id`!=1 AND `group_id`!=3 ORDER BY `name`;", $connection);
+            $result = mysql_query("SELECT `name`, `group_id` FROM `groups` WHERE `group_id`!=1 AND `group_id`!=3 ORDER BY `name`;", getPrimarySQLConnection());
             while($row = mysql_fetch_array($result)){
                 $groups[count($groups)] = array("group_id"=>$row['group_id'], "name"=>$row['name']);
             }
