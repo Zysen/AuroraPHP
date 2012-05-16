@@ -1,11 +1,67 @@
-/* BASE WIDGETS */           
+/* BASE WIDGETS */        
+function WebpageSettingsWidget(instanceId, data){
+    this.loader=function(){
+        var themesR = DATA.getRemote("aurora_theme_list", "aurora", NOT_READY, POLL_RATES.VERY_SLOW);  //, NOT_READY, POLL_RATES.SLOW 
+        var dataR = DATA.getRemote("aurora_settings", "aurora", NOT_READY, POLL_RATES.VERY_FAST);  //, NOT_READY, POLL_RATES.SLOW    
+        var dataBI = dataR.behaviour;
+        rendererTypedB = liftBI(
+        function(settingTable, themes){
+            if(settingTable==NOT_READY||themes==NOT_READY)
+                return NOT_READY;
+            if(settingTable==NO_PERMISSION||themes==NO_PERMISSION)
+                return NO_PERMISSION;
+            var cellMetaData = [];
+            for(rowIndex in settingTable.DATA){
+                var cellMetaDataRow = [];
+                var name = getTableValue(settingTable, rowIndex, "name"); 
+                var type = getTableValue(settingTable, rowIndex, "type");
+                var description = getTableValue(settingTable, rowIndex, "description");
+                var value = getTableValue(settingTable, rowIndex, "value");
+                var valueColIndex = getColumnIndex(settingTable, "value");
+                
+                                                                              
+                if(CELL_RENDERERS[type]!=undefined){
+                    cellMetaDataRow[valueColIndex] = {renderer: new BasicCellRenderer(type)};    
+                }
+                else if(type=="userDisplay"){
+                    var options = [{display: "Username", value: 1}, {display: "Firstname", value: 2}, {display: "Full Name", value: 3}];
+                    cellMetaDataRow[valueColIndex] = {renderer: new BasicRadioCellRendererContainer(name, options)};  
+                }
+                else if(type=="themeSelect"){
+                    var options = [];
+                    for(rowId in themes.DATA){
+                        var themeId = getTableValue(themes, rowId, "theme_id");
+                        var themeName = getTableValue(themes, rowId, "theme_name");
+                        options.push({display: themeName, value: themeId});
+                    }
+                    cellMetaDataRow[valueColIndex] = {renderer: new BasicSelectCellRendererContainer(options)};            
+                }
+                cellMetaData.push(cellMetaDataRow);
+            }
+            settingTable.CELLMETADATA = cellMetaData;
+            return settingTable;
+        },
+        function(settingTable, themes){
+            return [settingTable, undefined];
+        },
+        dataBI, themesR.behaviour);
+        tableBI = TableWidgetB(instanceId+"_table", data, dataBI);    
+        insertDomB(tableBI, instanceId+"_container");
+    
+    }
+    this.destroy=function(){
+        DATA.deregister("aurora_settings", "");
+    }
+    this.build=function(){
+        return "<span id=\""+instanceId+"_container\">&nbsp;</span>";
+    }
+}     
+widgetTypes['WebpageSettingsWidget']=WebpageSettingsWidget;   
 function GroupsManagerWidget(instanceId, data){
     this.loader=function(){
         var dataR = DATA.getRemote("aurora_groups", "", NOT_READY, POLL_RATES.VERY_FAST);  //, NOT_READY, POLL_RATES.SLOW    
-        liftB(function(data){log(data.ROWMETADATA);}, dataR.behaviour);
         tableB = TableWidgetB(instanceId+"_table", data, dataR.behaviour);    
         insertDomB(tableB, instanceId+"_container");
-    
     }
     this.destroy=function(){
         DATA.deregister("aurora_groups", "");

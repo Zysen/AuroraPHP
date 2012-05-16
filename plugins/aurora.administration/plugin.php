@@ -8,51 +8,70 @@
     $behaviourManager->registerBehaviour("aurora_plugins", "getPlugins", "setPlugins");
     $behaviourManager->registerBehaviour("aurora_permissions", "getAuroraPermissions", "setAuroraPermissions");
     $behaviourManager->registerBehaviour("aurora_permissions_set", "getBPermmissions", "setBPermmissions");
+    $behaviourManager->registerBehaviour("aurora_settings", "getWebpageSettings", "setWebpageSettings");  
+    $behaviourManager->registerBehaviour("aurora_theme_list", "getThemeList", "setThemeList");
     
-   /* function getPluginPermissions($context){
+    function getThemeList($context){
         global $current_user;
         global $NO_PERMISSION;
-        if(!$current_user->canReadPermission("aurora_pluginPermissions"))
+        if(!$current_user->canReadPermission("aurora_theme_list"))
+            return $NO_PERMISSION;
+        
+        $ret = getEmptyTableDef();
+        $ret["COLUMNS"] = array(
+                array("reference"=>"theme_id", 'display'=>"ID", 'type'=>"int", 'visible'=>false, 'readonly'=>true),
+                array("reference"=>"theme_name", 'display'=>"Group", 'type'=>"string", 'visible'=>true, 'readonly'=>false)
+        );
+        
+        $result = mysql_query("SELECT * FROM `themes`;", getPrimarySQLConnection());   
+        while($row = mysql_fetch_array($result)){    
+            $ret["DATA"][count($ret["DATA"])] = array((int)$row['theme_id'], $row['theme_name']);
+        }        
+        return $ret;
+    }
+    function setThemeList($newData, $context){
+        global $current_user;
+        if(!$current_user->canWritePermission("aurora_theme_list"))
+            return $data;
+        return getGroups($context);
+    }
+    
+    function getWebpageSettings($context){
+        global $current_user;
+        global $NO_PERMISSION;
+        if(!$current_user->canReadPermission("aurora_settings"))
             return $NO_PERMISSION;
         $ret = getEmptyTableDef();  
         $ret["COLUMNS"] = array(
-                array("reference"=>"pluginPermissionId", 'display'=>"ID", 'type'=>"int", 'visible'=>false, 'readonly'=>true),
-                array("reference"=>"reference", 'display'=>"Group", 'type'=>"string", 'visible'=>true, 'readonly'=>false),
-                array("reference"=>"group_id", 'display'=>"Group", 'type'=>"int", 'visible'=>false, 'readonly'=>true),
-                array("reference"=>"user_id", 'display'=>"User", 'type'=>"int", 'visible'=>false, 'readonly'=>true),
-                array("reference"=>"type", 'display'=>"Type", 'type'=>"string", 'visible'=>false, 'readonly'=>true)
+                array("reference"=>"name", 'display'=>"Name", 'type'=>"int", 'visible'=>false, 'readonly'=>true),
+                array("reference"=>"description", 'display'=>"Description", 'type'=>"string", 'visible'=>true, 'readonly'=>true),
+                array("reference"=>"value", 'display'=>"Value", 'type'=>"int", 'visible'=>true, 'readonly'=>false),
+                array("reference"=>"type", 'display'=>"Type", 'type'=>"string", 'visible'=>false, 'readonly'=>false)
         );
         
-        $result = mysql_query("SELECT * FROM `plugin_permissions`;");
+        $result = mysql_query("SELECT * FROM `settings` WHERE `plugin`='$context';");
         while($row = mysql_fetch_array($result)){
-            $ret["DATA"][count($ret["DATA"])] = array((int)$row['plugin_permission_id'], $row['reference'], (int)$row['group_id'], (int)$row['user_id'], $row['type']);
+            $ret["DATA"][count($ret["DATA"])] = array($row['name'], $row['description'], $row['value'], $row['type']);
         }
+        $ret["TABLEMETADATA"] = array("permissions"=>array("canEdit"=>true, "canAdd"=>false, "canDelete"=>false));
+        $ret["COLUMNMETADATA"] = array(array("permissions"=>"R"),array("permissions"=>"R"),array("permissions"=>"RW"),array("permissions"=>"R"));
         return $ret; 
     }
-    function setPluginPermissions($data, $context){
+    function setWebpageSettings($data, $context){
         global $current_user;
-        if(!$current_user->canWritePermission("aurora_pluginPermissions"))
+        if(!$current_user->canWritePermission("aurora_settings"))
             return $data;
-        $existing = getPluginPermissions($context);
-        $existingData = $existing["DATA"];
         $settings = $data["DATA"];
-        compareAndDeleteRows("plugin_permissions", "plugin_permission_id", 0, $existingData, $settings);
         for($i=0; $i<count($settings);$i++){
             $setting = $settings[$i];
-            $permissionId = mysql_escape_string($setting[0]);
-            $permissionId = ($permissionId=="undefined")?'NULL':$permissionId; 
-            $reference = mysql_escape_string($setting[1]);
-            $groupId = mysql_escape_string($setting[2]);  
-            $userId = mysql_escape_string($setting[3]); 
-            $userId = ($userId=="undefined")?'NULL':$userId; 
-            foreach($existingData as $row){
-                if(!($reference==$existingData[1]&&($groupId==$existingData[2]||$groupId==$existingData[3]))){
-                    mysql_query("INSERT INTO `plugin_permissions` (`plugin_permission_id`, `reference`, `group_id`, `user_id`) VALUES($permissionId, $reference, $groupId, $userId);", getPrimarySQLConnection());
-                }
-            }   
+            $name = mysql_escape_string($setting[0]);
+            $description = mysql_escape_string($setting[1]);
+            $value = mysql_escape_string($setting[2]);  
+            $type = mysql_escape_string($setting[3]); 
+            mysql_query("UPDATE `settings` SET `value`='$value' WHERE `name`='$name' LIMIT 1;", getPrimarySQLConnection());
         }
-        return getPluginPermissions($context);
-    }   */
+        return getWebpageSettings($context);
+    }   
     
     function getGroups($context){
         global $current_user;

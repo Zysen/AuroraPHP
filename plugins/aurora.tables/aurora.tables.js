@@ -1,8 +1,128 @@
 var tableBackgroundColor = "#FFFFFF";
 var tableBackgroundColorSelected = "#b3ddf8";
 var CELL_RENDERERS = {"boolean":BooleanCellRenderer, "string":StringCellRenderer, "int":IntegerCellRenderer, "gender":GenderColumn, "date":DateColumn, "RW": ReadWriteColumn, "readWrite": ReadWriteColumn};
+
+function BasicSelectCellRenderer(options, value, cell, width){
+    var element = document.createElement("select");
+    var selectedElement = 0;
+    for(optionIndex in options){
+        var option = options[optionIndex];
+        var optionElement = document.createElement("option");
+        optionElement.value = option.value;
+        optionElement.innerHTML = option.display;
+        element.appendChild(optionElement);
+        if(optionElement.value==value)
+            selectedElement = optionIndex;
+    }    
+    element.selectedIndex = selectedElement;
+    cell.appendChild(element);
+    
+    this.render = function(){
+        element.disabled = true;
+    }
+    this.getValue = function(){
+        return element.value;
+    }
+    this.renderEditor = function(){
+        element.disabled = false;   
+    }
+    this.setSelected = function(selected){ 
+        if(selected){
+            cell.className="TableWidgetCellSelected"; 
+           // cell.style.backgroundColor=tableBackgroundColorSelected; 
+        }                                  
+        else{
+            cell.className="TableWidgetCell"; 
+            //cell.style.backgroundColor=tableBackgroundColor; 
+        }
+    }
+    this.setValue = function(newValue){
+        element.value = newValue;
+    }
+    this.getUpdateEvent = function(){
+        return extractValueE(element);
+    }
+}
+function BasicSelectCellRendererContainer(options){
+    this.getCellRenderer = function(value, cell, width){
+        return new BasicSelectCellRenderer(options, value, cell, width);
+    }
+}
+function BasicRadioCellRenderer(name, options, value, cell, width){
+    this.elements = [];
+    this.events = new Array();
+    for(optionIndex in options){
+        var div = document.createElement("div");
+        div.style.textAlign = "center";
+        var option = options[optionIndex];
+        var element = document.createElement("input");
+        element.type = "radio";
+        element.name = name;
+        element.value = option.value;
+        div.appendChild(document.createTextNode(option.display));
+        div.appendChild(element);
+        cell.appendChild(div);
+        this.elements.push(element);
+        if(element.value == value)
+            element.checked = true;
+        var event = extractEventE(element, "change");
+        this.events.push(event);
+    }
+    this.valueChangeEventE = mergeE.apply(this, this.events);  
+    this.render = function(){
+        this.enabled(false);
+    }
+    this.enabled = function(en){
+        for(elementIndex in this.elements){
+            var element = this.elements[elementIndex];
+            element.disabled = !en;
+        }
+    }
+    this.getValue = function(){
+        for(elementIndex in this.elements){
+            var element = this.elements[elementIndex];
+            if(element.checked==true){
+                return element.value;
+            }
+        }
+        return "";
+    }
+    this.renderEditor = function(){
+        this.enabled(true);
+    }
+    this.setSelected = function(selected){ 
+        if(selected){
+            cell.className="TableWidgetCellSelected"; 
+           // cell.style.backgroundColor=tableBackgroundColorSelected; 
+        }                                  
+        else{
+            cell.className="TableWidgetCell"; 
+            //cell.style.backgroundColor=tableBackgroundColor; 
+        }
+    }
+    this.setValue = function(newValue){
+        for(elementIndex in this.elements){
+            var element = this.elements[elementIndex];
+            if(element.value==newValue){
+               element.checked = true
+            }
+            else
+                element.checked = false;
+        }
+    }
+    this.getUpdateEvent = function(){
+        return this.valueChangeEventE;
+    }
+}
+function BasicRadioCellRendererContainer(name, options){
+    this.getCellRenderer = function(value, cell, width){
+        return new BasicRadioCellRenderer(name, options, value, cell, width);
+    }
+}
 function BasicCellRenderer(type){
     this.renderClass = CELL_RENDERERS[type]; 
+    if(this.renderClass==undefined)
+        log("UNDEFINED RENDERCLASS "+type);
     this.getCellRenderer = function(value, cell, width){
         return new this.renderClass(value, cell, width);
     }
@@ -733,12 +853,18 @@ if(renderedData==NOT_READY||rowSelections==NOT_READY)
     return domTableB
 }
 function getTableValue(table, rowIndex, columnName){
-	for(colIndex in table.COLUMNS){
-		if(table.COLUMNS[colIndex].reference==columnName){
-			return table.DATA[rowIndex][colIndex];
-		}
-	}
-	return null;
+	var colIndex = getColumnIndex(table, columnName);
+    if(colIndex==null)
+        return null;
+    return table.DATA[rowIndex][colIndex];
+}
+function getColumnIndex(table, columnName){
+    for(colIndex in table.COLUMNS){
+        if(table.COLUMNS[colIndex].reference==columnName){
+            return colIndex;
+        }
+    }
+    return null;
 }
 function JoinTableB(table1B, table2B, columnId){
     return liftBI(function(table1, table2){
