@@ -517,7 +517,7 @@ var Behavior = function(eventStream, initialValue, downstreamTransformation, ups
 			}
 		}
 		else{
-			log("Upstream transformation returned undefined");		
+			log("Upstream transformation returned undefined "+upstreamTransformation);		
 		}
 		behave.sendBehavior(value);			
 	}

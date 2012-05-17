@@ -12,9 +12,10 @@ this.hash = "HASH";
         },
         function(value){
             //log("Upstream Event: "+key);
-	    parent.data = value;
+            parent.data = value;
             parent.hash = null;
             parent.dirty=true;
+            return [undefined];
         },
         this.originBehaviour);
     this.requiresPoll = function(){
@@ -100,6 +101,7 @@ function BehaviourManager(){
         return this.data[key].behaviour;
     }
     this.getDataRequest = function(){
+        //log("Data request");
         var arr = new Array();       
         for(index in this.data){
             var dataR = this.data[index];                            //rDatashow
@@ -107,7 +109,8 @@ function BehaviourManager(){
                 var packet = dataR.dirty?{key: dataR.key, context: dataR.context, data: dataR.data}:{key: dataR.key, context: dataR.context, hash: dataR.hash};
                 arr.push(packet);
             }
-        }                  
+        }   
+        arr = cleanFunctions(arr);              
         return {database: arr};
     }
     this.startPolling = function(){
@@ -123,7 +126,7 @@ function BehaviourManager(){
         }, nowB, lastRespTmB);
         var requestReadyE = requestOkayB.changes().filterE(function(x) { return x; }).filterE(function(x){return !DATA.isEmpty()}); 
         var dataRequestReady = requestReadyE.snapshotE(nowB).mapE(function(x){return DATA.getDataRequest();}); 
-        var serverResponseE = getAjaxRequestE(dataRequestReady, SETTINGS.scriptPath+'getBehaviours');
+        var serverResponseE = sendServerRequestE(dataRequestReady, SETTINGS.scriptPath+'getBehaviours');
         var localSyncE = serverResponseE.mapE(function(retData){                  
             for(key in retData){
                 var dataRow = retData[key];
@@ -140,4 +143,25 @@ function BehaviourManager(){
         });
         //respE.sendEvent(true);
     }
+}
+function sendServerRequestE(triggerE, url, timeout){
+    timeout = (timeout==undefined)?15000:timeout;
+    var rec = receiverE();                       
+    triggerE.mapE(function(requestData){
+        if(requestData.database.length>0){
+        jQuery.ajax({
+            type: "post",
+            async: false,
+            data: requestData,
+            dataType: 'json',
+            url: url,
+            timeout: timeout,
+            success: function(data){
+                rec.sendEvent(data);
+            },
+            error: function(data){/*rec.sendEvent(data);*/}
+        });
+        }
+    });                                          
+    return rec;
 }

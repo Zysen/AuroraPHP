@@ -48,7 +48,7 @@ class AuroraPage {
             $this->_name = $name;
             $this->_theme = $settings['aurora_theme'];
             $this->_themeName = $this->lookupThemeName($this->_theme);
-            $this->registerScript($scriptPath."js/jquery-1.7.1.min.js", false);
+            $this->registerScript($scriptPath."js/jquery-1.7.1.js", false);
             $this->registerScript("js/jquery-ui-1.8.16.custom.min.js");
 
            $this->registerScript("js/flapjax-2.1-inverse.js");

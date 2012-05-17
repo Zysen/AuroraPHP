@@ -1,15 +1,17 @@
 /* BASE WIDGETS */        
 function WebpageSettingsWidget(instanceId, data){
     this.loader=function(){
-        var themesR = DATA.getRemote("aurora_theme_list", "aurora", NOT_READY, POLL_RATES.VERY_SLOW);  //, NOT_READY, POLL_RATES.SLOW 
+        var themesR = DATA.getRemote("aurora_theme_list", "aurora", NOT_READY, POLL_RATES.VERY_FAST);  //, NOT_READY, POLL_RATES.SLOW 
         var dataR = DATA.getRemote("aurora_settings", "aurora", NOT_READY, POLL_RATES.VERY_FAST);  //, NOT_READY, POLL_RATES.SLOW    
         var dataBI = dataR.behaviour;
-        rendererTypedB = liftBI(
+        var rendererTypedB = liftBI(
         function(settingTable, themes){
             if(settingTable==NOT_READY||themes==NOT_READY)
                 return NOT_READY;
             if(settingTable==NO_PERMISSION||themes==NO_PERMISSION)
                 return NO_PERMISSION;
+                
+            var settingTable = clone(settingTable);
             var cellMetaData = [];
             for(rowIndex in settingTable.DATA){
                 var cellMetaDataRow = [];
@@ -21,11 +23,13 @@ function WebpageSettingsWidget(instanceId, data){
                 
                                                                               
                 if(CELL_RENDERERS[type]!=undefined){
-                    cellMetaDataRow[valueColIndex] = {renderer: new BasicCellRenderer(type)};    
+                    var renderer = new BasicCellRenderer(type, name);
+                    cellMetaDataRow[valueColIndex] = {renderer: renderer};    
                 }
                 else if(type=="userDisplay"){
                     var options = [{display: "Username", value: 1}, {display: "Firstname", value: 2}, {display: "Full Name", value: 3}];
-                    cellMetaDataRow[valueColIndex] = {renderer: new BasicRadioCellRendererContainer(name, options)};  
+                    var renderer = new BasicRadioCellRendererContainer(name, options);
+                    cellMetaDataRow[valueColIndex] = {renderer: renderer};  
                 }
                 else if(type=="themeSelect"){
                     var options = [];
@@ -34,7 +38,8 @@ function WebpageSettingsWidget(instanceId, data){
                         var themeName = getTableValue(themes, rowId, "theme_name");
                         options.push({display: themeName, value: themeId});
                     }
-                    cellMetaDataRow[valueColIndex] = {renderer: new BasicSelectCellRendererContainer(options)};            
+                    var renderer = new BasicSelectCellRendererContainer(options);
+                    cellMetaDataRow[valueColIndex] = {renderer: renderer};            
                 }
                 cellMetaData.push(cellMetaDataRow);
             }
@@ -42,10 +47,11 @@ function WebpageSettingsWidget(instanceId, data){
             return settingTable;
         },
         function(settingTable, themes){
+           // var settingTable = clone(settingTable);
             return [settingTable, undefined];
         },
-        dataBI, themesR.behaviour);
-        tableBI = TableWidgetB(instanceId+"_table", data, dataBI);    
+        dataBI, themesR.behaviour);   
+        tableBI = TableWidgetB(instanceId+"_table", data, rendererTypedB);    
         insertDomB(tableBI, instanceId+"_container");
     
     }

@@ -33,7 +33,7 @@
         global $current_user;
         if(!$current_user->canWritePermission("aurora_theme_list"))
             return $data;
-        return getGroups($context);
+        return getThemeList($context);
     }
     
     function getWebpageSettings($context){
@@ -51,7 +51,10 @@
         
         $result = mysql_query("SELECT * FROM `settings` WHERE `plugin`='$context';");
         while($row = mysql_fetch_array($result)){
-            $ret["DATA"][count($ret["DATA"])] = array($row['name'], $row['description'], $row['value'], $row['type']);
+            $value = $row['value'];
+            if($row['type']=="boolean")
+                $value = (boolean)$value;
+            $ret["DATA"][count($ret["DATA"])] = array($row['name'], $row['description'], $value, $row['type']);
         }
         $ret["TABLEMETADATA"] = array("permissions"=>array("canEdit"=>true, "canAdd"=>false, "canDelete"=>false));
         $ret["COLUMNMETADATA"] = array(array("permissions"=>"R"),array("permissions"=>"R"),array("permissions"=>"RW"),array("permissions"=>"R"));

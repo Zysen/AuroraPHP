@@ -1,7 +1,40 @@
 var tableBackgroundColor = "#FFFFFF";
 var tableBackgroundColorSelected = "#b3ddf8";
-var CELL_RENDERERS = {"boolean":BooleanCellRenderer, "string":StringCellRenderer, "int":IntegerCellRenderer, "gender":GenderColumn, "date":DateColumn, "RW": ReadWriteColumn, "readWrite": ReadWriteColumn};
+var CELL_RENDERERS = {"boolean":BooleanCellRenderer, "string":StringCellRenderer, "int":StringCellRenderer, "gender":GenderColumn, "date":DateColumn, "RW": ReadWriteColumn, "readWrite": ReadWriteColumn};
+                                                                                     //IntegerCellRenderer
 
+
+
+function cleanFunctions(obj) {
+    if(jQuery.isArray(obj)||jQuery.type(obj) === "object"){
+        for (var name in obj){
+            obj[name] = cleanFunctions(obj[name]);
+        }
+    }
+    else if(jQuery.isFunction(obj)){
+        return undefined;   
+    }
+    return obj;
+}
+
+function cleanRenderers(table){
+    for(colIndex in table.COLUMNMETADATA){
+        table.COLUMNMETADATA[colIndex].renderer = undefined;    
+    }
+    for(rowIndex in table.ROWMETADATA){
+        table.ROWMETADATA[rowIndex].renderer = undefined;    
+    }
+    for(rowIndex in table.CELLMETADATA){
+        var row = table.CELLMETADATA[rowIndex];
+        if(row!=undefined){
+            for(colIndex in row){
+                var cell = row[colIndex];
+                cell.renderer = undefined; 
+            }
+        }    
+    }
+    return table;
+}
 function BasicSelectCellRenderer(options, value, cell, width){
     var element = document.createElement("select");
     var selectedElement = 0;
@@ -43,7 +76,7 @@ function BasicSelectCellRenderer(options, value, cell, width){
         return extractValueE(element);
     }
 }
-function BasicSelectCellRendererContainer(options){
+function BasicSelectCellRendererContainer(options){       
     this.getCellRenderer = function(value, cell, width){
         return new BasicSelectCellRenderer(options, value, cell, width);
     }
@@ -119,12 +152,10 @@ function BasicRadioCellRendererContainer(name, options){
         return new BasicRadioCellRenderer(name, options, value, cell, width);
     }
 }
-function BasicCellRenderer(type){
-    this.renderClass = CELL_RENDERERS[type]; 
-    if(this.renderClass==undefined)
-        log("UNDEFINED RENDERCLASS "+type);
+function BasicCellRenderer(type, name){
+    var renderClass = CELL_RENDERERS[type]; 
     this.getCellRenderer = function(value, cell, width){
-        return new this.renderClass(value, cell, width);
+        return new renderClass(value, cell, width);
     }
 }
 function DefaultCellRenderer(value, cell, width){
@@ -388,11 +419,12 @@ function StringCellRenderer(value, cell, width){
     }
 }
 function IntegerCellRenderer(value, cell, width){
+    value = (value==undefined||value==null)?"":value;
     var displayDom = document.createElement("div");
-    displayDom.className = "TableWidgetIntegerCellText";
+    displayDom.className = "TableWidgetStringCellText";     //TableWidgetIntegerCellText
     cell.className="TableWidgetStringCell";
     var textbox = document.createElement("input");
-    textbox.className = "TableWidgetIntegerCellTextBox";
+//    textbox.className = "TableWidgetStringCellTextBox";       //TableWidgetIntegerCellTextBox
     textbox.type='text';
     textbox.value = value;
     //textbox.disabled = true;                 
@@ -402,20 +434,23 @@ function IntegerCellRenderer(value, cell, width){
             cell.appendChild(displayDom);
     }
     this.renderEditor = function(){
-            textbox.value = value;
             var scrollWidth = (cell.scrollWidth==0)?cell.style.width:cell.scrollWidth+"px";
             if(width!=undefined){
                 textbox.style.width = width+"px";
-            }
+            }    
             cell.removeChildren();
             cell.appendChild(textbox);
-    }
+    }                                         
     this.setSelected = function(selected){
+        
         if(selected){
-            cell.className="TableWidgetCellSelected"; 
+            cell.className="TableWidgetStringCellSelected"; 
+            //cell.style.backgroundColor=tableBackgroundColorSelected;
         }
-        else
-            cell.className="TableWidgetCell"; 
+        else{
+            cell.className="TableWidgetStringCell"; 
+            ///cell.style.backgroundColor=tableBackgroundColor;
+        }
     }
     this.getValue = function(){
         return textbox.value;
@@ -426,7 +461,7 @@ function IntegerCellRenderer(value, cell, width){
     this.getUpdateEvent = function(){
         return extractValueE(textbox);
     }
-} 
+}
 
 function TableWidgetB(instanceId, widgetData, dataB){
     var table = document.createElement("table");
@@ -472,6 +507,7 @@ function TableWidgetB(instanceId, widgetData, dataB){
         stopEventBubble(ev);
         //ev.preventDefault();
         //return NOT_READY;
+       // log("Row clicked");
         var target = (ev.target==undefined)?ev.srcElement:ev.target;
         jQuery(target).focus();
         var cell = findParentNodeWithTag(target, "td");
@@ -479,7 +515,7 @@ function TableWidgetB(instanceId, widgetData, dataB){
         var table =findParentNodeWithTag(row, "table");
             if(row!=undefined){
                 var clickedIndex = jQuery(row).prevAll().length;
-                if(clickedIndex<=0){
+                if(clickedIndex<=0 || (table.rows.length-1)==clickedIndex){
                     return NOT_READY;
                 }
                 return {clickedIndex: clickedIndex, shiftKey: ev.shiftKey, ctrlKey: ev.ctrlKey, target: target};
@@ -493,6 +529,7 @@ function TableWidgetB(instanceId, widgetData, dataB){
     var rowSelectionsE = tableSelectionRowIndexE.collectE([],function(newElement,arr) {
         if(newElement==NOT_READY)
             return []; 
+           // log("Col");
         var clickedIndex = newElement.clickedIndex;
         var shiftKey = newElement.shiftKey;
         var ctrlKey = newElement.ctrlKey;
@@ -561,8 +598,6 @@ function TableWidgetB(instanceId, widgetData, dataB){
             table.appendChild(element);
             return [new Array(), table, new Array(), document.createElement("div")];
         }  
-	//log("TABLE DATA");
-        //log(tableData);
         var headingTableRow = document.createElement("tr");
         var visibleColumnCount = 0;
         var columns = tableData.COLUMNS;
@@ -592,16 +627,13 @@ function TableWidgetB(instanceId, widgetData, dataB){
             var domRow = document.createElement("tr");
             var dataRow = data[index];
             var rowMetaData = tableData.ROWMETADATA[index];
-            /*if(rowMetaData!=undefined){
-            
-            }*/
             var rowPermissions = (rowMetaData!=undefined&&rowMetaData.permissions!=undefined)?rowMetaData.permissions:"RW";
             if(renderedTable[index]==undefined)
                 renderedTable[index] = new Array();
             for(cellIndex in columns){
                 var columnMetaData = tableData.COLUMNMETADATA[cellIndex];
                 var columnPermissions = columnMetaData==undefined||columnMetaData.permissions==undefined?"RW":columnMetaData.permissions;
-                var cellMetaData = (tableData.CELLMETADATA[index]==undefined)?undefined:tableData.CELLMETADATA[index][cellIndex];
+                var cellMetaData = (tableData.CELLMETADATA==undefined||tableData.CELLMETADATA[index]==undefined)?undefined:tableData.CELLMETADATA[index][cellIndex];
                 var cellPermissions = cellMetaData==undefined||cellMetaData.permissions==undefined?"RW":cellMetaData.permissions; 
                 var rowNumber = parseInt(cellIndex)+1;
                 var cell = document.createElement("td");
@@ -610,10 +642,11 @@ function TableWidgetB(instanceId, widgetData, dataB){
 
                 if(customRenderer==undefined){
                     var renderClass = (CELL_RENDERERS[column.type]==undefined)?DefaultCellRenderer:CELL_RENDERERS[column.type];
-                    renderer = new renderClass(dataRow[cellIndex], cell, column.width);
+                    var renderer = new renderClass(dataRow[cellIndex], cell, column.width);
                 }
-                else
-                    renderer = customRenderer.getCellRenderer(dataRow[cellIndex], cell, column.width);  
+                else{
+                    var renderer = customRenderer.getCellRenderer(dataRow[cellIndex], cell, column.width); 
+                } 
                 
 		if(tablePermissions==true&&rowPermissions=="RW"&&columnPermissions=="RW"&&cellPermissions=="RW")
                     renderer.renderEditor();    
@@ -654,7 +687,7 @@ function TableWidgetB(instanceId, widgetData, dataB){
                     addRow.appendChild(cell);
                 }
             }                                                                                           
-            table.appendChild(addRow);
+            table.appendChild(addRow); 
             table.appendChild(controlsRow);
         return [renderedTable, table, tableData, newRowsRenderedTable];
         // Table of Cell Renderers, The Dom Table, the raw table data
@@ -662,9 +695,19 @@ function TableWidgetB(instanceId, widgetData, dataB){
         return [value];
     }, dataB);
     
-    var filteredRowSelectionsB = liftB(function(rowSelections, pageRendered){
-        var renderedTable = pageRendered[0]
-        var newRowsRenderedTable = pageRendered[3];
+    var renderedTableB = liftB(function(pageRendered){
+        return pageRendered[0];
+    }, pageRenderedB); 
+    
+    var domTableB = liftB(function(pageRendered){
+        return pageRendered[1];
+    }, pageRenderedB);
+    
+    var newRowsRenderedTableB = liftB(function(pageRendered){
+        return pageRendered[3];
+    }, pageRenderedB);  
+    
+    var filteredRowSelectionsB = liftB(function(rowSelections, renderedTable, newRowsRenderedTable){
             for(index in rowSelections){
                 var targetIndex = rowSelections[index];
                 if(targetIndex>renderedTable.length){
@@ -672,65 +715,55 @@ function TableWidgetB(instanceId, widgetData, dataB){
                 }
             }
         return rowSelections;
-    }, rowSelectionsB, pageRenderedB); 
+    }, rowSelectionsB, renderedTableB, newRowsRenderedTableB); 
    var rowSelectionsEmptyB = filteredRowSelectionsB.liftB(function(rowSelections){return rowSelections.length==0;});      
     
     
-    var renderedRowSelectionsB = liftB(function(tableData, rowSelections){
-        if(tableData==NOT_READY||rowSelections==NOT_READY)
+    var renderedRowSelectionsB = liftB(function(renderedTable, rowSelections){
+        if(renderedTable==NOT_READY||rowSelections==NOT_READY)
             return NOT_READY; 
         var c = document.createElement("div");
-            for(index in tableData[0]){   
+            for(index in renderedTable){   
                 var isSelected = arrayContains(rowSelections, parseInt(index)+1);
-                for(cellIndex in tableData[0][index]){
-                    tableData[0][index][cellIndex].renderer.setSelected(isSelected);
+                for(cellIndex in renderedTable[index]){
+                    //log("Setting Selected");
+                    renderedTable[index][cellIndex].renderer.setSelected(isSelected);
                 }
             }
-    }, pageRenderedB, rowSelectionsB);
+    }, renderedTableB, rowSelectionsB);
     
     
-    var domTableB = liftB(function(pageRendered){
-	//log("domTableB");
-        return pageRendered[1];
-    }, pageRenderedB);    
+       
     
-    var tableAllowsAddB = pageRenderedB.liftB(function(data){
+    var tableAllowsAddB = dataB.liftB(function(tableData){
 	//log("tableAllowsAddB");
-	var tableData = data[2];
 	return (tableData.TABLEMETADATA!=undefined&&tableData.TABLEMETADATA.permissions!=undefined&&tableData.TABLEMETADATA.permissions.canAdd!=undefined)?tableData.TABLEMETADATA.permissions.canAdd:true;
     });
-    var tableAllowsDeleteB = pageRenderedB.liftB(function(data){
+    var tableAllowsDeleteB = dataB.liftB(function(tableData){
 	//log(tableAllowsDeleteB);
-	var tableData = data[2];
 	return (tableData.TABLEMETADATA!=undefined&&tableData.TABLEMETADATA.permissions!=undefined&&tableData.TABLEMETADATA.permissions.canDelete!=undefined)?tableData.TABLEMETADATA.permissions.canDelete:true;
     });
     
-    var tableDataChangedB = pageRenderedB.liftB(function(pageRendered){
-        if(pageRendered==NOT_READY||pageRendered[0].length==0)
+    var tableDataChangedB = liftB(function(rendererTable, domTable){
+        if(rendererTable==NOT_READY||rendererTable.length==0||domTable==NOT_READY)
             return receiverE().startsWith(NOT_READY);
-	//log("tableDataChangedB");
-        var rendererTable = pageRendered[0];
-        var domTable = pageRendered[1];
-        var dataTable = pageRendered[2][0];
-        /*var newRenderTable = pageRendered[3];*/
+//	log("tableDataChangedB");
         var updateEvents = new Array();
         for(rowIndex in rendererTable){
             for(colIndex in rendererTable[rowIndex]){
+                
                 updateE = rendererTable[rowIndex][colIndex].renderer.getUpdateEvent();
                 updateEvents.push(updateE);
             }
         }
-        /*for(rowIndex in newRenderTable){
-            for(colIndex in newRenderTable[rowIndex]){
-                updateE = newRenderTable[rowIndex][colIndex].renderer.getUpdateEvent();
-                updateEvents.push(updateE);
-            }
-        } */
+        //log("ZZZ");
         return mergeE.apply(this, updateEvents).startsWith(false);   
-    }).switchB();
+    },
+    renderedTableB, domTableB).switchB();
     
    var userDataChangeB = orB(tableDataChangedB.changes().snapshotE(pageRenderedB).mapE(function(renderedData){
         // Table of Cell Renderers, The Dom Table, the raw table data
+       // log("Checking Change");
         var rendererTable = renderedData[0];
         var domTable = renderedData[1];
         var dataTable = renderedData[2].DATA;
@@ -739,12 +772,15 @@ function TableWidgetB(instanceId, widgetData, dataB){
             for(colIndex in rendererTable[rowIndex]){
                 var renderCell = rendererTable[rowIndex][colIndex];
                 var dataCell = dataTable[rowIndex][colIndex];
+                //log("Getting Renderer Value");
                 if(renderCell.renderer.getValue()!=dataCell){
+                    log(jQuery.type(renderCell.renderer.getValue())+" "+jQuery.type(dataCell))
+                    log(renderCell.renderer.getValue()+"!="+dataCell);
                     return true; 
                 }
             } 
         }
-        
+       // log("Checking Change3");
         return false;
     }).startsWith(false), showAddRowsB); 
     /*
@@ -757,7 +793,7 @@ function TableWidgetB(instanceId, widgetData, dataB){
     insertValueB(ifB(andB(notB(showAddRowsB), tableAllowsAddB), 'inline', 'none'),addRowButton, 'style', 'display');
     insertValueB(ifB(rowSelectionsEmptyB, 'auto', 'pointer'),deleteRowButton, 'style', 'cursor');
     insertValueB(ifB(tableAllowsDeleteB, 'inline', 'none'),deleteRowButton, 'style', 'display');
-    insertValueB(ifB(notB(rowSelectionsEmptyB), SETTINGS.theme.path+'delete.png', SETTINGS.theme.path+'delete_disabled.png'),deleteRowButton, 'src');
+    insertValueB(ifB(notB(rowSelectionsEmptyB), SETTINGS.theme.path+'delete.png', SETTINGS.theme.path+'delete_disabled.png'),deleteRowButton, 'src'); 
  
 
     /*
@@ -768,7 +804,8 @@ function TableWidgetB(instanceId, widgetData, dataB){
         dataB.sendEvent(data); 
     });
     saveButtonPressedE.snapshotE(liftB(function(pageRendered, showAddRows){return [pageRendered, showAddRows]}, pageRenderedB,showAddRowsB)).mapE(function(data){
-//log("saveButtonPressedE");        
+//log("saveButtonPressedE");    
+    log("save pressed");    
 	var renderedTable = data[0][0];
         var dataTable = data[0][2].DATA;
         var columns = data[0][2].COLUMNS;
@@ -782,6 +819,7 @@ function TableWidgetB(instanceId, widgetData, dataB){
         dataTable[dataRowIndex] = Array();
             for(c=0;c<renderedTable[renderRowIndex].length;c++){
                 var cell = renderedTable[renderRowIndex][c];
+               //log("Save Button Get Renderer ");
                 var value = cell.renderer.getValue();
                 dataTable[dataRowIndex][c] = value;
             }
@@ -793,6 +831,7 @@ function TableWidgetB(instanceId, widgetData, dataB){
                     for(c=0;c<renderedTable[r].length;c++){
                         //log();
                         var cell = renderedTable[r][c];
+                        //log("Save Button Get Renderer "); 
                         var value = cell.renderer.getValue();
                         dataTable[r][c] = value;
                     }
@@ -801,6 +840,7 @@ function TableWidgetB(instanceId, widgetData, dataB){
                 for(rowIndex=0;rowIndex<newRenderedTable.length;rowIndex++){
                     for(c=0;c<newRenderedTable[rowIndex].length;c++){
                         var cell = newRenderedTable[rowIndex][c];
+                        //log("Save Button Get Renderer "); 
                         var value = cell.renderer.getValue();
                         if(dataTable[rowIndex+r]==undefined)
                             dataTable[rowIndex+r] = new Array();
@@ -826,6 +866,7 @@ function TableWidgetB(instanceId, widgetData, dataB){
 //log(pageDataAndRowSelectionsB);        
 if(renderedData==NOT_READY||rowSelections==NOT_READY)
             return NOT_READY;
+          //  log("Page and row selections");
         return {renderedData: renderedData, rowSelections: rowSelections};
     }, pageRenderedB, rowSelectionsB);
     var deleteTableRowsB = deleteButtonPressedE.snapshotE(pageDataAndRowSelectionsB).startsWith(NOT_READY);
