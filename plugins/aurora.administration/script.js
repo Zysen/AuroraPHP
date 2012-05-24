@@ -1,8 +1,10 @@
 /* BASE WIDGETS */        
 function WebpageSettingsWidget(instanceId, data){
     this.loader=function(){
-        var themesR = DATA.getRemote("aurora_theme_list", "aurora", NOT_READY, POLL_RATES.VERY_FAST);  //, NOT_READY, POLL_RATES.SLOW 
-        var dataR = DATA.getRemote("aurora_settings", "aurora", NOT_READY, POLL_RATES.VERY_FAST);  //, NOT_READY, POLL_RATES.SLOW    
+        
+        var targetPlugin = (data!=undefined&&data.plugin!=undefined)?data.plugin:"aurora";
+        var themesR = DATA.getRemote("aurora_theme_list", "", NOT_READY, POLL_RATES.VERY_FAST);  //, NOT_READY, POLL_RATES.SLOW 
+        var dataR = DATA.getRemote("aurora_settings", targetPlugin, NOT_READY, POLL_RATES.VERY_FAST);  //, NOT_READY, POLL_RATES.SLOW    
         var dataBI = dataR.behaviour;
         var rendererTypedB = liftBI(
         function(settingTable, themes){

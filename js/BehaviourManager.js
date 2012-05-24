@@ -51,7 +51,7 @@ function BehaviourManager(){
 
     this.getRemote = function(key, context, initialValue, pollRate){
         var key2 = key;
-        if(context=="_"||(context!='undefined'&&context!=null&&context.length!=0)){
+        if(context=="_"||(context!=undefined&&context!='undefined'&&context!=null&&context.length!=0)){
             key2 = new CompositKey(key, context).getKey();
         }
         initialValue = (initialValue==undefined)?NOT_READY:initialValue;
@@ -62,7 +62,39 @@ function BehaviourManager(){
             this.data[key2].pollRate = pollRate;         
         return this.data[key2]; 
     }
-    this.registerRemote=function(key){
+    this.getE = function(key, context){
+        var key2 = key;
+        if(context=="_"||(context!=undefined&&context!='undefined'&&context!=null&&context.length!=0)){
+            key2 = new CompositKey(key, context).getKey();
+        }
+        if(this.localData[key2]==undefined)
+            this.localData[key2] = receiverE();
+        return this.localData[key2];
+    }
+    this.getB = function(key, context){
+        var key2 = key;
+        if(context=="_"||(context!=undefined&&context!='undefined'&&context!=null&&context.length!=0)){
+            key2 = new CompositKey(key, context).getKey();
+        }
+        if(this.localData[key2]==undefined){
+            this.localData[key2] = liftBI(function(value){
+                return value;
+            }, function(value){
+                return [value];
+            }, receiverE().startsWith(NOT_READY));
+        }
+        return this.localData[key2];
+    }
+    /*this.getB = function(key, context){
+        var key2 = key;
+        if(context=="_"||(context!=undefined&&context!='undefined'&&context!=null&&context.length!=0)){
+            key2 = new CompositKey(key, context).getKey();
+        }
+        if(this.localData[key2]==undefined)
+            this.localData[key2] = receiverE().startsWithI(NOT_READY);
+        return this.localData[key2];
+    }     */
+    /*this.registerRemote=function(key){
         this.availableRemotes.push(key);
     }
     this.register=function(key, context, behaviour){
@@ -73,7 +105,7 @@ function BehaviourManager(){
             this.localData[key] = new Array();
         this.localData[key][context] = behaviour;
         return this.localData[key][context]; 
-    }
+    }*/
     this.deregister = function(key, context){
         context = (context=='undefined'||context==null||context.length==0)?"_":context;
         key = new CompositKey(key, context).getKey();

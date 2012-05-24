@@ -40,6 +40,6 @@ normalFontStyle
     ['Image','HorizontalRule','SpecialChar', 'Link','Unlink'],'/',
     ['NumberedList','BulletedList','Outdent','Indent'],              //'-',
     ['Bold','Italic','Underline','Strike', 'Subscript','Superscript', 'JustifyLeft','JustifyCenter','JustifyRight', 'TextColor','BGColor'],
-    ['Styles','Font','FontSize'],
+    ['Styles','Font','FontSize'],['auroraWidgetSelector'],
     ];
 };

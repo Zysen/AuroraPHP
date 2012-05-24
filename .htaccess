@@ -1,3 +1,3 @@
 RewriteEngine on
-RewriteCond $1 !^(index\.php|plugins|resources|plugins/auroraBehaviours|scripts|artis*|.*\.html|images|js|.*\.css|.*\.js|content|themes|robots\.txt|phpinfo\.php|phpmyadmin)
+RewriteCond $1 !^(index\.php|phpvirtualbox|plugins|resources|plugins/auroraBehaviours|scripts|artis*|.*\.html|images|js|.*\.css|.*\.js|content|themes|robots\.txt|phpinfo\.php|phpmyadmin)
 RewriteRule ^(.*)$ index.php/$1 [L]

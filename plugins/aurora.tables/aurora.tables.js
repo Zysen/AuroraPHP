@@ -1,6 +1,6 @@
 var tableBackgroundColor = "#FFFFFF";
 var tableBackgroundColorSelected = "#b3ddf8";
-var CELL_RENDERERS = {"boolean":BooleanCellRenderer, "string":StringCellRenderer, "int":StringCellRenderer, "gender":GenderColumn, "date":DateColumn, "RW": ReadWriteColumn, "readWrite": ReadWriteColumn};
+var CELL_RENDERERS = {"boolean":BooleanCellRenderer, "string":StringCellRenderer, "int":IntegerCellRenderer, "gender":GenderColumn, "date":DateColumn, "RW": ReadWriteColumn, "readWrite": ReadWriteColumn};
                                                                                      //IntegerCellRenderer
 
 
@@ -189,7 +189,7 @@ function BooleanCellRenderer(value, cell, width){
     var value = (value!=undefined&&(value=="1"||value==true||value=="true"))?true:false;
     var checkbox = document.createElement("input");
     checkbox.type='checkbox';
-    checkbox.checked = (value==undefined||value==null||value=="")?false:value;  
+    checkbox.checked = value;  
     cell.className="TableWidgetBooleanCell";
     checkbox.disabled = true; 
     
@@ -453,7 +453,7 @@ function IntegerCellRenderer(value, cell, width){
         }
     }
     this.getValue = function(){
-        return textbox.value;
+        return parseFloat(textbox.value);
     }
     this.setValue = function(newValue){
         textbox.value = newValue;
@@ -598,6 +598,7 @@ function TableWidgetB(instanceId, widgetData, dataB){
             table.appendChild(element);
             return [new Array(), table, new Array(), document.createElement("div")];
         }  
+        
         var headingTableRow = document.createElement("tr");
         var visibleColumnCount = 0;
         var columns = tableData.COLUMNS;
@@ -774,8 +775,6 @@ function TableWidgetB(instanceId, widgetData, dataB){
                 var dataCell = dataTable[rowIndex][colIndex];
                 //log("Getting Renderer Value");
                 if(renderCell.renderer.getValue()!=dataCell){
-                    log(jQuery.type(renderCell.renderer.getValue())+" "+jQuery.type(dataCell))
-                    log(renderCell.renderer.getValue()+"!="+dataCell);
                     return true; 
                 }
             } 

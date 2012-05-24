@@ -48,7 +48,6 @@
                 array("reference"=>"value", 'display'=>"Value", 'type'=>"int", 'visible'=>true, 'readonly'=>false),
                 array("reference"=>"type", 'display'=>"Type", 'type'=>"string", 'visible'=>false, 'readonly'=>false)
         );
-        
         $result = mysql_query("SELECT * FROM `settings` WHERE `plugin`='$context';");
         while($row = mysql_fetch_array($result)){
             $value = $row['value'];
@@ -69,9 +68,13 @@
             $setting = $settings[$i];
             $name = mysql_escape_string($setting[0]);
             $description = mysql_escape_string($setting[1]);
-            $value = mysql_escape_string($setting[2]);  
+            $value = mysql_escape_string($setting[2]); 
+            $value = $setting[2]; 
             $type = mysql_escape_string($setting[3]); 
-            mysql_query("UPDATE `settings` SET `value`='$value' WHERE `name`='$name' LIMIT 1;", getPrimarySQLConnection());
+            if($type=="boolean"){
+                $value = ($value=="true"||$value=="1")?"1":"0";
+            }
+            mysql_query("UPDATE `settings` SET `value`='$value' WHERE `name`='$name' AND `plugin`='$context' LIMIT 1;", getPrimarySQLConnection());
         }
         return getWebpageSettings($context);
     }   
@@ -223,12 +226,18 @@
         for($i=0; $i<count($settings);$i++){
             $setting = $settings[$i];
             $id = mysql_escape_string($setting[0]);
-            $id = ($id=="undefined")?'NULL':$id; 
+            $id = ($id=="undefined"||$id=="")?'NULL':$id; 
             $reference = mysql_escape_string($setting[1]);
+            
             $enabled = mysql_escape_string($setting[2]);
             $enabled = ($enabled=='true'||$enabled=='1')?1:0;
             $query = "INSERT INTO `plugins` (`id`, `reference`, `enabled`) VALUES($id, '$reference', $enabled) ON DUPLICATE KEY UPDATE `reference`='$reference',`enabled`=$enabled;";
             mysql_query($query, getPrimarySQLConnection()); 
+            /*if($reference=="aviat.csrDemo"){
+                echo $query."\n";
+                echo mysql_error(); 
+                exit;   
+            } */
         }
           return getPlugins($context);
     } 

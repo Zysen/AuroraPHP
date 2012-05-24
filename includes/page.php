@@ -229,7 +229,7 @@ class AuroraPage {
             }
             //$htmlHead="<script type=\"text/javascript\" src=\"".$scriptPath."js/ckeditor/ckeditor.js\"></script>\n";
             $scriptData= $this->mergeScriptAndStyle($theme['name']);
-            $htmlHead = $scriptData['htmlHead'];
+            $htmlHead = $this->_head."\n".$scriptData['htmlHead'];
             $clientSettings = json_encode(array("updateWait"=>(int)$settings['aurora_updateTime'],"page"=>$page,"defaultPage"=>$settings['aurora_defaultAction'], "scriptPath"=>$scriptPath, "theme"=>$theme, "externalCSS"=>$scriptData['externalCSS'], "groups"=>$groups, "pagePermissions"=>$pageData['permissions'], "messages"=>$messages));
             
             $htmlHead.="<script type=\"text/javascript\">var SETTINGS = $clientSettings;";
@@ -238,7 +238,7 @@ class AuroraPage {
                 $htmlHead .= $this->_inlineScripts[$i];
             }
 
-            $htmlHead.="</script>\n";//.$this->_head;
+            $htmlHead.="</script>\n";
             
             $compiledPage = /*$theme["html"].*/$page["html"];
             
