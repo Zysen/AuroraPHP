@@ -1,6 +1,6 @@
 function liftBArray(f, argsF){
     argsF.unshift(f);
-    var behaviour = liftB.apply(argsF[0], argsF);
+    var behaviour = F.liftB.apply(argsF[0], argsF);
     return behaviour;
 }
 function funcCallArray(f, argsF){

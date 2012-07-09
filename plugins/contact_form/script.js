@@ -34,4 +34,4 @@ function ContactFormSubmitButton(instanceId, elementId, data){
         return ""+submitButton.build()+"<img id=\""+loadingImId+"\" class=\"loadingSpinner\" src=\"themes/trans.png\" alt=\"\" />";                 
     }
 }
-widgetTypes['contactFormSubmitButton']=ContactFormSubmitButton;
+WIDGETS.register("contactFormSubmitButton", ContactFormSubmitButton);

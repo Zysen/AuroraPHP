@@ -1,0 +1,26 @@
+.loadingSpinner{
+    vertical-align: middle;
+}
+.form_validator_validInput{
+    
+}
+.form_validator_invalidInput{
+    border-color: #FF0000;
+    background-color: #FF9393;
+    color: #FFFFFF;
+}
+.validatedCalendar{
+}
+.ui-widget a{
+    text-decoration: none;
+    font-size: 8pt;
+    font-weight: normal;
+}
+.ui-datepicker td a { text-decoration: none;
+    font-size: 8pt;
+    font-weight: normal;
+    }
+    a { text-decoration: none;
+    font-size: 8pt;
+    font-weight: normal;
+    }

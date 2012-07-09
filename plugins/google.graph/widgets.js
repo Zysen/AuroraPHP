@@ -22,7 +22,7 @@
             return new google.visualization.Gauge(document.getElementById(divId));
          });
          
-         liftB(function(row, chart){
+         F.liftB(function(row, chart){
             
             if(row==NOT_READY||chart==NOT_READY)
                 return NOT_READY;
@@ -84,7 +84,7 @@
             return new google.visualization.AnnotatedTimeLine(document.getElementById(divId)); 
 
          });
-         var oldDeviceDrawnB = liftB(function(oldDeviceData, chart){
+         var oldDeviceDrawnB = F.liftB(function(oldDeviceData, chart){
             if(oldDeviceData==NOT_READY)
                 return false;
             for(index in oldDeviceData){
@@ -109,13 +109,13 @@
 function GoogleDyGraphWidget(instanceId, data){
     var divId = instanceId+"_container";
     this.loader=function(){ 
-        var csvDataB = liftB(function(deviceData){
+        var csvDataB = F.liftB(function(deviceData){
             if(deviceData==NOT_READY)
                 return NOT_READY;  
             return AuroraTableToCSVTable(deviceData);
         }, data.dataB);
         
-        liftB(function(csvData){
+        F.liftB(function(csvData){
             if(csvData==NOT_READY){
                 return NOT_READY;
             }
@@ -136,7 +136,7 @@ function GoogleDyGraphWidget(instanceId, data){
 function GooglePieChartWidget(instanceId, data){
     var divId = instanceId+"_container";
     this.loader=function(){                         
-        liftB(function(dataTable, googleReady){
+        F.liftB(function(dataTable, googleReady){
         
             if(dataTable==NOT_READY||googleReady==NOT_READY)
                 return NOT_READY;      
@@ -159,7 +159,7 @@ function GooglePieChartWidget(instanceId, data){
     }
 }
 function GoogleTableWidgetB(behaviour, targetDiv){
-        liftB(function(data, googleReady){
+        F.liftB(function(data, googleReady){
             if(data!=NOT_READY){
                 var table = new google.visualization.Table(document.getElementById(targetDiv));
                 data = AuroraTableToGoogleTable(data); 
@@ -168,10 +168,8 @@ function GoogleTableWidgetB(behaviour, targetDiv){
         }, behaviour, googleReadyB);
                                 
 }
-               
-widgetTypes['GooglePieChartWidget']=GooglePieChartWidget;                                 
-widgetTypes['GoogleDyGraphWidget']=GoogleDyGraphWidget;
-
+ WIDGETS.register("GooglePieChartWidget", GooglePieChartWidget, {});
+ WIDGETS.register("GoogleDyGraphWidget", GoogleDyGraphWidget, {});
 
 /*widgetTypes['GoogleAnnodatedTimeLineWidget']=GoogleAnnodatedTimeLineWidget;
 widgetTypes['GoogleLineGraphWidget']=GoogleLineGraphWidget;  

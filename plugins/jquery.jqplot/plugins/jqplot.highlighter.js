@@ -60,16 +60,7 @@
      * the format string in an order determined by the "tooltipAxes" and "yvalues"
      * options.  So, if you have a hi-low-close chart and you just want to display 
      * the hi-low-close values in the tooltip, you could set a formatString like:
-     * 
-     * > highlighter: {
-     * >     tooltipAxes: 'y',
-     * >     yvalues: 3,
-     * >     formatString:'<table class="jqplot-highlighter">
-     * >         <tr><td>hi:</td><td>%s</td></tr>
-     * >         <tr><td>low:</td><td>%s</td></tr>
-     * >         <tr><td>close:</td><td>%s</td></tr></table>'
-     * > }
-     * 
+     * @constructor
      */
     $.jqplot.Highlighter = function(options) {
         // Group: Properties
@@ -163,6 +154,10 @@
     // axis.renderer.tickrenderer.formatter
     
     // called with scope of plot
+/**
+ *  $.jqplot.Highlighter.init
+ * @constructor
+ */
     $.jqplot.Highlighter.init = function (target, data, opts){
         var options = opts || {};
         // add a highlighter attribute to the plot
@@ -170,6 +165,10 @@
     };
     
     // called within scope of series
+ /**
+ *  $.jqplot.Highlighter.parseOptions
+ * @constructor
+ */
     $.jqplot.Highlighter.parseOptions = function (defaults, options) {
         // Add a showHighlight option to the series 
         // and set it to true by default.
@@ -179,6 +178,10 @@
     // called within context of plot
     // create a canvas which we can draw on.
     // insert it before the eventCanvas, so eventCanvas will still capture events.
+ /**
+ *  $.jqplot.Highlighter.postPlotDraw
+ * @constructor
+ */
     $.jqplot.Highlighter.postPlotDraw = function() {
         // Memory Leaks patch    
         if (this.plugins.highlighter && this.plugins.highlighter.highlightCanvas) {

@@ -32,6 +32,7 @@
     /**
      * Class: $.jqplot.Dragable
      * Plugin to make plotted points dragable by the user.
+     * @constructor
      */
     $.jqplot.Dragable = function(options) {
         // Group: Properties
@@ -52,7 +53,10 @@
         this.constrainTo = 'none';  // 'x', 'y', or 'none';
         $.extend(true, this, options);
     };
-    
+/**
+ *  DragCanvas
+ * @constructor
+ */
     function DragCanvas() {
         $.jqplot.GenericCanvas.call(this);
         this.isDragging = false;
@@ -66,6 +70,10 @@
     
     
     // called within scope of series
+    /**
+ *  $.jqplot.Dragable.parseOptions
+ * @constructor
+ */
     $.jqplot.Dragable.parseOptions = function (defaults, opts) {
         var options = opts || {};
         this.plugins.dragable = new $.jqplot.Dragable(options.dragable);
@@ -78,6 +86,10 @@
     // create a canvas which we can draw on.
     // insert it before the eventCanvas, so eventCanvas will still capture events.
     // add a new DragCanvas object to the plot plugins to handle drawing on this new canvas.
+    /**
+ *  $.jqplot.Dragable.postPlotDraw
+ * @constructor
+ */
     $.jqplot.Dragable.postPlotDraw = function() {
         // Memory Leaks patch    
         if (this.plugins.dragable && this.plugins.dragable.highlightCanvas) {

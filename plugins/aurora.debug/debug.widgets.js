@@ -36,13 +36,13 @@ function BehaviourTest(instanceId,data){
        var t1B = timerB(500);
        var t2B = timerB(350);
        
-       var mergeB = liftB(function(t1, t2){
+       var mergeB = F.liftB(function(t1, t2){
         return t1+"<>"+t2;
        }, t1B, t2B);
        DATA.register("timer1", "", t1B);
        DATA.register("timer2", "", t2B);
        DATA.register("merge", "", mergeB);
-       insertDomB(mergeB, domId);
+       F.insertDomB(mergeB, domId);
     }
     this.destroy=function(){}
     this.build=function(){

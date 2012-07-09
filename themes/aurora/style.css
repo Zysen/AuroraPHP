@@ -18,6 +18,7 @@ img{
 }
 .themeAuroraBody{
 }
+
 #contentWrapper{
     margin: 0 auto;
     text-align: center;
@@ -38,6 +39,7 @@ img{
     padding-bottom: 20px;
     text-align: left;
     background-color: #5c7a93;
+    background-image: none !important;
     color: #FFFFFF;
 }
 
@@ -45,11 +47,13 @@ h1{
     font-family: Minecraft Regular;
     font-size: 1.3em;
     color: #FFFFFF;
+    text-shadow: 1px 1px 1px black;
 }
 h2{
     font-family: Minecraft Regular;
     font-size: 1em;
     color: #FFFFFF;
+    text-shadow: 1px 1px 1px black;
 }
 h2 a{
     font-family: Minecraft Regular;
@@ -59,16 +63,28 @@ h2 a{
 }
 h2 a:hover{
     text-decoration: none;
+    
 }
 h3{
     font-family: Minecraft Regular;
     font-size: .7em;
     color: #FFFFFF;
+    text-shadow: 1px 1px 1px black;
 }
 p{
 	font-family: verdana;
     font-size: 1em;
     color: #FFFFFF;	
+}
+.aurora_dialog{
+    font-family: verdana;
+    font-size: 1em;
+    color: #FFFFFF;    
+} 
+.dialogHeading{
+    font-family: Minecraft Regular;
+    font-size: 1em; 
+    color: #000000;
 }
 .themeAuroraContent{
     padding: 1em;

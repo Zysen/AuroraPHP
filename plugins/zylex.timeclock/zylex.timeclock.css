@@ -1,0 +1,12 @@
+.TimeClockWidget{
+    text-align: center;
+}
+.TimeClockWidget input{
+    width: 100%;
+}
+.TimeClockWidgetButton{
+    margin-top: 5px;
+    margin-bottom: 5px;
+    font-size: 16pt;
+    
+}

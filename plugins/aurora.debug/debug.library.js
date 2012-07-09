@@ -22,7 +22,7 @@ function printHashTable(table){
     }
 }
 
-function log(message){
+window['log'] = function(message){
     if (window.console)
         console.log(message);
 }

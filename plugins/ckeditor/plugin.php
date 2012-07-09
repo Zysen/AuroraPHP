@@ -1,8 +1,8 @@
 <?php
-$page->registerScript($scriptPath."plugins/ckeditor/ckeditor/ckeditor.js", false); 
-$page->registerScript($scriptPath."plugins/ckeditor/ckeditor/adapters/jquery.js"); 
-$page->registerScript($scriptPath."plugins/ckeditor/ckeditor.library.js");
-$page->registerCSS($scriptPath."plugins/ckeditor/style.css");
+$page->registerScript($scriptPath."plugins/ckeditor/ckeditor/ckeditor.js", false, false); 
+//$page->registerScript($scriptPath."plugins/ckeditor/ckeditor/adapters/jquery.js", false, false); 
+$page->registerScript("plugins/ckeditor/ckeditor.library.js", true, true);
+//$page->registerCSS("plugins/ckeditor/style.css");
 
 $requestManager->registerRequestHandler("commitPage", "ckeditor_commitPage");
 $requestManager->registerRequestHandler("deletePage", "ckeditor_deletePage");
@@ -15,6 +15,7 @@ function ckeditor_commitPage($restOfPath){
     $pageName = mysql_escape_string($_POST['pageName']);
     $pageContent = mysql_escape_string($_POST['content']);
 
+    
     if(array_key_exists("template", $_POST)&&$current_user->permissionContains("aurora_mod_template", "W"))
         mysql_query("UPDATE `themes` SET `theme_content` = '".mysql_escape_string($_POST['template'])."' WHERE `theme_id` = ".$settings['aurora_theme']." LIMIT 1;", getPrimarySQLConnection());                  
     $row = getPageData($pageName);

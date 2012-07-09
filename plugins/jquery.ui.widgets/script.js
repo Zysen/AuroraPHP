@@ -3,7 +3,7 @@
     this.loader=function(){
         var dataR = DATA.getRemote("aurora_plugins", "", NOT_READY, POLL_RATES.VERY_FAST);  //, NOT_READY, POLL_RATES.SLOW
         tableB = TableWidgetB(instanceId+"_table", data, dataR.behaviour);    
-        insertDomB(tableB, instanceId+"_container");
+        F.insertDomB(tableB, instanceId+"_container");
     }
     this.destroy=function(){
         DATA.deregister("aurora_plugins", "");
@@ -11,5 +11,6 @@
     this.build=function(){
         return "<span id=\""+instanceId+"_container\">&nbsp;</span>";
     }
-}     
-widgetTypes['PluginManagerWidget']=PluginManagerWidget;*/
+}    
+WIDGETS.register("PluginManagerWidget", PluginManagerWidget); 
+*/

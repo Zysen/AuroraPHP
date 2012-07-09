@@ -116,8 +116,8 @@ function getUserDisplay($username, $firstname, $lastname){
                 return false;
         }
         function getPermission($reference){
-            global $connection;
-            $result = mysql_query("SELECT `permissions` FROM `permission_register` NATURAL JOIN `permissions` WHERE `name`='$reference' AND (`user_id`=".$this->get_SqlId()." OR `group_id`=".$this->get_group_id().") LIMIT 1", $connection);
+            global $connection;            //`permissions`
+            $result = mysql_query("SELECT * FROM `permission_register` NATURAL JOIN `permissions` WHERE `name`='$reference' AND (`permissions`.`user_id`=".$this->get_SqlId()." OR `permissions`.`group_id`=".$this->get_group_id().") LIMIT 1;", $connection);
             if(mysql_num_rows($result)>0){
                 $row = mysql_fetch_array($result);
                 return $row['permissions'];
@@ -189,9 +189,9 @@ session_start();
                 //header("Location: ".$scriptPath);
                 if(isset($_POST['emailAddress'])){
                     $page->addToMessage("Welcome ".$current_user->get_firstname()." you have successfully logged in.");
-                    if(session_is_registered("aurora_requestedPage")&&count($_SESSION['aurora_requestedPage'])>0){
+                    if($_SESSION['aurora_requestedPage']&&count($_SESSION['aurora_requestedPage'])>0){
                         $path = $_SESSION['aurora_requestedPage'];
-                        session_destroy("aurora_requestedPage");
+                        //session_destroy();
                     }
                     else
                         $path = array($settings["aurora_defaultAction"]);

@@ -1,4 +1,5 @@
 function renderPage(data){
+    var widgetTypes = WIDGETS.widgetTypes;
     widgets=Array();    
     var elm = document.createElement('div');
     elm.innerHTML=data; 
@@ -13,8 +14,9 @@ function renderPage(data){
             var widgetPlaceholder = widgetPlaceholders[index];     
             var instanceId = (widgetPlaceholder.id!='')?widgetPlaceholder.id:key+i;
             var arguments={};
+            //alert(widgetPlaceholder.alt);
             try{         
-            arguments = (widgetPlaceholder.alt==null||widgetPlaceholder.alt=="")?{placeholder: widgetPlaceholder}:jQuery.parseJSON(widgetPlaceholder.alt.replaceAll("'", '"'));    
+            arguments = (widgetPlaceholder.alt==null||widgetPlaceholder.alt=="")?{placeholder: widgetPlaceholder}:window['JSON'].parse(widgetPlaceholder.alt.replaceAll("'", '"'));    
             }
             catch(err){
             log("Widget Argument Parse Error: "+err);
@@ -27,7 +29,10 @@ function renderPage(data){
                 element.height = widgetPlaceholder.height; 
             }
             arguments.placeholder = widgetPlaceholder;
-            widget = jQuery.extend(new widgetDef(instanceId, arguments), WIDGET);   
+            if(typeof jQuery != 'undefined')
+                widget = jQuery.extend(new widgetDef(instanceId, arguments), WIDGET);
+            else
+                widget = new widgetDef(instanceId, arguments);   
             WIDGETS.add(widget);
             
             var wBuild = widget.build();
@@ -40,23 +45,37 @@ function renderPage(data){
     } 
     return elm.innerHTML;            
 }
-function loadPage(pageName){
-    window.location=SETTINGS.scriptPath+pageName;
-}
+ /**
+ * loadPage
+ * @param {string} pageName
+ */
+var loadPage = function(pageName){
+    window.location=window['SETTINGS']['scriptPath']+pageName;
+}  
+
+
+ /**
+ * window.loadPage
+ * @param {string} pageName
+ */
+window.loadPage = function(pageName){
+    window.location=window['SETTINGS']['scriptPath']+pageName;
+}          
 
 function connection_error(error){
     log(error);
 }
+//te2sting testing
 function checkPermission(groupId){
-    for(index in SETTINGS.page.permissions.groups){
-        if(SETTINGS.page.permissions.groups[index].group_id==groupId)
+    for(index in window['SETTINGS']['page']['permissions']['groups']){
+        if(window['SETTINGS']['page']['permissions']['groups'][index]['group_id']==groupId)
             return true;
     }
     return false;
 }
 
 function requestAndRenderPage(page){
-    jQuery.ajax({
+    ajax({
         dataType: 'json',
         url: SETTINGS.scriptPath+"request/getPage/"+page+"/",
         success: function(data){
@@ -75,5 +94,5 @@ function connectionError(error){
     log(error);
 }
 function isBase(){
-    return SETTINGS.page.name==SETTINGS.defaultPage;
+    return window['SETTINGS']['page']['name']==window['SETTINGS']['defaultPage'];
 }

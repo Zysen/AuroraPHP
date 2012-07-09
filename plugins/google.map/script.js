@@ -58,7 +58,7 @@ function GoogleStreetViewWidget(instanceId, data){
     }
     this.destroy=function(){
     }
-}                                 
-widgetTypes['googleMapWidget']=GoogleMapWidget;
-widgetTypes['googleStreetViewWidget']=GoogleStreetViewWidget;
+}                 
+WIDGETS.register("googleMapWidget", GoogleMapWidget, {});
+WIDGETS.register("googleStreetViewWidget", GoogleStreetViewWidget, {});                
 

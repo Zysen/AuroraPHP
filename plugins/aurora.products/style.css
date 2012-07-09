@@ -1,0 +1,42 @@
+.ProductWidget{
+    padding: 10px;
+    background-color: #28353d;
+    clear: both;
+    -moz-border-radius: 0.6em;
+    border-radius: 0.6em;
+    margin: 1em;
+    box-shadow: inset -1px 2px 4px white, -2px 2px 8px 2px #404040;
+    -o-box-shadow: inset -1px 2px 4px white, -2px 2px 8px 2px #404040;  
+    -webkit-box-shadow: inset -1px 2px 4px white, -2px 2px 8px 2px #404040;  
+    -moz-box-shadow: inset -1px 2px 4px white, -2px 2px 8px 2px #404040;  
+    color: white;
+    text-align: left;
+    
+    font-family: arial;
+    font-size: 12pt;
+    
+}
+.ProductWidgetPrice{
+    font-family: arial;
+    font-size: 18pt;
+    color: #FFFFFF;
+    
+}
+.ProductWidgetImg{
+    float: right;
+    width: 100px;
+    height: 100px;    
+}
+.ProductWidgetPrice form{
+    border: 0;
+}
+.ProductWidgetPrice input{
+    background: none;
+    border: 0;
+    padding-right: 0;
+}
+.viewCart{
+    background: none;
+    border: 0;
+    padding: 0;
+}

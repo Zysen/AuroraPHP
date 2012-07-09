@@ -1,5 +1,9 @@
 <?php
-    class log {
+function AuroraLog($tag, $message){
+    $message = mysql_escape_string($message);
+    mysql_query("INSERT INTO `aurora`.`logs` (`id`, `entry`, `tag`, `timestamp`) VALUES (NULL, '$message', '$tag',  CURRENT_TIMESTAMP);");   
+}
+/*    class log {
   private $_level;
   private $_message;
   private __construct($level, $message){
@@ -23,14 +27,20 @@
             break;
         }
       }
+      
+      $message = mysql_escape_string($message);
+      mysql_query("INSERT INTO `aurora`.`logs` (`id`, `entry`, `timestamp`) VALUES (NULL, '$message', CURRENT_TIMESTAMP);");
   }
-}
+}   */
+
 class LogLevel{
-    const USER_INFO = 0;
-    const USER_ERROR = 1;
-    const SYSTEM_INFO = 2;
-    const SYSTEM_ERROR = 3;
-    const ADMIN_ERROR = 4;
+    const USER_INFO = "USER_INFO";
+    const USER_ERROR = "USER_ERROR";
+    const SYSTEM_INFO = "SYSTEM_INFO";
+    const SYSTEM_ERROR = "SYSTEM_ERROR";
+    const ADMIN_ERROR = "ADMIN_ERROR";
 }
+
+
 
 ?>

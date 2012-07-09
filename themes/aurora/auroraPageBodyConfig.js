@@ -3,8 +3,9 @@ CKEDITOR.editorConfig = function( config )
     // Define changes to default configuration here. For example:
     // config.language = 'fr';
     // config.uiColor = '#AADC6E';    
-    
+    //config.extraPlugins = 'auroraWidgets,auroraCancel'; 
     config.toolbar='Basic';
+    config.language = "en.js";   
     config.skin = 'office2003';
     config.toolbar = 'MyToolbar';
    // config.scayt_autoStartup = true;                                         
@@ -32,8 +33,8 @@ CKEDITOR.editorConfig = function( config )
 
     config.toolbar_MyToolbar =
     [        
-    ['Source','AjaxSave','Undo','Redo', 'Cut','Copy','Paste'],
-    ['Image','HorizontalRule','SpecialChar', 'Link','Unlink'],
+    ['Source','AjaxSave','AuroraCancel','Undo','Redo', 'Cut','Copy','Paste'],
+    ['Image','Table','HorizontalRule','SpecialChar', 'Link','Unlink'],
     ['NumberedList','BulletedList','Outdent','Indent'],              //'-',
     ['Bold','Italic','Underline','Strike', 'Subscript','Superscript', 'JustifyLeft','JustifyCenter','JustifyRight', 'TextColor','BGColor'],
     ['Styles','Font','FontSize'],

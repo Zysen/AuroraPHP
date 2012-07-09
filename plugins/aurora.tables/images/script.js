@@ -273,7 +273,7 @@ function UsersManagerWidget(instanceId, data){
                 {'display': "Gender", 'type': "gender", 'visible': true, 'readonly': false},
                 {'display': "Date Of Birth", 'type': "date", 'visible': true, 'readonly': false}
                 ];
-        var renderedTableB = liftBI(function(data, groups){
+        var renderedTableB = F.liftBI(function(data, groups){
             if(data==NOT_READY||groups==NOT_READY)
                 return NOT_READY;
             var groupsColumn = new AuroraUserGroupColumn(groups, 5);
@@ -285,7 +285,7 @@ function UsersManagerWidget(instanceId, data){
         }, [dataR.behaviour, groupsR.behaviour]);
     
     tableB = TableWidgetB(instanceId+"_table", columns, data, renderedTableB);    
-    insertDomB(tableB, instanceId+"_container");
+    F.insertDomB(tableB, instanceId+"_container");
     
     }
     this.destroy=function(){
@@ -330,11 +330,11 @@ function TableWidgetB(instanceId, columns, widgetData, dataB){
     table.appendChild(headingTableRow);
     
     //Control Bar Buttons
-    var saveButton = createIcon(SETTINGS.theme.path+"save.png");
-    var cancelButton = createIcon(SETTINGS.theme.path+"cancel.png");
-    var addRowButton = createIcon(SETTINGS.theme.path+"add.png");
-    var editRowButton = createIcon(SETTINGS.theme.path+"edit.png");
-    var deleteRowButton = createIcon(SETTINGS.theme.path+"delete.png");
+    var saveButton = createIcon(window['SETTINGS']['theme'].path+"save.png");
+    var cancelButton = createIcon(window['SETTINGS']['theme'].path+"cancel.png");
+    var addRowButton = createIcon(window['SETTINGS']['theme'].path+"add.png");
+    var editRowButton = createIcon(window['SETTINGS']['theme'].path+"edit.png");
+    var deleteRowButton = createIcon(window['SETTINGS']['theme'].path+"delete.png");
     
     
     //Events
@@ -406,7 +406,7 @@ function TableWidgetB(instanceId, columns, widgetData, dataB){
     
                  
     
-    var pageRenderedB = liftBI(function(tableData, userChanges){
+    var pageRenderedB = F.liftBI(function(tableData, userChanges){
         log("Rending Table");
         table.removeChildren();
         table.appendChild(headingTableRow);
@@ -414,7 +414,7 @@ function TableWidgetB(instanceId, columns, widgetData, dataB){
             var element = document.createElement("td");
             element.colSpan = visibleColumnCount;
             element.style.textAlign="center";
-            element.innerHTML = "<img src=\""+SETTINGS.theme.path+"loading.gif\" alt=\"\"/>";
+            element.innerHTML = "<img src=\""+window['SETTINGS']['theme'].path+"loading.gif\" alt=\"\"/>";
             table.appendChild(element);
             return [new Array(), table, new Array(), document.createElement("div")];
         }  
@@ -532,14 +532,14 @@ function TableWidgetB(instanceId, columns, widgetData, dataB){
         pageRenderedB.sendEvent(data);       
     });      
     
-    var pageDataAndRowSelectionsB = liftB(function(renderedData, rowSelections){
+    var pageDataAndRowSelectionsB = F.liftB(function(renderedData, rowSelections){
         if(renderedData==NOT_READY||rowSelections==NOT_READY)
             return NOT_READY;
         return {renderedData: renderedData, rowSelections: rowSelections};
     }, pageRenderedB, rowSelectionsB);
     var deleteTableRowsB = deleteButtonPressedE.snapshotE(pageDataAndRowSelectionsB).startsWith(NOT_READY);
     
-    liftB(function(data){
+    F.liftB(function(data){
         if(data==NOT_READY)
             return;
         var rowSelections = data.rowSelections;

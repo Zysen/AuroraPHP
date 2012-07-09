@@ -99,7 +99,7 @@ function ImageGalleryWidget(instanceId,data){
             }
             return galleriesDiv;               
         });
-        insertDomB(renderHTMLGalleriesB, tableDivId);
+        F.insertDomB(renderHTMLGalleriesB, tableDivId);
         uploadCompleteE.snapshotE(liftB(function(uploadData, galleries){if(uploadData==null||galleries==null)return null;return {uploadData:uploadData, galleries:galleries};},uploadCompleteE.startsWith(null), galleriesB)).mapE(function(data){
             var gallery = data.galleries[0];
             var uploadData = data.uploadData;
@@ -126,6 +126,6 @@ function ImageGalleryWidget(instanceId,data){
         return "<div id=\""+widgetId+"\" style=\"display: block; width: "+width+"px; height: "+height+"px;\" ><div id=\""+tableDivId+"\"></div></div>";
     }
 }
-widgetTypes['imageWidget']=ImageWidget;
-widgetTypes['imageGallery']=ImageGalleryWidget;
+WIDGETS.register("imageWidget", ImageWidget);
+WIDGETS.register("imageGallery", ImageGalleryWidget);
 

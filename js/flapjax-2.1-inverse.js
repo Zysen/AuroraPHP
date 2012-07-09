@@ -10,7 +10,7 @@ var extractValueOnEventE;
 var extractValueStaticB;
 var i;
 var insertDom;
-var insertDomB;
+var F.insertDomB;
 var insertDomE;
 var insertDomInternal;
 var insertValue;
@@ -181,7 +181,7 @@ var doNotPropagate = { };
 
 //Pulse: Stamp * Path * Obj
 var Pulse = function (stamp, value) {
-  // Timestamps are used by liftB (and ifE).  Since liftB may receive multiple
+  // Timestamps are used by F.liftB (and ifE).  Since F.liftB may receive multiple
   // update signals in the same run of the evaluator, it only propagates the 
   // signal if it has a new stamp.
   this.stamp = stamp;
@@ -1080,14 +1080,14 @@ var sendBehavior = function (b,v) { b.sendBehavior(v); };
 Behavior.prototype.ifB = function(trueB,falseB) {
   var testB = this;
   //TODO auto conversion for Behavior funcs
-  if (!(trueB instanceof Behavior)) { trueB = constantB(trueB); }
-  if (!(falseB instanceof Behavior)) { falseB = constantB(falseB); }
-  return liftB(function(te,t,f) { return te ? t : f; },testB,trueB,falseB);
+  if (!(trueB instanceof Behavior)) { trueB = F.constantB(trueB); }
+  if (!(falseB instanceof Behavior)) { falseB = F.constantB(falseB); }
+  return F.liftB(function(te,t,f) { return te ? t : f; },testB,trueB,falseB);
 };
 
 
 var ifB = function(test,cons,altr) {
-  if (!(test instanceof Behavior)) { test = constantB(test); };
+  if (!(test instanceof Behavior)) { test = F.constantB(test); };
   
   return test.ifB(cons,altr);
 };
@@ -1097,7 +1097,7 @@ var ifB = function(test,cons,altr) {
 //condB: . [Behavior boolean, Behavior a] -> Behavior a
 var condB = function (/* . pairs */ ) {
   var pairs = slice(arguments, 0);
-return liftB.apply({},[function() {
+return F.liftB.apply({},[function() {
     for(var i=0;i<pairs.length;i++) {
       if(arguments[i]) return arguments[pairs.length+i];
     }
@@ -1108,11 +1108,11 @@ return liftB.apply({},[function() {
 
 //TODO optionally append to objects
 //createConstantB: a -> Behavior a
-var constantB = function (val) {
+var F.constantB = function (val) {
   return new Behavior(internalE(), val);
 };
 
-var liftBI = function (functionDown, functionUp, parents) {
+var F.liftBI = function (functionDown, functionUp, parents) {
 	  var parents = slice(arguments, 2);
 	args = parents; 
 	//dependencies
@@ -1151,10 +1151,10 @@ var liftBI = function (functionDown, functionUp, parents) {
 	};
 
 	Behavior.prototype.liftBI = function(functionDown, functionUp, parents) {		
-		return liftBI.apply(this,[functionDown, functionUp].concat([this]).concat(parents));
+		return F.liftBI.apply(this,[functionDown, functionUp].concat([this]).concat(parents));
 	};
 	
-var liftB = function (fn  /*behaves*/ ) {
+var F.liftB = function (fn  /*behaves*/ ) {
 
   var args = slice(arguments, 1);
   
@@ -1196,12 +1196,12 @@ var liftB = function (fn  /*behaves*/ ) {
 
 Behavior.prototype.liftB = function(/* args */) {
   var args= slice(arguments,0).concat([this]);
-  return liftB.apply(this,args);
+  return F.liftB.apply(this,args);
 };
 
 
 var andB = function (/* . behaves */) {
-return liftB.apply({},[function() {
+return F.liftB.apply({},[function() {
     for(var i=0; i<arguments.length; i++) {if(!arguments[i]) return false;}
     return true;
 }].concat(slice(arguments,0)));
@@ -1214,7 +1214,7 @@ Behavior.prototype.andB = function() {
 
 
 var orB = function (/* . behaves */ ) {
-return liftB.apply({},[function() {
+return F.liftB.apply({},[function() {
     for(var i=0; i<arguments.length; i++) {if(arguments[i]) return true;}
     return false;
 }].concat(slice(arguments,0)));
@@ -1615,7 +1615,7 @@ forEach(function(tagName) {
 //TEXTB: Behavior a -> Behavior Dom TextNode    
 TEXTB = function (strB) {
   //      if (!(strB instanceof Behavior || typeof(strB) == 'string')) { throw 'TEXTB: expected Behavior as second arg'; } //SAFETY
-  if (!(strB instanceof Behavior)) { strB = constantB(strB); }
+  if (!(strB instanceof Behavior)) { strB = F.constantB(strB); }
   
   return startsWith(
     changes(strB).mapE(
@@ -1920,7 +1920,7 @@ extractValueStaticB = function (domObj, triggerE) {
 
 var extractValueB = function (domObj) {
   if (domObj instanceof Behavior) {
-    return liftB(function (dom) { return extractValueStaticB(dom); },
+    return F.liftB(function (dom) { return extractValueStaticB(dom); },
                   domObj)
            .switchB();
   } else {
@@ -2105,12 +2105,12 @@ insertDom = function (replaceWithD, hook, optPosition) {
 insertDomB = function (initTriggerB, optID, optPosition, unsafe) {
   
   if (!(initTriggerB instanceof Behavior)) { 
-    initTriggerB = constantB(initTriggerB);
+    initTriggerB = F.constantB(initTriggerB);
   }
   /*else if(initTriggerB instanceof Behavior)
-	  return insertDomBI(initTriggerB, optID, optPosition, unsafe); */
+	  return F.insertDomBI(initTriggerB, optID, optPosition, unsafe); */
   var triggerB = 
-  liftB(
+  F.liftB(
     function (d) { 
       if (unsafe === true) {
         var res = document.createElement('span');
@@ -2145,9 +2145,9 @@ insertDomB = function (initTriggerB, optID, optPosition, unsafe) {
 };
 /*insertDomBI = function (initTriggerB, optID, optPosition, unsafe) {
 	  if(!(initTriggerB instanceof Behavior))
-		  initTriggerB = constantB(initTriggerB);
+		  initTriggerB = F.constantB(initTriggerB);
 	  var triggerB = 
-	  liftB(
+	  F.liftB(
 	    function (d) {
 	    	if(d instanceof Behavior)
 	    		console.log("Inverse Behavior");
@@ -2217,7 +2217,7 @@ var mouseB = function(elem) {
 
 
 var mouseLeftB = function(elem) {
-  return liftB(function(v) { return v.left; },mouseB(elem));
+  return F.liftB(function(v) { return v.left; },mouseB(elem));
 };
 
 
@@ -2574,10 +2574,10 @@ var mixedSwitchB = function(behaviorCreatorsB) {
 
 var compilerInsertDomB = function(mixedB, target) {
   if (mixedB instanceof Behavior) {
-    insertDomB(mixedSwitchB(mixedB), target, "over"); 
+    F.insertDomB(mixedSwitchB(mixedB), target, "over"); 
   }
   else {
-    insertDomB(mixedB, target, "over");
+    F.insertDomB(mixedB, target, "over");
   }
 };
 
@@ -2606,7 +2606,7 @@ var compilerLift = function(f /* , args ... */) {
   // Assume some argument is a behavior.  This should always work.  We can
   // optimize later.
   var resultE = internalE();
-  var r = liftB.apply(this,arguments);
+  var r = F.liftB.apply(this,arguments);
   if (!(r instanceof Behavior)) {
     return r;
   }
@@ -2711,7 +2711,7 @@ var compilerUnbehavior = function(v) {
 try
 {
   if (constantB !== undefined)
-  this.constantB = constantB
+  this.constantB = F.constantB
 }
 catch (_) {
             ;
@@ -2783,7 +2783,7 @@ catch (_) {
 try
 {
   if (liftB !== undefined)
-  this.liftB = liftB
+  this.liftB = F.liftB
 }
 catch (_) {
             ;
@@ -2792,7 +2792,7 @@ catch (_) {
           try
           {
             if (liftBI !== undefined)
-            this.liftBI = liftBI
+            this.liftBI = F.liftBI
           }
           catch (_) {;};
 
@@ -2831,7 +2831,7 @@ catch (_) {
 try
 {
   if (insertDomB !== undefined)
-  this.insertDomB = insertDomB
+  this.insertDomB = F.insertDomB
 }
 catch (_) {
             ;

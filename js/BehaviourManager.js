@@ -1,12 +1,18 @@
+/**
+ *  RemoteData
+ * @constructor
+ */
+ 
+
 function RemoteData(key, context, initialValue, pollRate){
    
 this.hash = "HASH";
-    this.eventE = receiverE();
+    this.eventE = F.receiverE();
     this.event = this.eventE;
     this.originBehaviour = this.event.startsWith(initialValue);
     this.pollRate = (pollRate==undefined)?0:pollRate;//A pollrate of 0 means it will be requested once.
     this.lastUpdated = 0;
-    this.behaviour = liftBI(
+    this.behaviour = F.liftBI(
         function(value){
             return value;
         },
@@ -30,6 +36,9 @@ this.hash = "HASH";
             this.event.sendEvent(data);
         }
     }
+    this.sendEvent = function(event){
+        this.behaviour.sendEvent(event);
+    }
     this.key = key;
     this.dirty = false;
     this.data = initialValue;
@@ -39,16 +48,27 @@ this.hash = "HASH";
     var parent = this;
 }
 
+/**
+ *  CompositKey
+ * @constructor
+ */
 function CompositKey(key1, key2){
     this.getKey = function(){                   
         return (key2==undefined||key2.length==0)?key1:key1+"___"+key2;
     }
+    //this["getKey"] = this.buildKey;
 }
+/**
+ *  BehaviourManager
+ * @constructor
+ */
 function BehaviourManager(){
     this.availableRemotes = new Array();
     this.localData = new Object();
     this.data = new Object();
-
+    this.buildKey = function(key1, key2){                   
+        return (key2==undefined||key2.length==0)?key1:key1+"___"+key2;
+    }
     this.getRemote = function(key, context, initialValue, pollRate){
         var key2 = key;
         if(context=="_"||(context!=undefined&&context!='undefined'&&context!=null&&context.length!=0)){
@@ -68,7 +88,7 @@ function BehaviourManager(){
             key2 = new CompositKey(key, context).getKey();
         }
         if(this.localData[key2]==undefined)
-            this.localData[key2] = receiverE();
+            this.localData[key2] = F.receiverE();
         return this.localData[key2];
     }
     this.getB = function(key, context){
@@ -77,11 +97,11 @@ function BehaviourManager(){
             key2 = new CompositKey(key, context).getKey();
         }
         if(this.localData[key2]==undefined){
-            this.localData[key2] = liftBI(function(value){
+            this.localData[key2] = F.liftBI(function(value){
                 return value;
             }, function(value){
                 return [value];
-            }, receiverE().startsWith(NOT_READY));
+            }, F.receiverE().startsWith(NOT_READY));
         }
         return this.localData[key2];
     }
@@ -143,30 +163,36 @@ function BehaviourManager(){
             }
         }   
         arr = cleanFunctions(arr);              
-        return {database: arr};
+        return {"database": arr};
     }
     this.startPolling = function(){
         var localData = this.localData;
         var data = this.data;
-        var respE = receiverE();
-        var requestEvery = SETTINGS.updateWait; // request with this delay, only if last request is already serviced
-        var nowB = timerB(500); // current time, 500ms granularity
+        var respE = F.receiverE();
+        var requestEvery = window['SETTINGS']['updateWait']; // request with this delay, only if last request is already serviced
+        var nowB = F.timerB(500); // current time, 500ms granularity
         var lastRespTmB = respE.snapshotE(nowB).startsWith(nowB.valueNow());
-        var requestOkayB = liftB(function(now, lastRespTm) {
+        var requestOkayB = F.liftB(function(now, lastRespTm) {
 		//log("Request OK");
             return (now > (lastRespTm + requestEvery));                               
         }, nowB, lastRespTmB);
         var requestReadyE = requestOkayB.changes().filterE(function(x) { return x; }).filterE(function(x){return !DATA.isEmpty()}); 
         var dataRequestReady = requestReadyE.snapshotE(nowB).mapE(function(x){return DATA.getDataRequest();}); 
-        var serverResponseE = sendServerRequestE(dataRequestReady, SETTINGS.scriptPath+'getBehaviours');
+        var serverResponseE = sendServerRequestE(dataRequestReady, window['SETTINGS']['scriptPath']+'getBehaviours');
         var localSyncE = serverResponseE.mapE(function(retData){                  
             for(key in retData){
                 var dataRow = retData[key];
                 for(context in dataRow){
+                
+                var newKey = key;
+                if(context!=undefined&&context.length!=0){
+                    newKey+="___"+context;
+                }
                     var serverData = dataRow[context];
                    var localData = data[key+"___"+context]; 
                     //Pre getKey() check for json object contexts. 
-                    localData = (localData!=null)?localData:data[(new CompositKey(key, context)).getKey()];
+                    //var newKey = new CompositKey(key, context);
+                    localData = (localData!=null)?localData:data[newKey];
                     localData.updateFromServer(serverData.data, serverData.hash);
                 }                                  
             }
@@ -178,12 +204,12 @@ function BehaviourManager(){
 }
 function sendServerRequestE(triggerE, url, timeout){
     timeout = (timeout==undefined)?15000:timeout;
-    var rec = receiverE();                       
+    var rec = F.receiverE();                       
     triggerE.mapE(function(requestData){
-        if(requestData.database.length>0){
+        if(requestData["database"].length>0){
         jQuery.ajax({
             type: "post",
-            async: false,
+            async: true,
             data: requestData,
             dataType: 'json',
             url: url,

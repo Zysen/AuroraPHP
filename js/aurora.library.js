@@ -1,3 +1,164 @@
+function ajax(options) {
+    if(typeof jQuery != 'undefined'){
+        jQuery.ajax(options);
+    }
+    else{
+        var type = (options["type"]=='undefined')?"POST":options["type"];
+        var success = options["success"];
+        var error = options["fail"];
+        var dataType = options["dataType"];
+        var url = options["url"];
+        var data = options["data"];
+        
+        function getXMLHttpRequest() {
+            if (window.XMLHttpRequest) {
+                return new window.XMLHttpRequest;
+            } else {
+                try {
+                    return new ActiveXObject("MSXML2.XMLHTTP");
+                } catch (ex) {
+                    return null;
+                }
+            }
+        }
+
+        if(typeof data == 'string'){
+            data = JSON.parse(data);
+        } 
+        var dataStr="";
+        var count =0;
+        for(index in data){
+            var dataPiece = (typeof(data[index])=='string')?data[index]:JSON.stringify(data[index]);
+            if(count!=0)
+                dataStr+="&";
+            dataStr += index+"="+dataPiece;
+            count++;
+        }
+        //dataStr = dataStr.replaceAll("\"", "'");
+        /*var oReq = getXMLHttpRequest();
+        if (oReq != null) {
+            oReq.open("POST", url, true);
+            oReq.onreadystatechange = handler;
+            oReq.send(dataStr);
+        } else {
+            UI.showMessage("AJAX (XMLHTTP) not supported.");
+        }  */
+        var xmlhttp = getXMLHttpRequest(); 
+        
+        if (xmlhttp != null) {
+            xmlhttp.open("POST",url,true);
+            xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+            xmlhttp.send(dataStr);
+            xmlhttp.onreadystatechange = function(){
+                if (xmlhttp.readyState == 4 /* complete */ ) {
+                    if (xmlhttp.status == 200 && success!=undefined) {
+                        success(xmlhttp.responseText);
+                    }
+                    else if(error!=undefined)
+                        error(xmlhttp.status);
+                }
+            };
+        } else {
+            UI.showMessage("AJAX (XMLHTTP) not supported.");
+        }
+    }    
+}
+window['createBehaviour'] = function(initialValue){
+    return F.receiverE().startsWith(initialValue);
+}
+function getPos(el) {
+    // yay readability
+    for (var lx=0, ly=0;el != null;lx += el.offsetLeft, ly += el.offsetTop, el = el.offsetParent){}
+    return {x: lx,y: ly};
+}
+
+function aurora_viewport()
+{
+var e = window
+, a = 'inner';
+if ( !( 'innerWidth' in window ) )
+{
+a = 'client';
+e = document.documentElement || document.body;
+}
+return { width : e[ a+'Width' ] , height : e[ a+'Height' ] }
+}
+//John Resig   
+var ready = ( function () {
+function addEvent( obj, type, fn ) {
+    if (obj.addEventListener) {
+        obj.addEventListener( type, fn, false );
+        EventCache.add(obj, type, fn);
+    }
+    else if (obj.attachEvent) {
+        obj["e"+type+fn] = fn;
+        obj[type+fn] = function() { obj["e"+type+fn]( window.event ); }
+        obj.attachEvent( "on"+type, obj[type+fn] );
+        EventCache.add(obj, type, fn);
+    }
+    else {
+        obj["on"+type] = obj["e"+type+fn];
+    }
+}
+var EventCache = function(){
+    var listEvents = [];
+    return {
+        listEvents : listEvents,
+        add : function(node, sEventName, fHandler){
+            listEvents.push(arguments);
+        },
+        flush : function(){
+            var i, item;
+            for(i = listEvents.length - 1; i >= 0; i = i - 1){
+                item = listEvents[i];
+                if(item[0].removeEventListener){
+                    item[0].removeEventListener(item[1], item[2], item[3]);
+                };
+                if(item[1].substring(0, 2) != "on"){
+                    item[1] = "on" + item[1];
+                };
+                if(item[0].detachEvent){
+                    item[0].detachEvent(item[1], item[2]);
+                };
+                item[0][item[1]] = null;
+            };
+        }
+    };
+}();
+// Usage
+/*addEvent(window,'unload',EventCache.flush);
+addEvent(window,'load', function(){});       */
+
+  function ready( f ) {
+    if( ready.done ) return f();
+
+    if( ready.timer ) {
+      ready.ready.push(f);
+    } else {
+      addEvent( window, "load", isDOMReady );
+      ready.ready = [ f ];
+      ready.timer = setInterval(isDOMReady, 13);
+    }
+  };
+
+  function isDOMReady() {
+    if( ready.done ) return false;
+
+    if( document && document.getElementsByTagName && document.getElementById && document.body ) {
+      clearInterval( ready.timer );
+      ready.timer = null;
+      for( var i = 0; i < ready.ready.length; i++ ) {
+        ready.ready[i]();
+      }
+      ready.ready = null;
+      ready.done = true;
+    }
+  }
+
+  return ready;
+})();
+
+
 function caller(ob, depth, maxDepth){
     if(depth==undefined)
         depth = 1;
@@ -17,6 +178,39 @@ function auroraParseBoolean(b){
     if(b=="true"||b==true)
         return true;
     return false;
+}
+
+function getViewPortDimensions(){
+ 
+ var viewportwidth;
+ var viewportheight;
+  
+ // the more standards compliant browsers (mozilla/netscape/opera/IE7) use window.innerWidth and window.innerHeight
+  
+ if (typeof window.innerWidth != 'undefined')
+ {
+      viewportwidth = window.innerWidth,
+      viewportheight = window.innerHeight
+ }
+  
+// IE6 in standards compliant mode (i.e. with a valid doctype as the first line in the document)
+ 
+ else if (typeof document.documentElement != 'undefined'
+     && typeof document.documentElement.clientWidth !=
+     'undefined' && document.documentElement.clientWidth != 0)
+ {
+       viewportwidth = document.documentElement.clientWidth,
+       viewportheight = document.documentElement.clientHeight
+ }
+  
+ // older versions of IE
+  
+ else
+ {
+       viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+       viewportheight = document.getElementsByTagName('body')[0].clientHeight
+ }
+return {width: viewportwidth, height: viewportheight};
 }
 // Array Remove - By John Resig (MIT Licensed)
 
@@ -261,15 +455,14 @@ function clone(source){
 function cloneObject(source) {
    if (source instanceof Array) {
         var copy = [];
-        for (var i = 0, len = source.length; i < len; ++i) {
-            copy[i] = clone(source[i]);
+        for (var i = 0; i < source.length; i++) {
+            copy[i] = cloneObject(source[i]);
         }
         return copy;
     }
    var copiedObject = {};
-   jQuery.extend(copiedObject,source);
+   jQuery.extend(true, copiedObject,source);
    return copiedObject;
-
    }
 
 

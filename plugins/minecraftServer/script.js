@@ -38,7 +38,7 @@ function MinecraftServerPlayerListWidget(instanceId,data){
         DATA.registerRemote(playerListR);
         DATA.register("minecraftServer_getPlayersOnline", "", playerListOnlineB);
         DATA.register("minecraftServer_getPlayersOffline", "",playerListOfflineB);  
-        var playerListDivB = liftB(function(onlinePlayers, offlinePlayers){
+        var playerListDivB = F.liftB(function(onlinePlayers, offlinePlayers){
             /*alert("LIFT");
             if(onlinePlayers==NOT_READY)
                 alert("Online Players NOT READy");
@@ -52,7 +52,7 @@ function MinecraftServerPlayerListWidget(instanceId,data){
                 
            // alert(onlinePlayers.length+" <> "+offlinePlayers.length);
             if(onlinePlayers==NOT_READY||offlinePlayers==NOT_READY)
-                return createDomElement('div', '', "", "Loading..."); //<br /><img src=\"themes/"+SETTINGS.theme.name+"/loading_s.gif\" alt=\"\" />
+                return createDomElement('div', '', "", "Loading..."); //<br /><img src=\"themes/"+window['SETTINGS']['theme'].name+"/loading_s.gif\" alt=\"\" />
             switch(data.size){
                 case 0:{
                     var el = createDomElement('div', "", "", "<u>Players Online: "+onlinePlayers.length    +"</u><br />");
@@ -111,7 +111,7 @@ function MinecraftServerPlayerCountWidget(instanceId,data){
                 return createDomElement('div', "", "", "Players Online: Loading...");
             return createDomElement('div', "", "", "Players Online: "+((onlinePlayers!=null)?onlinePlayers.length+"":"Loading"));
         }); 
-        insertDomB(playersOnlineDivB, domId);     
+        F.insertDomB(playersOnlineDivB, domId);     
     }
     this.destroy=function(){
         DATA.deregister("minecraftServer_getPlayersOnline");
@@ -120,8 +120,8 @@ function MinecraftServerPlayerCountWidget(instanceId,data){
         return "<div class=\"minecraftServerPlayerCount\" style=\"width:"+width+"px; height: "+height+"px\"><div id=\""+domId+"\"></div></div>";
     }
 }
-widgetTypes['minecraftServerPlayerList']=MinecraftServerPlayerListWidget;  
-widgetTypes['minecraftServerPlayerCount']=MinecraftServerPlayerCountWidget;
+WIDGETS.register("minecraftServerPlayerList", MinecraftServerPlayerListWidget);
+WIDGETS.register("minecraftServerPlayerCount", MinecraftServerPlayerCountWidget);
 
 
  

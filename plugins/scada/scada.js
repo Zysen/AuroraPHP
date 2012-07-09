@@ -16,4 +16,4 @@ function AnalogRegisterDisplay(instanceId, data){
         return "<span class=\"scada_analogDisplay\"><span id=\""+instanceId+"_container\">&nbsp;</span>"+this.units+"</span>";
     }
 }     
-widgetTypes['AnalogRegisterDisplay']=AnalogRegisterDisplay;
+WIDGETS.register("AnalogRegisterDisplay", AnalogRegisterDisplay);

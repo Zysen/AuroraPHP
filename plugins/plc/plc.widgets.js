@@ -40,6 +40,5 @@ function PLCMachineStatusPieGraph(instanceId, data){
     }
 }  
 
-
-widgetTypes['PLCMachineStatusPieGraph']=PLCMachineStatusPieGraph;
-widgetTypes['PLCContinuousDeviceDataGraph']=PLCContinuousDeviceDataGraph; 
+WIDGETS.register("PLCMachineStatusPieGraph", PLCMachineStatusPieGraph);
+WIDGETS.register("PLCContinuousDeviceDataGraph", PLCContinuousDeviceDataGraph);

@@ -1,8 +1,8 @@
 var tableBackgroundColor = "#FFFFFF";
 var tableBackgroundColorSelected = "#b3ddf8";
-var CELL_RENDERERS = {"boolean":BooleanCellRenderer, "string":StringCellRenderer, "int":IntegerCellRenderer, "gender":GenderColumn, "date":DateColumn, "RW": ReadWriteColumn, "readWrite": ReadWriteColumn};
-                                                                                     //IntegerCellRenderer
-
+var CELL_RENDERERS = {"boolean":BooleanCellRenderer, "string":StringCellRenderer, "int":IntegerCellRenderer,"float":StringCellRenderer, "gender":GenderColumn, "date":(typeof(jQuery)=='undefined')?StringCellRenderer:DateColumn, "RW": ReadWriteColumn, "readWrite": ReadWriteColumn};
+                                                                                     
+                                    
 
 
 function cleanFunctions(obj) {
@@ -18,23 +18,28 @@ function cleanFunctions(obj) {
 }
 
 function cleanRenderers(table){
-    for(colIndex in table.COLUMNMETADATA){
-        table.COLUMNMETADATA[colIndex].renderer = undefined;    
+    for(colIndex in table["COLUMNMETADATA"]){
+        table["COLUMNMETADATA"][colIndex]["renderer"] = undefined;    
     }
-    for(rowIndex in table.ROWMETADATA){
-        table.ROWMETADATA[rowIndex].renderer = undefined;    
+    for(rowIndex in table["ROWMETADATA"]){
+        table["ROWMETADATA"][rowIndex]["renderer"] = undefined;    
     }
-    for(rowIndex in table.CELLMETADATA){
-        var row = table.CELLMETADATA[rowIndex];
+    for(rowIndex in table["CELLMETADATA"]){
+        var row = table["CELLMETADATA"][rowIndex];
         if(row!=undefined){
             for(colIndex in row){
                 var cell = row[colIndex];
-                cell.renderer = undefined; 
+                cell["renderer"] = undefined; 
             }
         }    
     }
     return table;
 }
+
+/**
+ *  BasicSelectCellRenderer
+ * @constructor
+ */
 function BasicSelectCellRenderer(options, value, cell, width){
     var element = document.createElement("select");
     var selectedElement = 0;
@@ -73,14 +78,23 @@ function BasicSelectCellRenderer(options, value, cell, width){
         element.value = newValue;
     }
     this.getUpdateEvent = function(){
-        return extractValueE(element);
+        return F.extractValueE(element);
     }
 }
+/**
+ *  BasicSelectCellRendererContainer
+ * @constructor
+ */
 function BasicSelectCellRendererContainer(options){       
     this.getCellRenderer = function(value, cell, width){
         return new BasicSelectCellRenderer(options, value, cell, width);
     }
 }
+//table
+/**
+ *  BasicRadioCellRenderer
+ * @constructor
+ */
 function BasicRadioCellRenderer(name, options, value, cell, width){
     this.elements = [];
     this.events = new Array();
@@ -98,10 +112,10 @@ function BasicRadioCellRenderer(name, options, value, cell, width){
         this.elements.push(element);
         if(element.value == value)
             element.checked = true;
-        var event = extractEventE(element, "change");
+        var event = F.extractEventE(element, "change");
         this.events.push(event);
     }
-    this.valueChangeEventE = mergeE.apply(this, this.events);  
+    this.valueChangeEventE = F.mergeE.apply(this, this.events);  
     this.render = function(){
         this.enabled(false);
     }
@@ -147,17 +161,31 @@ function BasicRadioCellRenderer(name, options, value, cell, width){
         return this.valueChangeEventE;
     }
 }
+/**
+ *  BasicRadioCellRendererContainer
+ * @constructor
+ */
 function BasicRadioCellRendererContainer(name, options){
     this.getCellRenderer = function(value, cell, width){
         return new BasicRadioCellRenderer(name, options, value, cell, width);
     }
 }
-function BasicCellRenderer(type, name){
-    var renderClass = CELL_RENDERERS[type]; 
+/**
+ *  BasicCellRenderer
+ * @constructor
+ */
+function BasicCellRenderer(type, name){ 
     this.getCellRenderer = function(value, cell, width){
-        return new renderClass(value, cell, width);
+        var renderClass = CELL_RENDERERS[type];
+        var renderer = new renderClass(value, cell, width);
+        //log(renderer);
+        return renderer; 
     }
 }
+/**
+ *  DefaultCellRenderer
+ * @constructor
+ */
 function DefaultCellRenderer(value, cell, width){
     this.render = function(){
         cell.innerHTML = value;
@@ -182,9 +210,13 @@ function DefaultCellRenderer(value, cell, width){
         value = newValue;
     }
     this.getUpdateEvent = function(){
-        return receiverE();
+        return F.receiverE();
     }
 }
+/**
+ *  BooleanCellRenderer
+ * @constructor
+ */
 function BooleanCellRenderer(value, cell, width){    
     var value = (value!=undefined&&(value=="1"||value==true||value=="true"))?true:false;
     var checkbox = document.createElement("input");
@@ -222,9 +254,13 @@ function BooleanCellRenderer(value, cell, width){
         checkbox.checked = newValue;
     }
     this.getUpdateEvent = function(){
-        return extractValueE(checkbox);
+        return F.extractValueE(checkbox);
     }
 }
+/**
+ *  ReadWriteColumn
+ * @constructor
+ */
 function ReadWriteColumn(value, cell, width){
     value = (value==undefined||value==null||value=="")?"":value;
     var select = document.createElement("select");
@@ -279,9 +315,13 @@ rwOption=document.createElement("OPTION");
         select.value = newValue;
     }
     this.getUpdateEvent = function(){
-        return extractValueE(select);
+        return F.extractValueE(select);
     }
 }
+/**
+ *  GenderColumn
+ * @constructor
+ */
 function GenderColumn(value, cell, width){
     value = (value==undefined||value==null||value=="")?"M":value;
     var select = document.createElement("select");
@@ -324,9 +364,13 @@ function GenderColumn(value, cell, width){
         select.value = newValue;
     }
     this.getUpdateEvent = function(){
-        return extractValueE(select);
+        return F.extractValueE(select);
     }
 }
+/**
+ *  DateColumn
+ * @constructor
+ */
 function DateColumn(value, cell, width){
    value = (value==undefined||value==null||value=="")?"2012-01-01":value;
     var div = document.createElement("div");
@@ -373,7 +417,11 @@ function DateColumn(value, cell, width){
     this.getUpdateEvent = function(){
         return jQuery(input).datepicker().fj('jQueryBind', 'change');
     }
-}
+}        
+/**
+ *  StringCellRenderer
+ * @constructor
+ */
 function StringCellRenderer(value, cell, width){
     value = (value==undefined||value==null)?"":value;
     var displayDom = document.createElement("div");
@@ -415,9 +463,13 @@ function StringCellRenderer(value, cell, width){
         textbox.value = newValue;
     }
     this.getUpdateEvent = function(){
-        return extractValueE(textbox);
+        return F.extractValueE(textbox);
     }
 }
+/**
+ *  IntegerCellRenderer
+ * @constructor
+ */
 function IntegerCellRenderer(value, cell, width){
     value = (value==undefined||value==null)?"":value;
     var displayDom = document.createElement("div");
@@ -453,28 +505,37 @@ function IntegerCellRenderer(value, cell, width){
         }
     }
     this.getValue = function(){
-        return parseFloat(textbox.value);
+        var val = textbox.value;
+        if(val.length==0)
+            val = 0;
+        return parseFloat(val);
     }
     this.setValue = function(newValue){
         textbox.value = newValue;
     }
     this.getUpdateEvent = function(){
-        return extractValueE(textbox);
+        return F.extractValueE(textbox);
     }
 }
 
+/**
+ *  TableWidgetB
+ * @constructor
+ */
 function TableWidgetB(instanceId, widgetData, dataB){
+    if(arguments.length!=3)
+        log("Error TableWidgetB called with wrong argument count");
     var table = document.createElement("table");
     table.id = instanceId+"_table";
     table.className = "TableWidget";
     this.table = table;
-    
-    
+    var confirmChanges = (widgetData!=undefined&&widgetData.confirmChanges!=undefined)?widgetData.confirmChanges:true;
+    var confirmChangesB = F.constantB(confirmChanges);
    //Control Bar Buttons
-    var saveButton = createIcon(SETTINGS.theme.path+"save.png");
-    var cancelButton = createIcon(SETTINGS.theme.path+"cancel.png");
-    var addRowButton = createIcon(SETTINGS.theme.path+"add.png");
-    var deleteRowButton = createIcon(SETTINGS.theme.path+"delete.png"); 
+    var saveButton = createIcon(window['SETTINGS']['theme'].path+"save.png");
+    var cancelButton = createIcon(window['SETTINGS']['theme'].path+"cancel.png");
+    var addRowButton = createIcon(window['SETTINGS']['theme'].path+"add.png");
+    var deleteRowButton = createIcon(window['SETTINGS']['theme'].path+"delete.png"); 
     
     var addRow = document.createElement("tr");
     var controlsRow = document.createElement("tr");
@@ -493,17 +554,18 @@ function TableWidgetB(instanceId, widgetData, dataB){
     
     //Build Heading Row
     //Events
-    var userEventE = receiverE();
+    var userEventE = F.receiverE();
     var userEventB = userEventE.startsWith("view");
     
-    var saveButtonPressedE = extractEventE(saveButton,'click');
-    var cancelButtonPressedE = extractEventE(cancelButton,'click');   
-    var addButtonPressedE = extractEventE(addRowButton,'click');
-   var deleteButtonPressedE = extractEventE(deleteRowButton,'click');
+    var triggerSaveE = F.receiverE();
+    var saveButtonPressedE = F.mergeE(triggerSaveE, F.extractEventE(saveButton,'click'));
+    var cancelButtonPressedE = F.extractEventE(cancelButton,'click');   
+    var addButtonPressedE = F.extractEventE(addRowButton,'click');
+   var deleteButtonPressedE = F.extractEventE(deleteRowButton,'click');
     
     
     //extractEventE(table,"click")                   jQuery(table).fj('extEvtE', 'click')
-    var tableRowClickedE = extractEventE(table,"click").mapE(function(ev){
+    var tableRowClickedE = F.extractEventE(table,"click").mapE(function(ev){
         stopEventBubble(ev);
         //ev.preventDefault();
         //return NOT_READY;
@@ -524,8 +586,8 @@ function TableWidgetB(instanceId, widgetData, dataB){
     }).filterE(function(v){return v!=NOT_READY;});
     
     var tableBlurE = jQuery(document).fj('extEvtE', 'click').mapE(function(x){return NOT_READY;});    
-    var rowSelectionResetE = receiverE();
-    var tableSelectionRowIndexE = mergeE(tableRowClickedE, rowSelectionResetE.mapE(function(v){return NOT_READY;}), tableBlurE);
+    var rowSelectionResetE = F.receiverE();
+    var tableSelectionRowIndexE = F.mergeE(tableRowClickedE, rowSelectionResetE.mapE(function(v){return NOT_READY;}), tableBlurE);
     var rowSelectionsE = tableSelectionRowIndexE.collectE([],function(newElement,arr) {
         if(newElement==NOT_READY)
             return []; 
@@ -571,12 +633,12 @@ function TableWidgetB(instanceId, widgetData, dataB){
     
     
     
-    var showAddRowsResetE = receiverE();
+    var showAddRowsResetE = F.receiverE();
     
-    var showAddRowsB = mergeE(addButtonPressedE, showAddRowsResetE).collectE(false,function(newVal,lastVal){if(newVal==NOT_READY)return false;return !lastVal; }).startsWith(false);
+    var showAddRowsB = F.mergeE(addButtonPressedE, showAddRowsResetE).collectE(false,function(newVal,lastVal){if(newVal==NOT_READY)return false;return !lastVal; }).startsWith(false);
            
     
-    var pageRenderedB = liftBI(function(tableData){
+    var pageRenderedB = F.liftBI(function(tableData){
         table.removeChildren();
         addRow.removeChildren();
         //If not ready, show a loading icon
@@ -585,7 +647,7 @@ function TableWidgetB(instanceId, widgetData, dataB){
             element.className = "TableWidgetCell";
             jQuery(element).attr('colspan',visibleColumnCount);                                         
             element.style.textAlign="center";
-            element.innerHTML = "<img src=\""+SETTINGS.theme.path+"loading.gif\" alt=\"\"/>";
+            element.innerHTML = "<img src=\""+window['SETTINGS']['theme'].path+"loading.gif\" alt=\"\"/>";
             table.appendChild(element);
             return [new Array(), table, new Array(), document.createElement("div")];
         }  
@@ -594,19 +656,24 @@ function TableWidgetB(instanceId, widgetData, dataB){
             element.className = "TableWidgetCell";
             jQuery(element).attr('colspan',visibleColumnCount);                                         
             element.style.textAlign="center";
-            element.innerHTML = "<img src=\""+SETTINGS.theme.path+"noperm.png\" alt=\"\"/><br />No Permission";
+            element.innerHTML = "<img src=\""+window['SETTINGS']['theme'].path+"noperm.png\" alt=\"\"/><br />No Permission";
             table.appendChild(element);
             return [new Array(), table, new Array(), document.createElement("div")];
         }  
-        
+        //log(tableData);
         var headingTableRow = document.createElement("tr");
         var visibleColumnCount = 0;
-        var columns = tableData.COLUMNS;
-        jQuery(controlsCell).attr('colspan',columns.length);
-
-        
+       /* if(tableData['COLUMNS']==undefined){
+            for (property in tableData){
+                alert(property);
+            }
+            return;
+        }  */
+        var columns = tableData['COLUMNS'];
+        jQuery(controlsCell).attr('colspan',columns.length); 
         for(index in columns){ 
             var col = columns[index];
+            
             if(col.visible){
                 var cell = document.createElement("th");
                 if(col.width!=undefined){
@@ -620,26 +687,26 @@ function TableWidgetB(instanceId, widgetData, dataB){
         table.appendChild(headingTableRow);
         
         //If ready render the table
-        var tableMetaData = tableData.TABLEMETADATA;
-        var tablePermissions = (tableMetaData!=undefined&&tableMetaData.permissions!=undefined&&tableMetaData.permissions.canEdit!=undefined)?tableMetaData.permissions.canEdit:true; 
-        var data = tableData.DATA;
+        var tableMetaData = tableData['TABLEMETADATA'];
+        var tablePermissions = (tableMetaData!=undefined&&tableMetaData['permissions']!=undefined&&tableMetaData['permissions']['canEdit']!=undefined)?tableMetaData['permissions']['canEdit']:true; 
+        var data = tableData['DATA'];
         renderedTable = new Array(); 
         for(index in data){
             var domRow = document.createElement("tr");
             var dataRow = data[index];
-            var rowMetaData = tableData.ROWMETADATA[index];
-            var rowPermissions = (rowMetaData!=undefined&&rowMetaData.permissions!=undefined)?rowMetaData.permissions:"RW";
+            var rowMetaData = tableData['ROWMETADATA'][index];
+            var rowPermissions = (rowMetaData!=undefined&&rowMetaData['permissions']!=undefined)?rowMetaData['permissions']:"RW";
             if(renderedTable[index]==undefined)
                 renderedTable[index] = new Array();
             for(cellIndex in columns){
-                var columnMetaData = tableData.COLUMNMETADATA[cellIndex];
-                var columnPermissions = columnMetaData==undefined||columnMetaData.permissions==undefined?"RW":columnMetaData.permissions;
-                var cellMetaData = (tableData.CELLMETADATA==undefined||tableData.CELLMETADATA[index]==undefined)?undefined:tableData.CELLMETADATA[index][cellIndex];
-                var cellPermissions = cellMetaData==undefined||cellMetaData.permissions==undefined?"RW":cellMetaData.permissions; 
+                var columnMetaData = tableData['COLUMNMETADATA'][cellIndex];
+                var columnPermissions = columnMetaData==undefined||columnMetaData['permissions']==undefined?"RW":columnMetaData['permissions'];
+                var cellMetaData = (tableData['CELLMETADATA']==undefined||tableData['CELLMETADATA'][index]==undefined)?undefined:tableData['CELLMETADATA'][index][cellIndex];
+                var cellPermissions = cellMetaData==undefined||cellMetaData['permissions']==undefined?"RW":cellMetaData['permissions']; 
                 var rowNumber = parseInt(cellIndex)+1;
                 var cell = document.createElement("td");
                 var column = columns[cellIndex];
-		var customRenderer = (rowMetaData!=undefined&&rowMetaData.renderer!=undefined)?rowMetaData.renderer:(columnMetaData!=undefined&&columnMetaData.renderer!=undefined)?columnMetaData.renderer:(cellMetaData!=undefined&&cellMetaData.renderer!=undefined)?cellMetaData.renderer:undefined;
+		var customRenderer = (rowMetaData!=undefined&&rowMetaData["renderer"]!=undefined)?rowMetaData["renderer"]:(columnMetaData!=undefined&&columnMetaData["renderer"]!=undefined)?columnMetaData["renderer"]:(cellMetaData!=undefined&&cellMetaData["renderer"]!=undefined)?cellMetaData["renderer"]:undefined;
 
                 if(customRenderer==undefined){
                     var renderClass = (CELL_RENDERERS[column.type]==undefined)?DefaultCellRenderer:CELL_RENDERERS[column.type];
@@ -666,13 +733,13 @@ function TableWidgetB(instanceId, widgetData, dataB){
             
             newRowsRenderedTable = new Array();
             for(cellIndex in columns){
-                var columnMetaData = tableData.COLUMNMETADATA[cellIndex];
+                var columnMetaData = tableData['COLUMNMETADATA'][cellIndex];
                 var columnPermissions = columnMetaData==undefined?"RW":columnMetaData.permissions;
                 
                 var rowNumber = parseInt(cellIndex)+1;
                 var cell = document.createElement("td");
                 var column = columns[cellIndex];
-                var customRenderer = (columnMetaData!=undefined&&columnMetaData.renderer!=undefined)?columnMetaData.renderer:undefined;	
+                var customRenderer = (columnMetaData!=undefined&&columnMetaData["renderer"]!=undefined)?columnMetaData["renderer"]:undefined;	
 		if(customRenderer==undefined){                           
 			var renderClass = (CELL_RENDERERS[column.type]!=undefined)?CELL_RENDERERS[column.type]:DefaultCellRenderer;
                     	renderer = new renderClass(undefined, cell, column.width);
@@ -696,19 +763,19 @@ function TableWidgetB(instanceId, widgetData, dataB){
         return [value];
     }, dataB);
     
-    var renderedTableB = liftB(function(pageRendered){
+    var renderedTableB = F.liftB(function(pageRendered){
         return pageRendered[0];
     }, pageRenderedB); 
     
-    var domTableB = liftB(function(pageRendered){
+    var domTableB = F.liftB(function(pageRendered){
         return pageRendered[1];
     }, pageRenderedB);
     
-    var newRowsRenderedTableB = liftB(function(pageRendered){
+    var newRowsRenderedTableB = F.liftB(function(pageRendered){
         return pageRendered[3];
     }, pageRenderedB);  
     
-    var filteredRowSelectionsB = liftB(function(rowSelections, renderedTable, newRowsRenderedTable){
+    var filteredRowSelectionsB = F.liftB(function(rowSelections, renderedTable, newRowsRenderedTable){
             for(index in rowSelections){
                 var targetIndex = rowSelections[index];
                 if(targetIndex>renderedTable.length){
@@ -720,15 +787,16 @@ function TableWidgetB(instanceId, widgetData, dataB){
    var rowSelectionsEmptyB = filteredRowSelectionsB.liftB(function(rowSelections){return rowSelections.length==0;});      
     
     
-    var renderedRowSelectionsB = liftB(function(renderedTable, rowSelections){
-        if(renderedTable==NOT_READY||rowSelections==NOT_READY)
+    var renderedRowSelectionsB = F.liftB(function(renderedTable, rowSelections){
+        if(renderedTable==NOT_READY||rowSelections==NOT_READY){
             return NOT_READY; 
+        }
         var c = document.createElement("div");
             for(index in renderedTable){   
                 var isSelected = arrayContains(rowSelections, parseInt(index)+1);
                 for(cellIndex in renderedTable[index]){
                     //log("Setting Selected");
-                    renderedTable[index][cellIndex].renderer.setSelected(isSelected);
+                    renderedTable[index][cellIndex]["renderer"].setSelected(isSelected);
                 }
             }
     }, renderedTableB, rowSelectionsB);
@@ -738,62 +806,87 @@ function TableWidgetB(instanceId, widgetData, dataB){
     
     var tableAllowsAddB = dataB.liftB(function(tableData){
 	//log("tableAllowsAddB");
-	return (tableData.TABLEMETADATA!=undefined&&tableData.TABLEMETADATA.permissions!=undefined&&tableData.TABLEMETADATA.permissions.canAdd!=undefined)?tableData.TABLEMETADATA.permissions.canAdd:true;
+	return (tableData["TABLEMETADATA"]!=undefined&&tableData["TABLEMETADATA"]['permissions']!=undefined&&tableData["TABLEMETADATA"]['permissions']['canAdd']!=undefined)?tableData["TABLEMETADATA"]['permissions']['canAdd']:true;
     });
     var tableAllowsDeleteB = dataB.liftB(function(tableData){
 	//log(tableAllowsDeleteB);
-	return (tableData.TABLEMETADATA!=undefined&&tableData.TABLEMETADATA.permissions!=undefined&&tableData.TABLEMETADATA.permissions.canDelete!=undefined)?tableData.TABLEMETADATA.permissions.canDelete:true;
+	return (tableData["TABLEMETADATA"]!=undefined&&tableData["TABLEMETADATA"]['permissions']!=undefined&&tableData["TABLEMETADATA"]['permissions']['canDelete']!=undefined)?tableData["TABLEMETADATA"]['permissions']['canDelete']:true;
     });
     
-    var tableDataChangedB = liftB(function(rendererTable, domTable){
+    var tableDataChangedB = F.liftB(function(rendererTable, domTable){
         if(rendererTable==NOT_READY||rendererTable.length==0||domTable==NOT_READY)
-            return receiverE().startsWith(NOT_READY);
+            return F.receiverE().startsWith(NOT_READY);
 //	log("tableDataChangedB");
         var updateEvents = new Array();
-        for(rowIndex in rendererTable){
-            for(colIndex in rendererTable[rowIndex]){
+        for(var rowIndex in rendererTable){
+            for(var colIndex in rendererTable[rowIndex]){
                 
-                updateE = rendererTable[rowIndex][colIndex].renderer.getUpdateEvent();
+                updateE = rendererTable[rowIndex][colIndex]["renderer"].getUpdateEvent();
                 updateEvents.push(updateE);
             }
-        }
+        }                                                             
         //log("ZZZ");
-        return mergeE.apply(this, updateEvents).startsWith(false);   
+        return F.mergeE.apply(this, updateEvents).startsWith(false);   
     },
     renderedTableB, domTableB).switchB();
     
-   var userDataChangeB = orB(tableDataChangedB.changes().snapshotE(pageRenderedB).mapE(function(renderedData){
+   var userDataChangeB = F.orB(tableDataChangedB.changes().snapshotE(pageRenderedB).mapE(function(renderedData){
         // Table of Cell Renderers, The Dom Table, the raw table data
        // log("Checking Change");
         var rendererTable = renderedData[0];
         var domTable = renderedData[1];
-        var dataTable = renderedData[2].DATA;
+        var dataTable = renderedData[2]["DATA"];
         /*var newRenderTable = renderedData[3]; */       
-        for(rowIndex in rendererTable){
-            for(colIndex in rendererTable[rowIndex]){
+        for(var rowIndex in rendererTable){
+            for(var colIndex in rendererTable[rowIndex]){
                 var renderCell = rendererTable[rowIndex][colIndex];
                 var dataCell = dataTable[rowIndex][colIndex];
                 //log("Getting Renderer Value");
-                if(renderCell.renderer.getValue()!=dataCell){
+                
+                if((renderCell["renderer"]).getValue()!=dataCell){
+                    /*log("DIFF");
+                    log(renderCell["renderer"].getValue()+" != "+dataCell);
+                log(renderCell["renderer"]);
+                log(typeof(rowIndex)+" "+typeof(colIndex)) 
+                log(rowIndex+" "+colIndex);
+                log(renderCell);
+                log(dataCell);
+                log(dataTable);
+                log("/DIFF");  */
                     return true; 
+                
                 }
             } 
         }
-       // log("Checking Change3");
         return false;
     }).startsWith(false), showAddRowsB); 
+    
+    F.liftB(function(userDataChange, confirmChanges){
+        //log(userDataChange+" "+confirmChanges);
+        if(userDataChange==NOT_READY||confirmChanges==NOT_READY){
+            return NOT_READY;
+        }
+        
+        if(userDataChange&&(!confirmChanges)){
+            //log("Sending Update");
+            triggerSaveE.sendEvent("ChangeEvent");
+        }
+    }, userDataChangeB, confirmChangesB);
+    
+    
+    
     /*
-    Gui Updates
+    Gui Updates                     
     */
-    insertValueB(ifB(userDataChangeB, 'inline', 'none'),saveButton, 'style', 'display');
-    insertValueB(ifB(userDataChangeB, 'inline', 'none'),cancelButton, 'style', 'display');
-    insertValueB(ifB(showAddRowsB, 'table-row', 'none'),addRow, 'style', 'display');
+    F.insertValueB(F.ifB(F.andB(userDataChangeB, confirmChangesB), 'inline', 'none'),saveButton, 'style', 'display');
+    F.insertValueB(F.ifB(F.andB(userDataChangeB, confirmChangesB), 'inline', 'none'),cancelButton, 'style', 'display');
+    
+    F.insertValueB(F.ifB(showAddRowsB, 'table-row', 'none'),addRow, 'style', 'display');
   
-    insertValueB(ifB(andB(notB(showAddRowsB), tableAllowsAddB), 'inline', 'none'),addRowButton, 'style', 'display');
-    insertValueB(ifB(rowSelectionsEmptyB, 'auto', 'pointer'),deleteRowButton, 'style', 'cursor');
-    insertValueB(ifB(tableAllowsDeleteB, 'inline', 'none'),deleteRowButton, 'style', 'display');
-    insertValueB(ifB(notB(rowSelectionsEmptyB), SETTINGS.theme.path+'delete.png', SETTINGS.theme.path+'delete_disabled.png'),deleteRowButton, 'src'); 
- 
+    F.insertValueB(F.ifB(F.andB(F.notB(showAddRowsB), tableAllowsAddB), 'inline', 'none'),addRowButton, 'style', 'display');
+    F.insertValueB(F.ifB(rowSelectionsEmptyB, 'auto', 'pointer'),deleteRowButton, 'style', 'cursor');
+    F.insertValueB(F.ifB(tableAllowsDeleteB, 'inline', 'none'),deleteRowButton, 'style', 'display');
+    F.insertValueB(F.ifB(F.notB(rowSelectionsEmptyB), window['SETTINGS']['theme'].path+'delete.png', window['SETTINGS']['theme'].path+'delete_disabled.png'),deleteRowButton, 'src'); 
 
     /*
     Save Rows
@@ -802,12 +895,12 @@ function TableWidgetB(instanceId, widgetData, dataB){
         showAddRowsResetE.sendEvent(NOT_READY);
         dataB.sendEvent(data); 
     });
-    saveButtonPressedE.snapshotE(liftB(function(pageRendered, showAddRows){return [pageRendered, showAddRows]}, pageRenderedB,showAddRowsB)).mapE(function(data){
+    saveButtonPressedE.snapshotE(F.liftB(function(pageRendered, showAddRows){return [pageRendered, showAddRows]}, pageRenderedB,showAddRowsB)).mapE(function(data){
 //log("saveButtonPressedE");    
-    log("save pressed");    
+    //log("save pressed");    
 	var renderedTable = data[0][0];
-        var dataTable = data[0][2].DATA;
-        var columns = data[0][2].COLUMNS;
+        var dataTable = data[0][2]["DATA"];
+        var columns = data[0][2]["COLUMNS"];
         var newRenderedTable = data[0][3];  
         var renderRowIndex = renderedTable.length-1;
         var showAddRows = data[1];
@@ -819,7 +912,7 @@ function TableWidgetB(instanceId, widgetData, dataB){
             for(c=0;c<renderedTable[renderRowIndex].length;c++){
                 var cell = renderedTable[renderRowIndex][c];
                //log("Save Button Get Renderer ");
-                var value = cell.renderer.getValue();
+                var value = cell["renderer"].getValue();
                 dataTable[dataRowIndex][c] = value;
             }
         }
@@ -831,7 +924,7 @@ function TableWidgetB(instanceId, widgetData, dataB){
                         //log();
                         var cell = renderedTable[r][c];
                         //log("Save Button Get Renderer "); 
-                        var value = cell.renderer.getValue();
+                        var value = cell["renderer"].getValue();
                         dataTable[r][c] = value;
                     }
                 }
@@ -840,7 +933,7 @@ function TableWidgetB(instanceId, widgetData, dataB){
                     for(c=0;c<newRenderedTable[rowIndex].length;c++){
                         var cell = newRenderedTable[rowIndex][c];
                         //log("Save Button Get Renderer "); 
-                        var value = cell.renderer.getValue();
+                        var value = cell["renderer"].getValue();
                         if(dataTable[rowIndex+r]==undefined)
                             dataTable[rowIndex+r] = new Array();
                         dataTable[rowIndex+r][c] = value;
@@ -861,25 +954,25 @@ function TableWidgetB(instanceId, widgetData, dataB){
     /*
     Delete Rows
     */
-    var pageDataAndRowSelectionsB = liftB(function(renderedData, rowSelections){
-//log(pageDataAndRowSelectionsB);        
-if(renderedData==NOT_READY||rowSelections==NOT_READY)
-            return NOT_READY;
+    var pageDataAndRowSelectionsB = F.liftB(function(renderedData, rowSelections){
+    if(renderedData==NOT_READY||rowSelections==NOT_READY){
+        return NOT_READY;                         
+    }
           //  log("Page and row selections");
         return {renderedData: renderedData, rowSelections: rowSelections};
     }, pageRenderedB, rowSelectionsB);
     var deleteTableRowsB = deleteButtonPressedE.snapshotE(pageDataAndRowSelectionsB).startsWith(NOT_READY);
     
     deleteTableRowsB.liftB(function(data){
-//log("deleteTableRowsB");
-        if(data==NOT_READY || data.rowSelections.length==0)
+        if(data==NOT_READY || data.rowSelections.length==0){
             return;
+        }
         var rowSelections = data.rowSelections.reverse(); 
         var renderedTable = data.renderedData[0];
-        var dataTable = data.renderedData[2].DATA;
-        var columns = data.renderedData[2].COLUMNS;
+        var dataTable = data.renderedData[2]["DATA"];
+        var columns = data.renderedData[2]["COLUMNS"];
         for(index=0;index<rowSelections.length;index++){
-            arrayCut(data.renderedData[2].DATA, (rowSelections[index]-1));
+            arrayCut(data.renderedData[2]["DATA"], (rowSelections[index]-1));
         }              
         UI.confirm("Delete Rows", "Are you sure you wish to delete these "+rowSelections.length+" row(s)", "Yes", function(val){
             rowSelectionResetE.sendEvent(true);
@@ -892,34 +985,46 @@ if(renderedData==NOT_READY||rowSelections==NOT_READY)
     
     return domTableB
 }
+function getTableRowId(table, rowIndex){
+    if(table.TABLEMETADATA!=undefined&&table.TABLEMETADATA['idColumn']!=undefined){
+        var idColumnStr = table.TABLEMETADATA['idColumn'];
+        var colIndex = getColumnIndex(table, idColumnStr);
+        if(colIndex==null)
+            return null;
+        return table["DATA"][rowIndex][colIndex];
+    }
+    else
+        log("Error, no id column specified in table meta data");
+}
 function getTableValue(table, rowIndex, columnName){
 	var colIndex = getColumnIndex(table, columnName);
     if(colIndex==null)
         return null;
-    return table.DATA[rowIndex][colIndex];
+    return table["DATA"][rowIndex][colIndex];
 }
 function getColumnIndex(table, columnName){
-    for(colIndex in table.COLUMNS){
-        if(table.COLUMNS[colIndex].reference==columnName){
+    for(colIndex in table["COLUMNS"]){
+        if(table["COLUMNS"][colIndex]["reference"]==columnName){
             return colIndex;
         }
     }
     return null;
 }
 function JoinTableB(table1B, table2B, columnId){
-    return liftBI(function(table1, table2){
-        if(table1==NOT_READY||table2==NOT_READY)
+    return F.liftBI(function(table1, table2){
+        if(table1==NOT_READY||table2==NOT_READY){
             return NOT_READY;
+        }
         var searchColIndex1 = columnId;
-        for(colIndex in table1.COLUMNS){
-            if(columnId==table1.COLUMNS.reference){
+        for(colIndex in table1["COLUMNS"]){
+            if(columnId==table1["COLUMNS"]["reference"]){
                 searchColIndex = colIndex;
                 break;
             }        
         }
         var searchColIndex2 = columnId;
-        for(colIndex in table2.COLUMNS){
-            if(columnId==table2.COLUMNS.reference){
+        for(colIndex in table2["COLUMNS"]){
+            if(columnId==table2["COLUMNS"]["reference"]){
                 searchColIndex = colIndex;
                 break;
             }        
@@ -930,15 +1035,15 @@ function JoinTableB(table1B, table2B, columnId){
             log(table1[property]);
         }*/  
         
-        table1.COLUMNS = table1.COLUMNS.concat(table2.COLUMNS);
-        //table1.COLUMNMETADATA = table1.COLUMNMETADATA.concat(table2.COLUMNMETADATA);
-        for(rowIndex in table1.DATA){
-            var searchCell1 = table1.DATA[rowIndex][searchColIndex1];
-            for(rowIndex2 in table2.DATA){
-                var searchCell2 = table2.DATA[rowIndex2][searchColIndex2];
+        table1["COLUMNS"] = table1["COLUMNS"].concat(table2["COLUMNS"]);
+        //table1["COLUMNMETADATA"] = table1["COLUMNMETADATA"].concat(table2["COLUMNMETADATA"]);
+        for(rowIndex in table1["DATA"]){
+            var searchCell1 = table1["DATA"][rowIndex][searchColIndex1];
+            for(rowIndex2 in table2["DATA"]){
+                var searchCell2 = table2["DATA"][rowIndex2][searchColIndex2];
                 if(searchCell1==searchCell2){
-                    for(colIndex2 in table2.DATA[rowIndex2]){
-                        table1.DATA[rowIndex][table1.COLUMNS.length+colIndex2] = table2.DATA[rowIndex2][colIndex2];
+                    for(colIndex2 in table2["DATA"][rowIndex2]){
+                        table1["DATA"][rowIndex][table1["COLUMNS"].length+colIndex2] = table2["DATA"][rowIndex2][colIndex2];
                     }
                 }    
             }

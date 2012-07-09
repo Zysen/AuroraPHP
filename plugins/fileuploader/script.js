@@ -85,6 +85,6 @@ function FileUploaderWidget(instanceId,data){
         return "<div id=\""+tableDivId+"\"></div>";
     }
 }
-widgetTypes['fileUploaderWidget']=FileUploaderWidget;
-widgetTypes['fileUploaderDragDropWidget']=FileUploaderDragDropWidget;
+WIDGETS.register("fileUploaderWidget", FileUploaderWidget);
+WIDGETS.register("fileUploaderDragDropWidget", FileUploaderDragDropWidget);
 
