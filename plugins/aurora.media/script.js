@@ -4,25 +4,43 @@
  * @constructor
  */
 function VideoPlayerWidget(instanceId, data){
-    var poster = (data.poster!=undefined&&data.poster!="")?" poster=\""+data.poster+"\"":"";
     var width = (data.placeholder!=undefined&&data.placeholder.style.width!=undefined)?data.placeholder.style.width:undefined;
     var height = (data.placeholder!=undefined&&data.placeholder.style.height!=undefined)?data.placeholder.style.height:undefined;
+    var poster = (data.poster!=undefined&&data.poster!="")?"&poster="+data.poster+"":"";
+    var poster2 = (data.poster!=undefined&&data.poster!="")?"<img alt=\"happyfit2\" src=\""+data.poster+"\" style=\"position:absolute;left:0;\" width=\""+width+"\" height=\""+height+"\" title=\"Video playback is not supported by your browser\" />":"";
+    var poster3 = (data.poster!=undefined&&data.poster!="")?" poster=\""+data.poster+"\"":"";
     var sources = data.sources;
+    var flashPlayer = "/plugins/aurora.media/flashfox.swf";
     this.loader=function(){
-      
+         var sourcesStr = "";
+        var mp4 = "";
+        for(index in sources){
+            var type = sources[index]['type'];
+            //window['SETTINGS']['scriptPath']
+            if(sources[index]['type']=="video/mp4")
+                mp4 = sources[index]['src']; 
+            sourcesStr += "<source src=\""+sources[index]['src']+"\" type='"+type+"' />";
+        }
+        var flashPart = "";
+        if(mp4!=""){
+            flashPart = "<object classid=\"clsid:D27CDB6E-AE6D-11cf-96B8-444553540000\" type=\"application/x-shockwave-flash\" data=\""+flashPlayer+"\" width=\"604\" height=\"256\" style=\"position:relative;\">"+
+                                "<param name=\"movie\" value=\""+flashPlayer+"\" />"+
+                                "<param name=\"allowFullScreen\" value=\"true\" />"+
+                                "<param name=\"flashVars\" value=\"autoplay=true&amp;controls=true&amp;loop=true&amp;src="+mp4+"\" />"+
+                                "<embed src=\""+flashPlayer+"\" width=\"604\" height=\"256\" flashVars=\"src="+mp4+"&amp;autoplay=true&amp;controls=true&amp;loop=true"+poster+"\"    allowFullScreen=\"true\" wmode=\"transparent\" type=\"application/x-shockwave-flash\" pluginspage=\"http://www.adobe.com/go/getflashplayer_en\" />"+
+                                poster2+
+                                "</object>";
+        }
+        document.getElementById("video").innerHTML = "<video controls=\"controls\" autoplay=\"autoplay\""+poster3+" width=\""+width+"\" height=\""+height+"\" onclick=\"if(/Android/.test(navigator.userAgent))this.play();\">"+sourcesStr+flashPart+"</video>"; 
     }
     this.destroy=function(){
         DATA.deregister("aurora_settings", "");
     }
-    this.build=function(){
-        var sourcesStr = "";
-        for(index in sources){
-            sourcesStr += "<source type=\""+sources[index]['type']+"\" src=\""+sources[index]['src']+"\">";
-        }
-        //<track kind=\"subtitles\" srclang=\"ru\" src=\"./media/sintel_ru.srt\">
-        return "<video controls"+poster+" width=\""+width+"\" height=\""+height+"\">"+sourcesStr+"</video>";
+    this.build=function(){     
+        return "<div id=\"video\"></div>";
     }
-}     
+}   
+
 function VideoPlayerWidgetConfigurator(){
     var id = "VideoWidgetCont";
     this['render'] = function(newData){
@@ -86,20 +104,3 @@ function VideoPlayerWidgetConfigurator(){
     this['getImage'] = function(){}
 } 
 WIDGETS.register("VideoPlayerWidget", VideoPlayerWidget, VideoPlayerWidgetConfigurator); 
-function auroraMediaVideoSrcToType(src){
-    var t = src.split('.').pop();
-    switch(src){
-        case "ogg":{
-            return "video/ogg";
-        }
-        case "mp4":{
-            return "video/mp4";
-        }
-        case "webm":{
-            return "video/webm";
-        }
-        default:{
-            return "video/"+t; 
-        }
-    }
-}
