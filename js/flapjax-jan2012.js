@@ -68,6 +68,142 @@ F.mkArray = function(arrayLike) {
   return Array.prototype.slice.call(arrayLike);
 };
 
+
+
+
+
+
+
+
+   
+               var module = this;
+
+//credit 4umi
+//slice: Array a * Integer * Integer -> Array a
+F.slice = function (arr, start, stop) {
+  var i, len = arr.length, r = [];
+  if( !stop ) { stop = len; }
+  if( stop < 0 ) { stop = len + stop; }
+  if( start < 0 ) { start = len - start; }
+  if( stop < start ) { i = start; start = stop; stop = i; }
+  for( i = 0; i < stop - start; i++ ) { r[i] = arr[start+i]; }
+  return r;
+}
+
+F.isEqual = function (a,b) {
+  return (a == b) ||
+    ( (((typeof(a) == 'number') && isNaN(a)) || a == 'NaN') &&
+      (((typeof(b) == 'number') && isNaN(b)) || b == 'NaN') );
+};
+
+F.forEach = function(fn,arr) {
+  for (var i = 0 ; i < arr.length; i++) {
+    fn(arr[i]);
+  }
+};
+
+//member: a * Array b -> Boolean
+F.member = function(elt, lst) {
+  for (var i = 0; i < lst.length; i++) { 
+    if (isEqual(lst[i], elt)) {return true;} 
+  }
+  return false;
+};
+
+F.zip = function(arrays) {
+  if (arrays.length == 0) return [];
+  var ret = [];
+  for(var i=0; i<arrays[0].length;i++) {
+    ret.push([]);
+    for(var j=0; j<arrays.length;j++) 
+      ret[i].push(arrays[j][i]);
+  }
+  return ret;
+}
+
+//map: (a * ... -> z) * [a] * ... -> [z]
+F.map = function (fn) {
+  var arrays = F.slice(arguments, 1);
+  if (arrays.length === 0) { return []; }
+  else if (arrays.length === 1) {
+    var ret = [];
+    for(var i=0; i<arrays[0].length; i++) {ret.push(fn(arrays[0][i]));}
+    return ret;
+  }
+  else {
+    var ret = F.zip(arrays);
+    var o = new Object();
+    for(var i=0; i<ret.length; i++) {ret[i] = fn.apply(o,ret[i]);}
+    return ret;
+  }
+};
+
+//filter: (a -> Boolean) * Array a -> Array a
+F.filter = function (predFn, arr) {
+  var res = [];
+  for (var i = 0; i < arr.length; i++) { 
+    if (predFn(arr[i])) { res.push(arr[i]); }
+  }
+  return res;
+};
+
+  
+//fold: (a * .... * accum -> accum) * accum * [a] * ... -> accum
+//fold over list(s), left to right
+F.fold = function(fn, init /* arrays */) {
+  var lists = F.slice(arguments, 2);
+  if (lists.length === 0) { return init; }
+  else if(lists.length === 1) {
+    var acc = init;
+    for(var i = 0; i < lists[0].length; i++) {
+      acc = fn(lists[0][i],acc);
+    }
+    return acc;
+  }
+  else {
+    var acc = init;
+    for (var i = 0; i < lists[0].length; i++) {
+      var args = map( function (lst) { return lst[i];}, 
+            lists);
+      args.push(acc);
+      acc = fn.apply({}, args);
+    }
+    return acc;
+  }
+};
+  
+//foldR: (a * .... * accum -> accum) * accum * [a] * ... -> accum
+//fold over list(s), right to left, fold more memory efficient (left to right)
+F.foldR = function (fn, init /* arrays */) {
+  var lists = F.slice(arguments, 2);
+  if (lists.length === 0) { return init; }
+  else if(lists.length === 1) {
+    var acc = init;
+    for(var i=lists[0].length - 1; i > -1; i--)
+      acc = fn(lists[0][i],acc);
+    return acc;
+  }
+  else {
+    var acc = init;
+    for (var i = lists[0].length - 1; i > -1; i--) {
+      var args = map( function (lst) { return lst[i];}, 
+            lists);
+      args.push(acc);
+      acc = fn.apply({}, args);
+    }
+    return acc;     
+  }
+};
+
+
+
+
+
+
+
+
+
+
 //////////////////////////////////////////////////////////////////////////////
 // Flapjax core
 
@@ -975,10 +1111,7 @@ F.liftB = function (fn) {
    // showObj(var_args);
   var args = Array.prototype.slice.call(arguments, 1);
   //dependencies
-  var constituentsE =
-    F.mkArray(arguments)
-    .filter(function (v) { return v instanceof F.Behavior; })
-    .map(function (b) { return b.changes(); });
+  var constituentsE = F.map(function (b) { return b.changes(); }, F.filter(function (v) { return v instanceof F.Behavior; }, F.mkArray(arguments)));
   
   //calculate new vals
   var getCur = function (v) {
@@ -986,7 +1119,7 @@ F.liftB = function (fn) {
   };
   
   var getRes = function () {
-    return getCur(fn).apply(null, args.map(getCur));
+    return getCur(fn).apply(null, F.map(getCur, args));
   };
 
   if(constituentsE.length === 1) {
@@ -1019,10 +1152,7 @@ F.liftBI = function (fn, functionUp) {
    // showObj(var_args);
   var args = Array.prototype.slice.call(arguments, 2);
   //dependencies
-  var constituentsE =
-    F.mkArray(arguments)
-    .filter(function (v) { return v instanceof F.Behavior; })
-    .map(function (b) { return b.changes(); });
+  var constituentsE = F.map(function (b) { return b.changes(); }, F.filter(function (v) { return v instanceof F.Behavior; }, F.mkArray(arguments)));
   
   //calculate new vals
   var getCur = function (v) {
@@ -1030,7 +1160,7 @@ F.liftBI = function (fn, functionUp) {
   };
   
   var getRes = function () {
-    return getCur(fn).apply(null, args.map(getCur));
+    return getCur(fn).apply(null, F.map(getCur, args));
   };
 
   if(constituentsE.length === 1) {
@@ -1464,13 +1594,17 @@ F.dom_.makeTagB = function(tagName) { return function() {
 }; };
 
 
-[ "a", "b", "blockquote", "br", "button", "canvas", "div", "fieldset", 
+var dtypes = [ "a", "b", "blockquote", "br", "button", "canvas", "div", "fieldset", 
 "form", "font", "h1", "h2", "h3", "h4", "hr", "iframe", "input", 
 "label", "legend", "li", "ol", "optgroup", "option", 
 "p", "select", "span", "strong", "table", "tbody", 
-"td", "textarea", "tfoot", "th", "thead", "tr", "tt", "ul" ].forEach(function (name) {
-  window[name.toUpperCase()] = F.dom_.makeTagB(name);
-});
+"td", "textarea", "tfoot", "th", "thead", "tr", "tt", "ul" ];
+
+for(index in dtypes){
+    var name = dtypes[index];
+    if(window&&typeof(name)=='string'&&window[name.toUpperCase()])
+        window[name.toUpperCase()] = F.dom_.makeTagB(name);
+}
 
 /**
  * Creates a DOM element with time-varying children.
