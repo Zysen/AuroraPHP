@@ -1,37 +1,44 @@
-function ContactFormSubmitButton(instanceId, elementId, data){
+function ContactFormSubmitButton(instanceId, data){
     this.instanceId = instanceId;
     var loadingImId = this.instanceId+"_loading";
-    var wysiwygData = data;
-    var form = document.getElementById(data.form);
-    var submitButton = new ValidatedSubmitButton(instanceId,elementId, "{\"validationGroup\":\""+data.validationGroup+"\"}");
-    commonWidgetData.push(data.formGroup, new BehaviourMap());
-    this.loader=function(){    
-        var validationGroup = commonWidgetData.pull(data.validationGroup);
-        var formDataB = commonWidgetData.pull(data.formGroup).getBehaviour();
+    var submitButton = new ValidatedSubmitButton(instanceId,data);
+    this.loader=function(){           
+        
+        var formDataGroupB = DATA.get(data.formGroup, undefined, []); 
+        var formDataB = formDataGroupB.liftB(function(validationMap){
+            return F.liftB.apply(this,[function(){
+                var dataOb = {};
+                for(index in arguments){
+                    if(arguments[index].valid){
+                        dataOb[arguments[index].name] = arguments[index].value;                            
+                    }
+                }
+                return dataOb;
+            }].concat(validationMap));
+        }).switchB();
+        
         submitButton.loader();    
-        var submitClickedE = jQuery("#"+submitButton.elementId).fj('extEvtE', 'click').snapshotE(formDataB).mapE(function(formDataMap){
-            validationGroup.push("contactFormSubmit", false);
-            
-            var ret = new Object();
-            var formData = formDataMap.toArray();
-            ret.target = wysiwygData.target;
-            ret.subject = wysiwygData.subject; 
-            for(index in formData){ 
-                var data = formData[index];
-                eval("ret."+index+"='"+data+"';");
-            }                                                                  
-            return ret;
+        var submitClickedE = jQuery("#"+submitButton.elementId).fj('extEvtE', 'click').snapshotE(formDataB).mapE(function(formData){
+            return formData;
         });
-        var emailValidB = getAjaxRequestB(submitClickedE, scriptPath+"request/contactForm_sendMessage/").mapE(function(valid){
-            validationGroup.push("contactFormSubmit", true);
-            aurora_ui.showMessage('Contact Form', 'Your request has been sent.');
+        var submitClickedB = submitClickedE.startsWith(NOT_READY);
+         
+        /*var submitClickedE = jQuery("#"+submitButton.elementId).fj('extEvtE', 'click').snapshotE(formDataB).mapE(function(formDataMap){
+            alert("Submit clicked");
+            return formDataB;
+        });   */            
+        getAjaxRequestB(submitClickedB, SETTINGS['scriptPath']+"request/contactForm_sendMessage/").mapE(function(valid){
+            UI.showMessage('Contact Form', 'Your request has been sent.');
             return valid;    
         });  
-        insertValueE(emailValidB.mapE(function(){return '';}),loadingImId, 'src');
-        insertValueE(submitClickedE.mapE(function(){return themeDir+'loading_s.gif';}),loadingImId, 'src');
+        //groupValidB
+        
+        //var emailValidB = F.receiverE().startsWith(false);
+        //F.insertValueB(emailValidB,loadingImId, 'src');
+        //F.insertValueB(submitClickedE.mapE(function(){return SETTINGS['theme']['path']+'loading_s.gif';}),loadingImId, 'src');
     }
     this.build=function(){
         return ""+submitButton.build()+"<img id=\""+loadingImId+"\" class=\"loadingSpinner\" src=\"themes/trans.png\" alt=\"\" />";                 
     }
 }
-WIDGETS.register("contactFormSubmitButton", ContactFormSubmitButton);
+WIDGETS.register("ContactFormSubmitButton", ContactFormSubmitButton);

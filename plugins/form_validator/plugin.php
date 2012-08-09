@@ -3,9 +3,9 @@
     $page->registerCSS("plugins/form_validator/style.css");
     //$behaviourManager->registerBehaviour("portMonitor_tx", "portMonitor_getTx");
     $requestManager->registerRequestHandler("form_validator_check_email", "formValidators_checkEmail");
-    function formValidators_checkEmail($path){     
-        if(array_key_exists("email", $_GET)){
-            $email = $_GET['email'];
+    function formValidators_checkEmail($path){ 
+        if(array_key_exists("email", $_POST)){
+            $email = $_POST['email'];
             $valid = true; 
             if (!preg_match("/^[^@]{1,64}@[^@]{1,255}\$/", $email)) {
                  $valid =  false;

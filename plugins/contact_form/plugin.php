@@ -4,11 +4,12 @@
     $requestManager->registerRequestHandler("contactForm_sendMessage", "contactForm_sendMessage");
 
     function contactForm_sendMessage($path){    
-        if(count($_GET)>0){
+        global $settings;
+        if(count($_POST)>0){
             $message = "";
             $nameField = "";
             $emailField = "";
-            foreach($_GET as $name=>$value){
+            foreach($_POST as $name=>$value){
                 if($name=="target" || $name=="subject")
                     continue;
                 $message .= "$name: $value<br />";
@@ -16,12 +17,10 @@
                     $nameField = $value;
                 if(stristr($name, "email")&&$emailField=="")
                     $emailField = $value;    
-            }                         
-            foreach($_GET['target'] as $target){
-                $email = new Email($target, $nameField."<".$emailField.">", $_GET['subject']);
+            }                 
+                $email = new Email($settings['contact_form_target'], $nameField."<".$emailField.">", $settings['contact_form_subject']);
                 $email->SetHtmlContent($message);
                 $email->Send();
-            }
         }    
     }
 ?>
