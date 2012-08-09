@@ -9,74 +9,77 @@ function aurora_recompile(){
     $externs = $page->getExterns();
     $minifyAll = false;
     $htmlHead = "";
-    $scriptDir = "js/"; 
-    $scriptName = "script.js";
-    $scriptNameMin = "script-min.js"; 
-    $scriptNameTemp = "script-temp.js";  
-    $externsPath = $scriptDir."closure-externs.js";
-    $externsURL = $scriptPath.$scriptDir."closure-externs.js";
-    unlink($scriptDir.$scriptNameTemp);
-    unlink($scriptDir.$scriptName);
-    unlink($scriptDir.$scriptNameMin);
-    
-    echo "Aurora Compiler v0.1<br />\n<br />\nNo Compile Scripts<br />\n";
-    for($i=0;$i<count($scripts);$i++){
-        if($scripts[$i]!=null){
-            $script = $scripts[$i]["script"];
-            $compile = $scripts[$i]["compile"];
-            $merge = $scripts[$i]["merge"];
-            if((!$compile)&&$merge){ 
-                $data = file_get_contents($script);
-                echo "\tMerging: ".$script."<br />\n";
-                file_put_contents($scriptDir.$scriptName, $data."\r\n", FILE_APPEND);
-                if($settings['closure_compile']=="1"){
-                    
-                    file_put_contents($scriptDir.$scriptNameMin, $data."\r\n", FILE_APPEND);
+   
+        $scriptDir = "js/"; 
+        $scriptName = "script.js";
+        $scriptNameMin = "script-min.js"; 
+        $scriptNameTemp = "script-temp.js";  
+        $externsPath = $scriptDir."closure-externs.js";
+        $externsURL = $scriptPath.$scriptDir."closure-externs.js";
+        unlink($scriptDir.$scriptNameTemp);
+        unlink($scriptDir.$scriptName);
+        unlink($scriptDir.$scriptNameMin);
+        
+        echo "Aurora Compiler v0.1<br />\n<br />\nNo Compile Scripts<br />\n";
+        for($i=0;$i<count($scripts);$i++){
+            if($scripts[$i]!=null){
+                $script = $scripts[$i]["script"];
+                $compile = $scripts[$i]["compile"];
+                $merge = $scripts[$i]["merge"];
+                if((!$compile)&&$merge){ 
+                    $data = file_get_contents($script);
+                    echo "\tMerging: ".$script."<br />\n";
+                    file_put_contents($scriptDir.$scriptName, $data."\r\n", FILE_APPEND);
+                    if($settings['closure_compile']=="1"){
+                        
+                        file_put_contents($scriptDir.$scriptNameMin, $data."\r\n", FILE_APPEND);
+                    }
                 }
             }
         }
-    }
-    echo "<br />\n<br />\nCompile Scripts<br />\n";
-    for($i=0;$i<count($scripts);$i++){
-        if($scripts[$i]!=null){
-            $script = $scripts[$i]["script"];
-            $compile = $scripts[$i]["compile"];
-            $merge = $scripts[$i]["merge"];
-            if($compile&&$merge){ 
-                echo "\tMerging: ".$script."<br />\n";
-                $data = file_get_contents($script);
-                file_put_contents($scriptDir.$scriptName, $data."\r\n", FILE_APPEND);
-                file_put_contents($scriptDir.$scriptNameTemp, $data."\r\n", FILE_APPEND);
+        echo "<br />\n<br />\nCompile Scripts<br />\n";
+        echo "Writing to: <b>".$scriptDir.$scriptName."</b><br />\n";
+        for($i=0;$i<count($scripts);$i++){
+            if($scripts[$i]!=null){
+                $script = $scripts[$i]["script"];
+                $compile = $scripts[$i]["compile"];
+                $merge = $scripts[$i]["merge"];
+                if($compile&&$merge){ 
+                    echo "\tMerging: ".$script."<br />\n";
+                    $data = file_get_contents($script);
+                    
+                    file_put_contents($scriptDir.$scriptName, $data."\r\n", FILE_APPEND);
+                    file_put_contents($scriptDir.$scriptNameTemp, $data."\r\n", FILE_APPEND);
+                }
             }
         }
-    }
-    
-    if($settings['closure_compile']=="1"){
-        unlink($externsPath);
-        array_reverse($externs);
-        foreach($externs as $path){
-            $data = file_get_contents($path);
-            file_put_contents($externsPath, $data."\n\n", FILE_APPEND);
+        
+        if($settings['closure_compile']=="1"){
+            unlink($externsPath);
+            array_reverse($externs);
+            foreach($externs as $path){
+                $data = file_get_contents($path);
+                file_put_contents($externsPath, $data."\n\n", FILE_APPEND);
+            }
+            $closure = new PhpClosure();
+            $closure = $closure->advancedMode();
+            if($settings['closure_prettyPrint'])
+                $closure = $closure->prettyPrint();
+            $closure = $closure->cacheDir("js/temp/");
+            $closure = $closure->setExternsURL($externsURL);
+            $closure = $closure->useCodeUrl($scriptPath);
+            $closure->add($scriptDir.$scriptNameTemp);
+            echo "Compiling Script<br />\n";       
+            $compiledScript = $closure->_compile();
+            echo $compiledScript['debug']."<br />\n";
+            
+            echo $compiledScript['warnings']."<br />\n";
+            
+            echo $compiledScript['errors']."<br />\n";
+            
+            file_put_contents($scriptDir.$scriptNameMin, $compiledScript['compiledCode'], FILE_APPEND);
         }
-        $closure = new PhpClosure();
-        $closure = $closure->advancedMode();
-        if($settings['closure_prettyPrint'])
-            $closure = $closure->prettyPrint();
-        $closure = $closure->cacheDir("js/temp/");
-        $closure = $closure->setExternsURL($externsURL);
-        $closure = $closure->useCodeUrl($scriptPath);
-        $closure->add($scriptDir.$scriptNameTemp);
-        echo "Compiling Script<br />\n";       
-        $compiledScript = $closure->_compile();
-        echo $compiledScript['debug']."<br />\n";
-        
-        echo $compiledScript['warnings']."<br />\n";
-        
-        echo $compiledScript['errors']."<br />\n";
-        
-        file_put_contents($scriptDir.$scriptNameMin, $compiledScript['compiledCode'], FILE_APPEND);
-    }
-    
+
     echo "<br />\n<br />\nBuilding CSS<br />\n";    
     
     
@@ -103,6 +106,25 @@ function aurora_recompile(){
         echo "\tMerging: $style into $newStyleFile<br />\n";
         file_put_contents($newStyleFile, file_get_contents($style), FILE_APPEND);
     }
+    
+    
+    
+    //echo "<pre>".$data."</pre>";
+    //exit;  
+    $result = mysql_query("SELECT `theme_name` FROM `themes`;");
+    while($row = mysql_fetch_array($result)){
+        $data = file_get_contents($scriptDir.$scriptName);
+        $themeName = $row['theme_name'];
+        $themeScript = "";
+        if(file_exists("themes/$themeName/script.js")){
+            $themeScript = file_get_contents("themes/$themeName/script.js");
+        }
+        echo "Writing to <b>js/script-$themeName.js</b>\t".strlen($data)."\t".strlen($themeScript)."\t".strlen($data."\n".$themeScript)." <br />\n";
+        unlink("js/script-$themeName.js");
+        file_put_contents("js/script-$themeName.js", $data."\n".$themeScript);
+    }                            
+    
+    
 }
 
 function compareAndDeleteRows($table, $matchingColumnName, $matchingColumnIndex, $existingArray, $newArray){
@@ -151,8 +173,7 @@ function findDependencyDepth($array, $search, $depth){
     }
 }
 function getCleanPathVariables(){
-    if(array_key_exists("PATH_INFO", $_SERVER)){
-        $path = explode("/",$_SERVER['PATH_INFO']);
+    $path = explode("/",(array_key_exists("PATH_INFO", $_SERVER)?$_SERVER['PATH_INFO']:$_SERVER['REQUEST_URI']));
         if(count($path)>1){
             $args=array();
             $first = true;
@@ -164,7 +185,6 @@ function getCleanPathVariables(){
             }
             return $args;
         }                               
-    }
     return false;
 }
 function getRestOfPath(){

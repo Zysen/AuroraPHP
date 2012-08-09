@@ -1,3 +1,11 @@
+function good(){
+    var args = arguments.callee.caller.arguments;
+    for(index in args){
+        if(args[index]==NOT_READY)
+            return false;
+    }
+    return true;
+}
 function liftBArray(f, argsF){
     argsF.unshift(f);
     var behaviour = F.liftB.apply(argsF[0], argsF);
@@ -53,9 +61,10 @@ function fileDragOverE(element){
 }
 function getAjaxRequestE(triggerE, url, timeout){
     timeout = (timeout==undefined)?15000:timeout;
-    var rec = receiverE();                       
+    var rec = F.receiverE();      
+                       
     triggerE.mapE(function(requestData){
-        if(requestData.database.length>0){
+        
         jQuery.ajax({
             type: "post",
             data: requestData,
@@ -67,13 +76,13 @@ function getAjaxRequestE(triggerE, url, timeout){
             },
             error: function(data){/*rec.sendEvent(data);*/}
         });
-        }
     });                                          
     return rec;
 }
 function getAjaxRequestB(triggerB, url){
-    var rec = receiverE();                       
+    var rec = F.receiverE();                     
     triggerB.liftB(function(requestData){
+        if(requestData!=NOT_READY){
         jQuery.ajax({
             type: "post",
             data: requestData,
@@ -84,6 +93,7 @@ function getAjaxRequestB(triggerB, url){
             },
             error: function(data){rec.sendEvent(data);}
         });
+        }
     });                                          
     return rec;
 }
@@ -95,7 +105,7 @@ function FileReaderReadyE(fr){
     return rec;
 }     
 function getAjaxFileRequest(triggerE, url, contentType){
-    var rec = receiverE();
+    var rec = F.receiverE();
     triggerE.mapE(function(builder){
         var xhr = new XMLHttpRequest();
         xhr.open("POST", url, true);

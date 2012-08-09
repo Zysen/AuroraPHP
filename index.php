@@ -1,8 +1,9 @@
 <?    
 //error_reporting(E_ALL);
-header("Pragma: no-cache");
-header("Cache-Control: no-store, no-cache, must-revalidate");
-header("Cache-Control: post-check=0, pre-check=0", false);  
+//header("Pragma: no-cache");
+//header("Cache-Control: no-store, no-cache, must-revalidate");
+//header("Cache-Control: post-check=0, pre-check=0", false);  
+header("Content-Type: text/html; charset=ISO-8859-1");
 
 $NO_PERMISSION = 978001;
 
@@ -76,9 +77,11 @@ if(count($path)>0 && $path[0]!=""){
         case "js":
            // if($path[1]=="script.js"||$path[1]=="script-min.js"||$path[1]=="script-temp.js"||$path[1]=="closure-externs.js"){
                 header("content-type: application/x-javascript");
-                header("Pragma: no-cache");
-                header("Cache-Control: no-store, no-cache, must-revalidate");
-                header("Cache-Control: post-check=0, pre-check=0", false); 
+                //header("Pragma: no-cache");
+                //header("Cache-Control: no-store, no-cache, must-revalidate");
+                //header("Cache-Control: post-check=0, pre-check=0", false); 
+                //echo "js/".$path[1];    
+                
                 echo file_get_contents("js/".$path[1]);
            // }
             exit;

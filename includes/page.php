@@ -62,7 +62,9 @@ class AuroraPage {
             
            $this->registerScript("js/aurora.js");
            $this->registerScript("js/aurora_page.js");
-           $this->registerScript("js/aurora_ui.js");         
+           $this->registerScript("js/aurora_ui.js");
+           
+           //$this->registerScript("themes/".$this->_themeName."/script.js");         
         }      
         public function addExternsUrl($url){
             $this->_externsURLs[count($this->_externsURLs)] = $url;
@@ -151,8 +153,10 @@ class AuroraPage {
                 $groups[count($groups)] = array("group_id"=>$row['group_id'], "name"=>$row['name']);
             }
 
-            $clientSettings = json_encode(array("user"=>array("firstname"=>$current_user->get_firstname(), "lastname"=>$current_user->get_lastname(), "username"=>$current_user->get_username()), "updateWait"=>(int)$settings['aurora_updateTime'],"page"=>$page,"defaultPage"=>$settings['aurora_defaultAction'], "scriptPath"=>$scriptPath, "theme"=>$theme, "externalCSS"=>$scriptData['externalCSS'], "groups"=>$groups, "pagePermissions"=>$pageData['permissions'], "messages"=>$messages, "aurora_encapsulationMethod"=>$settings['aurora_encapsulationMethod']));
-            $htmlHead = $this->_head."\n<script type=\"text/javascript\" src=\"".$scriptPath."js/script".(($settings['closure_compile']=="1")?"-min":"").".js\"></script>\n";
+            $clientSettings = json_encode(array("user"=>array("groupid"=>$current_user->get_group_id(),"firstname"=>$current_user->get_firstname(), "lastname"=>$current_user->get_lastname(), "username"=>$current_user->get_username()), "updateWait"=>(int)$settings['aurora_updateTime'],"page"=>$page,"defaultPage"=>$settings['aurora_defaultAction'], "scriptPath"=>$scriptPath, "theme"=>$theme, "externalCSS"=>$scriptData['externalCSS'], "groups"=>$groups, "pagePermissions"=>$pageData['permissions'], "messages"=>$messages, "aurora_encapsulationMethod"=>$settings['aurora_encapsulationMethod']));
+            $htmlHead = $this->_head."\n<script type=\"text/javascript\" src=\"".$scriptPath."js/script-".$this->_themeName."".(($settings['closure_compile']=="1")?"-min":"").".js\"></script>\n";
+            
+            //$scriptPath."js/".$this->_themeName."-script.js
             
             for($i=0;$i<count($this->_scripts);$i++){
                 if($this->_scripts[$i]!=null){
@@ -165,11 +169,11 @@ class AuroraPage {
             }
             
             
-            $htmlHead.="<style type=\"text/css\" media=\"all\">@import \"".$scriptPath."themes/".$this->_themeName."/style-gen.css\";</style>\n<script type=\"text/javascript\">var SETTINGS = $clientSettings;";
+            $htmlHead.="<style type=\"text/css\" media=\"all\">@import \"".$scriptPath."themes/".$this->_themeName."/style-gen.css\";</style>\n<script type=\"text/javascript\">var SETTINGS = $clientSettings;\n";
             for($i=0;$i<count($this->_inlineScripts);$i++){
                 $htmlHead .= $this->_inlineScripts[$i]."\n";
             }
-            $htmlHead.="</script>\n";
+            $htmlHead.="</script>\n<meta charset=\"utf-8\" />";
             echo "<!DOCTYPE html>\n<html>\n<head>\n<title>$title</title>\n$htmlHead\n</head>\n<body class=\"themeAuroraBody\"><div id=\"body\"  style=\"display: none;\">".$page["html"]."</div></body>\n</html>";
         }
 } 

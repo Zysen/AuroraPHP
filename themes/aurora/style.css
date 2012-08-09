@@ -12,6 +12,7 @@ pre{
     padding: 5px;
     border: solid 1px #000000;
     margin-top : 10px;
+    color: #FFFFFF;
 }
 img{
     border: 0;
@@ -101,10 +102,11 @@ p{
     text-decoration: none;
 }
 #content a{
- color: #FFFFFF;
+ color: #A0D7F1;
  text-decoration: none;
  font-family: verdana;
- font-size: 10pt;
+ font-size: 11pt;
+ 
 }
 #content a:hover{
     text-decoration: underline;

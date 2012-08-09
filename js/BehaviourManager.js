@@ -91,7 +91,7 @@ function BehaviourManager(){
             this.localData[key2] = F.receiverE();
         return this.localData[key2];
     }
-    this.getB = function(key, context){
+    this.getB = function(key, context, initialValue){
         var key2 = key;
         if(context=="_"||(context!=undefined&&context!='undefined'&&context!=null&&context.length!=0)){
             key2 = new CompositKey(key, context).getKey();
@@ -101,7 +101,7 @@ function BehaviourManager(){
                 return value;
             }, function(value){
                 return [value];
-            }, F.receiverE().startsWith(NOT_READY));
+            }, F.receiverE().startsWith((initialValue==undefined)?NOT_READY:initialValue));
         }
         return this.localData[key2];
     }
@@ -143,14 +143,20 @@ function BehaviourManager(){
         return size;
         //return Object.keys(this.data).length; 
     }
-    this.get = function(key, context){
+    this.get = function(key, context, initialValue){
         var mContext = (context==undefined||context.length==0)?"_":context;
+        if(this.data[key]!=undefined&&this.data[key][mContext]!=undefined){
+            return this.data[key][mContext];
+        }
+        return this.getB(key, context, initialValue);
+       /* 
+        
         if(this.localData[key]!=undefined&&this.localData[key][mContext]!=undefined)
             return this.localData[key][mContext];
         if(context=="_"||(context!='undefined'&&context!=null&&context.length!=0)){
             key = new CompositKey(key, mContext).getKey();
         }
-        return this.data[key].behaviour;
+        return this.data[key].behaviour; */
     }
     this.getDataRequest = function(){
         //log("Data request");
