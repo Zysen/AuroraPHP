@@ -1,4 +1,4 @@
-window['CKEDITOR_BASEPATH'] = 'plugins/ckeditor/ckeditor/';
+window['CKEDITOR_BASEPATH'] = '/plugins/ckeditor/ckeditor/';
 pageRenderedE.calmE().mapE(function(){
  //getElementById("content")
  var element = document.createElement("span");
