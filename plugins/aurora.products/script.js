@@ -1,7 +1,8 @@
-function BuildProductWidgetHTML(id, title, description, price){
-    return "<div id=\""+id+"\" class=\"ProductWidget\"><img src=\"resources/aurora.products/"+id+".png\" alt=\"\" class=\"ProductWidgetImg\" /><h2>"+title+"</h2>"+description+"<div style=\"clear:both;\" class=\"ProductWidgetPrice\"><form style=\"float: right;\" target=\"paypal\" action=\"https://www.paypal.com/cgi-bin/webscr\" method=\"post\"><input type=\"hidden\" name=\"cmd\" value=\"_s-xclick\"><input type=\"hidden\" name=\"hosted_button_id\" value=\""+id+"\"><input type=\"image\" src=\"plugins/aurora.products/addtocart.png\" border=\"0\" name=\"submit\" alt=\"PayPal - The safer, easier way to pay online!\"></form>$"+price+"</div></div>";
-    
-    
+function BuildProductWidgetHTML(id, title, description, price, text){
+    var text = (text==undefined)?"Add To Cart":text;
+    return "<div id=\""+id+"\" class=\"ProductWidget\"><img id=\""+id+"_image\" src=\"resources/aurora.products/"+id+".png\" alt=\"\" class=\"ProductWidgetImg\" /><h2>"+title+"</h2>"+description+"<div style=\"clear:both;\" class=\"ProductWidgetPrice\"><form style=\"float: right;\" target=\"paypal\" action=\"https://www.paypal.com/cgi-bin/webscr\" method=\"post\"><input id=\""+id+"_submit\" type=\"image\" src=\"/plugins/aurora.products/addtocart.png\" border=\"0\" name=\"submit\" alt=\"PayPal - The safer, easier way to pay online!\"><input type=\"hidden\" name=\"cmd\" value=\"_s-xclick\"><input type=\"hidden\" name=\"hosted_button_id\" value=\""+id+"\"></form>$"+price+"</div></div>";
+//<input id=\""+id+"_submit\" type=\"submit\" src=\"/border=\"0\" name=\"submit\" value=\""+text+"\" alt=\"PayPal - The safer, easier way to pay online!\">    
+//<input id=\""+id+"_submit\" type=\"image\" src=\"/plugins/aurora.products/addtocart.png\" border=\"0\" name=\"submit\" alt=\"PayPal - The safer, easier way to pay online!\">    
  /*<img alt=\"\" border=\"0\" src=\"https://www.paypalobjects.com/en_US/i/scr/pixel.gif\" width=\"1\" height=\"1\"> */   
     
 }
@@ -15,7 +16,13 @@ function ProductWidget(instanceId, data){
     var description = data.description;
     var price = data.price;
     var productId = data.productId;
-    this.loader=function(){}
+    this.loader=function(){
+        //jQuery("#"+productId+"_submit").button();
+        var img = document.getElementById(productId+"_image");
+        if(!img.complete){
+            img.src = "/resources/trans.png";
+        }
+    }
     this.destroy=function(){}
     this.build=function(){
         return BuildProductWidgetHTML(productId, title, description, price);
@@ -65,13 +72,33 @@ WIDGETS.register("ProductWidget", ProductWidget, ProductWidgetConfigurator);
  */ 
 function ViewCartWidget(instanceId, data){
     var id = instanceId+"_container";
-    var code = data.code;
+    
+    var identifier = (data.code!=undefined)?"<input type=\"hidden\" name=\"encrypted\" value=\""+data.code+"\">":"<input type=\"hidden\" name=\"business\" value=\""+data.business+"\">"
     this.loader=function(){}
     this.destroy=function(){}
-    this.build=function(){
-        return "<form target=\"paypal\" action=\"https://www.paypal.com/cgi-bin/webscr\" method=\"post\"><input type=\"hidden\" name=\"cmd\" value=\"_s-xclick\"><input type=\"hidden\" name=\"encrypted\" value=\""+code+"\"><input class=\"viewCart\" type=\"image\" src=\"plugins/aurora.products/checkout.png\" border=\"0\" name=\"submit\" alt=\"PayPal - The safer, easier way to pay online!\"></form>";
+    this.build=function(){           //<input type=\"hidden\" name=\"encrypted\" value=\""+code+"\">
+        return "<form target=\"paypal\" action=\"https://www.paypal.com/cgi-bin/webscr\" method=\"post\">"+identifier+"<input type=\"hidden\" name=\"cmd\" value=\"_s-xclick\"><input class=\"viewCart\" type=\"image\" src=\"/plugins/aurora.products/cart.png\" border=\"0\" name=\"submit\" alt=\"PayPal - The safer, easier way to pay online!\"></form>";
     }                         
 }
+
+/*<form target="_self" action="https://www.paypal.com/cgi-bin/webscr"  
+        method="post">  
+  
+    <!-- Identify your business so that you can collect the payments. -->  
+    <input type="hidden" name="business" value="kin@kinskards.com">  
+  
+    <!-- Specify a PayPal Shopping Cart View Cart button. -->  
+    <input type="hidden" name="cmd" value="_cart">  
+    <input type="hidden" name="display" value="1">  
+  
+    <!-- Display the View Cart button. -->  
+    <input type="image" name="submit" border="0"  
+        src="https://www.paypal.com/en_US/i/btn/btn_viewcart_LG.gif"   
+        alt="PayPal - The safer, easier way to pay online">  
+    <img alt="" border="0" width="1" height="1"  
+        src="https://www.paypal.com/en_US/i/scr/pixel.gif" >  
+</form> */
+
                      
 /**
  *  UsernameWidgetConfigurator
