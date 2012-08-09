@@ -518,3 +518,20 @@ function UsernameWidgetConfigurator(){
 } 
 WIDGETS.register("UsernameWidget", UsernameWidget, UsernameWidgetConfigurator); 
 //HASHffff
+
+
+/**
+ *  UsernameWidget
+ * @constructor
+ */ 
+function LoggedInImageWidget(instanceId, data){
+    this.loader=function(){}
+    this.destroy=function(){}
+    
+    this.build=function(){
+        var imageSrc = (window['SETTINGS']['user']['groupid']==1)?data.loginImage:data.logoutImage;
+        var url = (window['SETTINGS']['user']['groupid']==1)?"/login":"/logout"; 
+        return "<a href=\""+url+"\"><img src=\""+imageSrc+"\" alt=\"\" /></a>";
+    }                         
+}
+WIDGETS.register("LoggedInImageWidget", LoggedInImageWidget);
