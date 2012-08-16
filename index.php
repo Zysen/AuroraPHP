@@ -14,7 +14,7 @@ include("includes/requestHandler.php");
 include("includes/core.php"); 
 include("includes/php-closure.php");
 
-$scriptPath = ($_SERVER['HTTPS'])?$settings['aurora_secureScriptPath']:$settings['aurora_scriptPath'];
+$scriptPath = (array_key_exists('HTTPS', $_SERVER)&&$_SERVER['HTTPS'])?$settings['aurora_secureScriptPath']:$settings['aurora_scriptPath'];
 $path = getCleanPathVariables();  
 include("includes/page.php"); 
 $page = new AuroraPage("Page");
