@@ -160,7 +160,13 @@ function minifyCSS($buffer){
         return $buffer;
   }
 function findDependencyDepth($array, $search, $depth){
-    $depCount = count($array[$search]);
+    if(array_key_exists($search, $array)){
+        $depCount = count($array[$search]);
+    }
+    else{
+        $depCount = 0;
+    }
+    
     if($depCount==0)
         return $depth;
     else{

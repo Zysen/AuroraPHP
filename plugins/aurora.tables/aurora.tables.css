@@ -19,9 +19,13 @@ background: url('../../plugins/aurora.tables/images/fhbg.gif');
     border-right: solid 1px #dddddd;
     text-decoration: underline;
 }
+.TableWidget input {
+    font-family:verdana;
+    font-size: 7pt;
+}
 .TableWidget td{
-    font-family: Arial,Helvetica,sans-serif;
-    font-size: 10pt;
+    font-family: Verdana;
+    font-size: 7pt;
     color: #000000;
     border-right: solid 1px #dddddd;
     border-bottom: solid 1px #dddddd;

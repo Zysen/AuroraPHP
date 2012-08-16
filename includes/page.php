@@ -153,7 +153,8 @@ class AuroraPage {
                 $groups[count($groups)] = array("group_id"=>$row['group_id'], "name"=>$row['name']);
             }
 
-            $clientSettings = json_encode(array("user"=>array("groupid"=>$current_user->get_group_id(),"firstname"=>$current_user->get_firstname(), "lastname"=>$current_user->get_lastname(), "username"=>$current_user->get_username()), "updateWait"=>(int)$settings['aurora_updateTime'],"page"=>$page,"defaultPage"=>$settings['aurora_defaultAction'], "scriptPath"=>$scriptPath, "theme"=>$theme, "externalCSS"=>$scriptData['externalCSS'], "groups"=>$groups, "pagePermissions"=>$pageData['permissions'], "messages"=>$messages, "aurora_encapsulationMethod"=>$settings['aurora_encapsulationMethod']));
+            //"externalCSS"=>$scriptData['externalCSS'],
+            $clientSettings = json_encode(array("user"=>array("groupid"=>$current_user->get_group_id(),"firstname"=>$current_user->get_firstname(), "lastname"=>$current_user->get_lastname(), "username"=>$current_user->get_username()), "updateWait"=>(int)$settings['aurora_updateTime'],"page"=>$page,"defaultPage"=>$settings['aurora_defaultAction'], "scriptPath"=>$scriptPath, "theme"=>$theme, "groups"=>$groups, "pagePermissions"=>$pageData['permissions'], "messages"=>$messages, "aurora_encapsulationMethod"=>$settings['aurora_encapsulationMethod']));
             $htmlHead = $this->_head."\n<script type=\"text/javascript\" src=\"".$scriptPath."js/script-".$this->_themeName."".(($settings['closure_compile']=="1")?"-min":"").".js\"></script>\n";
             
             //$scriptPath."js/".$this->_themeName."-script.js
