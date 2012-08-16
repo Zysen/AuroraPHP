@@ -13,42 +13,48 @@ var WIDGET = {
     getHeight: function(){return (data.placeholder==null)?data.height:data.placeholder.style.height.replace('px', '');}
 }; 
 var widgets=new Array();
-ready(function() {
-    /**
-     * @type {F.Behavior}            =
-     */
-    var themeB = F.receiverE().startsWith(SETTINGS['theme']);
-    /**
-     * @type {F.Behavior}
-     */
-    var pageB = F.receiverE().startsWith(SETTINGS['page']);
-    var trans = function(page,theme){
-        if(page==NOT_READY||theme==NOT_READY)
-            return NOT_READY;
-        return [page, theme];
-    };
-    //showObj(SETTINGS['theme']);
-    
-    var pageReadyB = F.liftB(trans,pageB,themeB);//.calmB();
-    pageReadyB.liftB(function(pageData){
-        if(pageData==NOT_READY)
-            return NOT_READY;
-        var page = pageData[0];
-        var theme = pageData[1];
-        WIDGETS.clear();
-        //log("Rendering Page "+page+" "+theme);
-        document.getElementById("body").innerHTML = renderPage(theme.html);   // Using the body div and not body because ckeditor doesnt like the body tag
-        document.getElementById("content").innerHTML = renderPage(page.html);
+
+/**
+* @type {F.Event}
+*/
+var pageE = F.receiverE();
+/**
+* @type {F.Behavior}
+*/
+var pageB = pageE.startsWith(NOT_READY);
+
+var pageDataB = F.liftB(function(pageData){
+    if(pageData==NOT_READY)
+        return NOT_READY;
+    var page = pageData.page;
+    var theme = pageData.theme;
+    var permissions = pageData.permissions;
+    WIDGETS.clear();
+    //log("Rendering Page "+page+" "+theme);
+    document.getElementById("body").innerHTML = renderPage(theme.html);   // Using the body div and not body because ckeditor doesnt like the body tag
+    document.getElementById("content").innerHTML = renderPage(page.html);
         
-        WIDGETS.load();
-        pageRenderedE.sendEvent(true); 
-        if(window['SETTINGS']['messages']!=""){
-            UI.showMessage('', window['SETTINGS']['messages'], function(){}); 
-        }
-        document.getElementById("body").style.display = 'block';   // Page data is output in php pre JS render but the body div is hidden so its not visible. This is for SEO
-    });
+    WIDGETS.load();
+    pageRenderedE.sendEvent(true); 
+    if(window['SETTINGS']['messages']!=""){
+        UI.showMessage('', window['SETTINGS']['messages'], function(){}); 
+    }
+    document.getElementById("body").style.display = 'block';   // Page data is output in php pre JS render but the body div is hidden so its not visible. This is for SEO
+},pageB);
+
+
+ready(function() {
+    var pageName = window['SETTINGS']['page']['name'];
+    var href = window['SETTINGS']['scriptPath']+pageName;
+    log(pageName);
+    history.pushState({page: pageName}, pageName, href);
+    pageE.sendEvent({page: window['SETTINGS']['page'], theme: SETTINGS['theme'], permissions: SETTINGS['pagePermissions']}); 
     DATA.startPolling();
 });
-
-
+window.addEventListener('popstate', function(ev) {
+  log("Popped State: "+ev.state.page);
+  if(ev.state){
+    loadPageE.sendEvent(ev.state.page);
+  }
+});
 //})(F);

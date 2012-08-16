@@ -16,11 +16,11 @@ function renderPage(data){
             var arguments={};
             //alert(widgetPlaceholder.alt);
             try{         
-            arguments = (widgetPlaceholder.alt==null||widgetPlaceholder.alt=="")?{placeholder: widgetPlaceholder}:window['JSON'].parse(widgetPlaceholder.alt.replaceAll("'", '"'));    
+                arguments = (widgetPlaceholder.alt==null||widgetPlaceholder.alt=="")?{placeholder: widgetPlaceholder}:window['JSON'].parse(widgetPlaceholder.alt.replaceAll("'", '"'));    
             }
             catch(err){
-            log("Widget Argument Parse Error: "+err);
-            arguments={};
+                log("Widget Argument Parse Error: "+err);
+                arguments={};
             }
 
             var element = document.createElement('span');
@@ -45,22 +45,23 @@ function renderPage(data){
     } 
     return elm.innerHTML;            
 }
- /**
- * loadPage
- * @param {string} pageName
- */
-var loadPage = function(pageName){
-    window.location=window['SETTINGS']['scriptPath']+pageName;
-}  
 
-
- /**
- * window.loadPage
- * @param {string} pageName
- */
-window.loadPage = function(pageName){
-    window.location=window['SETTINGS']['scriptPath']+pageName;
-}          
+var loadPageE = F.receiverE();
+loadPageE.mapE(function(pageName){
+    ajax({
+        dataType: 'json',
+        url: SETTINGS.scriptPath+"request/getPage/"+pageName+"/",
+        success: function(data){
+            pageE.sendEvent({page: data, theme: window['SETTINGS']['theme'], permissions: data.permissions});
+        },
+        error: connectionError
+    });    
+}); 
+function loadPage(pageName){
+    history.pushState({page: pageName}, pageName, window['SETTINGS']['scriptPath']+pageName);
+    loadPageE.sendEvent(pageName);
+    return false;
+}   
 
 function connection_error(error){
     log(error);
@@ -72,23 +73,6 @@ function checkPermission(groupId){
             return true;
     }
     return false;
-}
-
-function requestAndRenderPage(page){
-    ajax({
-        dataType: 'json',
-        url: SETTINGS.scriptPath+"request/getPage/"+page+"/",
-        success: function(data){
-            pagePermissions  = data.permissions;
-            page = data;
-            currentPage=page;      
-            jQuery("#content").html(renderPage(data.pageData));
-            for (var instanceId in topLevelWidgets){
-                topLevelWidgets[instanceId].loader();
-            }
-        },
-        error: connectionError
-    }); 
 }
 function connectionError(error){
     log(error);

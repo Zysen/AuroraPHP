@@ -21,16 +21,16 @@ if(window['SETTINGS']['page']['permissions']['canEdit'] || window['SETTINGS']['p
  
  });                                                                         
            
-       //ff
-function replaceLinkPaths(parent, search, replace){
+     
+function findLinks(parent,callback){
     child = parent.firstChild;
     while(child){
         if(child.nodeName.toLowerCase()=="a"){
-            child.href = child.href.replaceAll(search, replace);
+            callback(child);
         }
         if(child.hasChildNodes()){               
             //parent.replaceChild(replaceLinkPaths(child, search, replace), child);
-            child = replaceLinkPaths(child, search, replace);
+            child = findLinks(child,callback);
         }
         if(child.nextSibling==null)  //Needed for weird old browser compatibility
             return parent;// parent;
@@ -41,15 +41,25 @@ function replaceLinkPaths(parent, search, replace){
 function cleanUpHtml(html){
     var element = document.createElement("div");
     element.innerHTML = html;
-    element = replaceLinkPaths(element, window['SETTINGS']['scriptPath']+"", "page://");
-    //replaceLinkPaths(element, "&quot;", "'"); 
+    findLinks(element, function(child){
+        var pageName = child.href.replaceAll(window['SETTINGS']['scriptPath'], "");
+        child.href = child.href.replaceAll(window['SETTINGS']['scriptPath'], "page://");
+        log('Hurr2');  
+        child.onclick = function(){loadPage(pageName)};
+    });
     return element.innerHTML;
 }
-
+            
+            
 function cleanDownHtml(html){
     var element = document.createElement("div");
     element.innerHTML = html;
-    element = replaceLinkPaths(element, "page://", window['SETTINGS']['scriptPath']+"");
+    element = findLinks(element, function(child){
+    var pageName = child.href.replaceAll("page://", "");
+        child.href = child.href.replaceAll("page://", window['SETTINGS']['scriptPath']);
+        log('Hurr');
+        child.onclick = function(){loadPage(pageName);return false;};
+    });
     return element.innerHTML;
 }
               
