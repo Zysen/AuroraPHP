@@ -1,6 +1,6 @@
 <?php
     $page->registerScript("plugins/aurora.media/script.js");
-    $page->registerScript("/plugins/aurora.media/html5ext.js", false, false);
+    //$page->registerScript("/plugins/aurora.media/html5ext.js", false, false);
     $page->registerCSS("plugins/aurora.media/style.css");
     
     //$behaviourManager->registerBehaviour("aurora_pluginPermissions", "getPluginPermissions", "setPluginPermissions");

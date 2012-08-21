@@ -14,6 +14,7 @@ function VideoPlayerWidget(instanceId, data){
     this.loader=function(){
          var sourcesStr = "";
         var mp4 = "";
+        var autoplay = (data.autoplay==true||data.autoplay=="true")?true:false;
         for(index in sources){
             var type = sources[index]['type'];
             //window['SETTINGS']['scriptPath']
@@ -26,12 +27,12 @@ function VideoPlayerWidget(instanceId, data){
             flashPart = "<object classid=\"clsid:D27CDB6E-AE6D-11cf-96B8-444553540000\" type=\"application/x-shockwave-flash\" data=\""+flashPlayer+"\" width=\"604\" height=\"256\" style=\"position:relative;\">"+
                                 "<param name=\"movie\" value=\""+flashPlayer+"\" />"+
                                 "<param name=\"allowFullScreen\" value=\"true\" />"+
-                                "<param name=\"flashVars\" value=\"autoplay=true&amp;controls=true&amp;loop=true&amp;src="+mp4+"\" />"+
-                                "<embed src=\""+flashPlayer+"\" width=\"604\" height=\"256\" flashVars=\"src="+mp4+"&amp;autoplay=true&amp;controls=true&amp;loop=true"+poster+"\"    allowFullScreen=\"true\" wmode=\"transparent\" type=\"application/x-shockwave-flash\" pluginspage=\"http://www.adobe.com/go/getflashplayer_en\" />"+
+                                "<param name=\"flashVars\" value=\"autoplay="+autoplay+"&amp;controls=true&amp;loop=true&amp;src="+mp4+"\" />"+
+                                "<embed src=\""+flashPlayer+"\" width=\"604\" height=\"256\" flashVars=\"src="+mp4+"&amp;autoplay="+autoplay+"&amp;controls=true&amp;loop=true"+poster+"\"    allowFullScreen=\"true\" wmode=\"transparent\" type=\"application/x-shockwave-flash\" pluginspage=\"http://www.adobe.com/go/getflashplayer_en\" />"+
                                 poster2+
                                 "</object>";
         }
-        document.getElementById("video").innerHTML = "<video controls=\"controls\" autoplay=\"autoplay\""+poster3+" width=\""+width+"\" height=\""+height+"\" onclick=\"if(/Android/.test(navigator.userAgent))this.play();\">"+sourcesStr+flashPart+"</video>"; 
+        document.getElementById("video").innerHTML = "<video controls=\"controls\" "+(autoplay?" autoplay=\"autoplay\"":"")+"\""+poster3+" width=\""+width+"\" height=\""+height+"\" onclick=\"if(/Android/.test(navigator.userAgent))this.play();\">"+sourcesStr+flashPart+"</video>"; 
     }
     this.destroy=function(){
         DATA.deregister("aurora_settings", "");
@@ -45,6 +46,7 @@ function VideoPlayerWidgetConfigurator(){
     var id = "VideoWidgetCont";
     this['render'] = function(newData){
         var poster = (newData!=undefined&&newData['poster']!=undefined)?newData['poster']:"";
+        var autoplay = (newData!=undefined&&newData['autoplay']!=undefined)?newData['autoplay']:"false";
         var returnString = "";
         var src1 = "";
         var type1="";
@@ -52,7 +54,6 @@ function VideoPlayerWidgetConfigurator(){
         var type2="";
         var src3 = "";
         var type3="";
-        
         if(newData!=undefined&&newData['sources'].length>0){
             src1 = (newData!=undefined&&newData['sources'][0]['src']!=undefined)?newData['sources'][0]['src']:"";
             type1 = (newData!=undefined&&newData['sources'][0]['type']!=undefined)?newData['sources'][0]['type']:""; 
@@ -71,7 +72,7 @@ function VideoPlayerWidgetConfigurator(){
              
         }
         returnString+="SRC: <input type=\"text\" id=\""+id+"_src3\" value=\""+src3+"\" /><br />Type<input type=\"text\" id=\""+id+"_type3\" value=\""+type3+"\" /><br />";
-        return returnString+"Poster: <input type=\"text\" id=\""+id+"_poster\" value=\""+poster+"\" />"; 
+        return returnString+"Poster: <input type=\"text\" id=\""+id+"_poster\" value=\""+poster+"\" /><br />Autoplay: <input type=\"checkbox\" id=\""+id+"_autoplay\"  "+((autoplay)?" checked=\"true\"":"")+" />"; 
     }
     this['getData'] = function(){
         var sources = [];
@@ -93,7 +94,7 @@ function VideoPlayerWidgetConfigurator(){
             var type3Value = (type3.value.length==0)?auroraMediaVideoSrcToType(src3):type3.value; 
             sources.push({"src": src3.value, "type": type3Value});
         }
-        return {"poster": document.getElementById(id+"_poster").value, "sources": sources};
+        return {"poster": document.getElementById(id+"_poster").value, "autoplay": document.getElementById(id+"_autoplay").checked, "sources": sources};
     }
     this['getName'] = function(){
         return "Video Player Widget";
