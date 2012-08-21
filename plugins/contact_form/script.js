@@ -38,7 +38,7 @@ function ContactFormSubmitButton(instanceId, data){
         //F.insertValueB(submitClickedE.mapE(function(){return SETTINGS['theme']['path']+'loading_s.gif';}),loadingImId, 'src');
     }
     this.build=function(){
-        return ""+submitButton.build()+"<img id=\""+loadingImId+"\" class=\"loadingSpinner\" src=\"themes/trans.png\" alt=\"\" />";                 
+        return ""+submitButton.build()+"<img id=\""+loadingImId+"\" class=\"loadingSpinner\" src=\"/resources/trans.png\" alt=\"\" />";                 
     }
 }
 WIDGETS.register("ContactFormSubmitButton", ContactFormSubmitButton);
