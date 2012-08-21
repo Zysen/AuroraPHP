@@ -521,17 +521,47 @@ WIDGETS.register("UsernameWidget", UsernameWidget, UsernameWidgetConfigurator);
 
 
 /**
- *  UsernameWidget
+ *  LoggedInImageWidget
  * @constructor
  */ 
 function LoggedInImageWidget(instanceId, data){
-    this.loader=function(){}
+    var href = (window['SETTINGS']['user']['groupid']==1)?data.outURL:data.inURL;
+    var src = (window['SETTINGS']['user']['groupid']==1)?data.outSRC:data.inSRC;
+    this.loader=function(){
+        /*setTimeout(function(){
+            document.getElementById(instanceId+"_anchor").setAttribute('href',href);
+            document.getElementById(instanceId+"_img").setAttribute('onclick',function(){window.location('/logout');});
+            document.getElementById(instanceId+"_img").setAttribute('style',"cursor: pointer;");
+        }, 1000);  */
+    }
     this.destroy=function(){}
     
     this.build=function(){
-        var imageSrc = (window['SETTINGS']['user']['groupid']==1)?data.loginImage:data.logoutImage;
-        var url = (window['SETTINGS']['user']['groupid']==1)?"/login":"/logout"; 
-        return "<a href=\""+url+"\"><img src=\""+imageSrc+"\" alt=\"\" /></a>";
+        return "<a id=\""+instanceId+"_anchor\" href=\""+href+"\"><img id=\""+instanceId+"_img\" src=\""+src+"\" alt=\"\" /></a>";
     }                         
 }
 WIDGETS.register("LoggedInImageWidget", LoggedInImageWidget);
+
+/**
+ *  LoggedInImageMenuWidget
+ * @constructor
+ */ 
+function LoggedInImageMenuWidget(instanceId, data){
+    var href = (window['SETTINGS']['user']['groupid']==1)?data.outURL:data.inURL;
+    var src = (window['SETTINGS']['user']['groupid']==1)?data.outSRC:data.inSRC;
+    this.loader=function(){
+        /*setTimeout(function(){
+            document.getElementById(instanceId+"_anchor").setAttribute('href',href);
+            document.getElementById(instanceId+"_img").setAttribute('onclick',function(){window.location('/logout');});
+            document.getElementById(instanceId+"_img").setAttribute('style',"cursor: pointer;");
+        }, 1000);  */
+    }
+    this.destroy=function(){}
+    
+    this.build=function(){
+        if(href=="")
+            return "";
+        return "<li><a id=\""+instanceId+"_anchor\" href=\""+href+"\"><img id=\""+instanceId+"_img\" src=\""+src+"\" alt=\"\" /></a></li>";
+    }                         
+}
+WIDGETS.register("LoggedInImageMenuWidget", LoggedInImageMenuWidget);
