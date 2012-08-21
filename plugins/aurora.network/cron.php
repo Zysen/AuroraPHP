@@ -20,9 +20,38 @@ function pingScan(){
         mysql_query("UPDATE `aurora_network_hosts` SET `online`=$online WHERE `ip`=$ip;");
     }
 }
+
+function buildGuacamoleUserMapping(){
+    $newFile = "";
+    $result = mysql_query("SELECT * FROM `aurora_network_hosts` ORDER BY INET_ATON(`ip`) ASC;");
+    while($row = mysql_fetch_array($result)){
+        $result2 = mysql_query("SELECT * FROM `aurora_network_ports` WHERE `ip`='".$row['ip']."' ORDER BY `port` ASC;");    
+        while($row2 = mysql_fetch_array($result2)){
+            if($row2['port']=="3389"){
+                $newFile.="<connection name=\"".$row['ip']."RDP\">
+                        <protocol>rdp</protocol>
+                        <param name=\"hostname\">".$row['ip']."</param>
+                        <param name=\"port\">".$row2['port']."</param>
+                </connection>";
+            }
+            else if($row2['port']=="5900"){
+                $newFile.="<connection name=\"".$row['ip']."VNC\">
+                        <protocol>vnc</protocol>
+                        <param name=\"hostname\">".$row['ip']."</param>
+                        <param name=\"port\">".$row2['port']."</param>
+                </connection>";    
+            }
+        }
+    }
+    $newFile = "<user-mapping>\n<authorize username=\"zysen\" password=\"sxs4mtq\">\n$newFile\n</authorize>\n</user-mapping>";
+    file_put_contents("/etc/guacamole/user-mapping.xml", $newFile);
+    return $newFile;
+}
+
+
 function readNMapPingResults(){
     //AuroraLog("aurora.network", "CRON: NMap ping results processed");
-     $hostsFile = file_get_contents("onlinehosts.txt");
+     $hostsFile = file_get_contents("/var/www/onlinehosts.txt");
     if(strlen($hostsFile)==0)
         return;
     
@@ -64,7 +93,7 @@ function advancedScan(){
     global $IGNORE_OS;
     global $SWAP_OS;
     //AuroraLog("aurora.network", "CRON: NMap advanced scan results processed");
-    $hostsFile = file_get_contents("advancedscan.txt");
+    $hostsFile = file_get_contents("/var/www/advancedscan.txt");
     if(strlen($hostsFile)==0)
         return;
     $doc = new DOMDocument();
@@ -297,25 +326,7 @@ function detectClientsByDHCP(){
             continue;
         }
         $dudCount = 0;
-        $ping = ping($ip);
         $online = $ping?1:0;
-        writeLog("Online: $online");
-        if($ping){
-            $nodeDetails = getNetbiosInfo($ip);
-            if($nodeDetails['hostname']!=""){
-                $hostname = $nodeDetails['hostname'];
-            }
-            mysql_query("DELETE FROM `aurora_network_ports` WHERE `ip`='$ip';");
-            $ports = array(3389,5900,8080,8081,25565);       //21,22,23,80,443
-            for($i=1;$i<1024;$i++){
-                tryPort($i, $ip, $wait);
-                tryPort($i, $ip, $wait);
-            }
-            foreach($ports as $portIndex=>$port){
-                tryPort($port, $ip, $wait);
-            }
-        }
-        /* $query = "INSERT INTO `aurora_network_hosts` (`hostname`, `ip`, `mac`, `online`, `timestamp`) VALUES ('$hostname', '$ip', '$mac', $online, CURRENT_TIMESTAMP) ON DUPLICATE KEY UPDATE hostname='$hostname', ip='$ip', online=$online;";    */
         if(strlen($hostname)>0){     
            mysql_query("UPDATE `aurora_network_hosts` SET `hostname`='$hostname' WHERE `hostname`='' AND `ip`='$ip' LIMIT 1;");
         }
@@ -332,14 +343,21 @@ if(array_key_exists('mode', $_GET) && $_GET['mode']=="ping"){
 }
 else if(array_key_exists('mode', $_GET) && $_GET['mode']=="advancedscan"){
     writeLog("Detecting By advanced scan");
-    advancedScan();  
-    //writeLog("Detecting By DHCP");  
-    //detectClientsByDHCP();
+    advancedScan(); 
+    buildGuacamoleUserMapping(); 
+    writeLog("Detecting By DHCP");  
+    detectClientsByDHCP();
 }
 else if(array_key_exists('mode', $_GET) && $_GET['mode']=="dhcp"){
     writeLog("Detecting By DHCP");
     detectClientsByDHCP();
 }
+else if(array_key_exists('mode', $_GET) && $_GET['mode']=="buildusers"){
+    writeLog("Building Users Mapping");
+    $mappingData = buildGuacamoleUserMapping();
+    writeLog($mappingData);
+}
+
 write("</body></html>");
 ?>
 

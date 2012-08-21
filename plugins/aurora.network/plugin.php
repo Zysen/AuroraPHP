@@ -64,14 +64,31 @@
 
             $result2 = mysql_query("SELECT * FROM `aurora_network_ports` WHERE `ip`='$ip' ORDER BY `port` ASC;");    
             while($row2 = mysql_fetch_array($result2)){
-                $ret["DATA"][count($ret["DATA"])-1][6].=",".$row2['port'];
+                $port = $row2['port'];
+                if($port=="3389"){
+                    $port = "<a href=\"http://glenrd.dontexist.net/guacamole/client.xhtml?id=".$ip."RDP\">$port</a>";
+                }
+                else if($port=="5900"){
+                    $port = "<a href=\"http://glenrd.dontexist.net/guacamole/client.xhtml?id=".$ip."VNC\">$port</a>";
+                }
+                else if($port=="80"){
+                    $port = "<a href=\"http://$ip\">$port</a>";
+                }
+                else if($port=="443"){
+                    $port = "<a href=\"https://$ip\">$port</a>";
+                }
+                else if($port=="8080"){
+                    $port = "<a href=\"http://$ip:8080\">8080</a>";
+                }
+                //192.168.1.80RDP
+                $ret["DATA"][count($ret["DATA"])-1][6].=",$port";
             } 
         }
         $result = mysql_query("SELECT `ip`, `mac`, `hostname`,`online`, `os` FROM `aurora_network_hosts` WHERE `online`=0 ORDER BY INET_ATON(`ip`) ASC;", getPrimarySQLConnection());
         while($row = mysql_fetch_array($result)){
             $ip = $row['ip'];
             $hostname = $row['hostname'];
-            $mac = $row['mac'];           
+            $mac = $row['mac'];                      
             $online = $row['online'];  
             $os = $row['os'];   
             $name="";  
@@ -88,7 +105,24 @@
             
             $result2 = mysql_query("SELECT * FROM `aurora_network_ports` WHERE `ip`='$ip' ORDER BY `port` ASC;");    
             while($row2 = mysql_fetch_array($result2)){
-                $ret["DATA"][count($ret["DATA"])-1][6].=",".$row2['port'];
+                $port = $row2['port'];
+                if($port=="3389"){
+                    $port = "<a href=\"http://glenrd.dontexist.net/guacamole/client.xhtml?id=".$ip."RDP\">$port</a>";
+                }
+                else if($port=="5900"){
+                    $port = "<a href=\"http://glenrd.dontexist.net/guacamole/client.xhtml?id=".$ip."VNC\">$port</a>";
+                }
+                else if($port=="80"){
+                    $port = "<a href=\"$ip\">$port</a>";
+                }
+                else if($port=="443"){
+                    $port = "<a href=\"https://$ip\">$port</a>";
+                }
+                else if($port=="8080"){
+                    $port = "<a href=\"http://$ip:8080\">8080</a>";
+                }
+                //192.168.1.80RDP
+                $ret["DATA"][count($ret["DATA"])-1][6].=",$port";
             } 
         }
         return $ret;
