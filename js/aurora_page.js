@@ -58,8 +58,15 @@ loadPageE.mapE(function(pageName){
     });    
 }); 
 function loadPage(pageName){
-    history.pushState({page: pageName}, pageName, window['SETTINGS']['scriptPath']+pageName);
-    loadPageE.sendEvent(pageName);
+    window.location = window['SETTINGS']['scriptPath']+pageName;
+    return;
+    if(history.pushState){
+        history.pushState({page: pageName}, pageName, window['SETTINGS']['scriptPath']+pageName);
+        loadPageE.sendEvent(pageName);
+    }
+    else{
+        window.location = window['SETTINGS']['scriptPath']+pageName;
+    }
     return false;
 }   
 

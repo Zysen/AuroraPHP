@@ -47,13 +47,18 @@ ready(function() {
     var pageName = window['SETTINGS']['page']['name'];
     var href = window['SETTINGS']['scriptPath']+pageName;
     log(pageName);
-    history.pushState({page: pageName}, pageName, href);
-    pageE.sendEvent({page: window['SETTINGS']['page'], theme: SETTINGS['theme'], permissions: SETTINGS['pagePermissions']}); 
+    if(history.pushState){
+        history.pushState({page: pageName}, pageName, href);
+        
+    }
+    else{
+        //window.location = href;
+    } 
+    pageE.sendEvent({page: window['SETTINGS']['page'], theme: SETTINGS['theme'], permissions: SETTINGS['pagePermissions']});
     DATA.startPolling();
 });
 window.addEventListener('popstate', function(ev) {
-  log("Popped State: "+ev.state.page);
-  if(ev.state){
+  if(ev.state && ev.state.page){
     loadPageE.sendEvent(ev.state.page);
   }
 });
