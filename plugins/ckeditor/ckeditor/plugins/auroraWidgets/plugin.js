@@ -58,19 +58,35 @@
                 var widType = selectionWidgetW.selectedValue();
                 var optionsDef = WIDGETS.getWidgetInterface(widType);
                 if(optionsDef!=undefined){
-                    var options = new optionsDef();
-                    var interfaceElements = WIDGETS.renderWidget(options);
-                    if(interfaceElements==undefined||interfaceElements==null){
-                        editor.insertElement(getPlaceholder(editor, widType));
+                    var options = new optionsDef();  
+                    
+                    var handleWidgetOptions = function(options, widId){
+                        var widgetData = options.getData();
+                        if(widId>=0){
+                            widgetData.widgetRef = widId;
+                        }
+                        var jsonString = JSON.stringify(widgetData);
+                        var dataString = jsonString.replaceAll("\"", "'");//.replace('"', "'").replace('&quot;', '\''); 
+                                
+                        var interfaceElements = WIDGETS.renderWidget(options);            
+                        if(interfaceElements==undefined||interfaceElements==null){
+                            editor.insertElement(getPlaceholder(editor, widType, dataString));
+                        }
+                        else{
+                            interfaceElements = (typeof(interfaceElements)=='string')?interfaceElements:interfaceElements.innerHTML;
+                            UI.confirm("Please Configure Your Widget", interfaceElements,"OK", function(arg){
+                                editor.insertElement(getPlaceholder(editor, widType, dataString));
+                            }, "Cancel", function(arg){});
+                        }
+                    };
+                    
+                    if(options.requiresRef){
+                        aurora_requestWidgetRef("page", function(data){
+                            handleWidgetOptions(options, data.id);
+                        })
                     }
                     else{
-                        interfaceElements = (typeof(interfaceElements)=='string')?interfaceElements:interfaceElements.innerHTML;
-                        UI.confirm("Please Configure Your Widget", interfaceElements,"OK", function(arg){
-                            var data = options.getData();
-                            var jsonString = JSON.stringify(data);
-                            var dataString = jsonString.replaceAll("\"", "'");//.replace('"', "'").replace('&quot;', '\''); 
-                            editor.insertElement(getPlaceholder(editor, widType, dataString));
-                        }, "Cancel", function(arg){});
+                        handleWidgetOptions(options, -1);
                     }
                 }
                 else{

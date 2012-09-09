@@ -4,6 +4,9 @@
 //header("Cache-Control: no-store, no-cache, must-revalidate");
 //header("Cache-Control: post-check=0, pre-check=0", false);  
 header("Content-Type: text/html; charset=ISO-8859-1");
+error_reporting(E_ALL);
+ini_set('display_errors', 'On');
+
 
 $NO_PERMISSION = 978001;
 
@@ -88,9 +91,15 @@ if(count($path)>0 && $path[0]!=""){
         case "phpinfo":
             echo exec('whoami');
             phpinfo();
-            exit;
+            exit;                    
         case "request":
-            switch($path[1]){          
+            switch($path[1]){
+                case "getWidgetRef": 
+                    $page = mysql_escape_string($_POST['page']);
+                    mysql_query("INSERT INTO `aurora`.`aurora_widgetRefs` (`widgetRef_id`, `page`, `user_id`, `timestamp`) VALUES (NULL, '$page', '".$current_user->get_SqlId()."', CURRENT_TIMESTAMP);", getPrimarySQLConnection());
+                    $id = mysql_insert_id(getPrimarySQLConnection());
+                    echo json_encode(array("id"=>$id));
+                    break;          
                 case "getPage":
                     $pageData = getPageData(mysql_escape_string(str_replace("request/getPage/", "", getRestOfPath()))); 
                     $page = array("name"=>$pageData['title'], "ownerId"=>$pageData['user_id'], "permissions"=>$pageData['permissions'], "html"=>str_replace("\\\"", "\"", str_replace("\\'", "'", $pageData['content'])));
