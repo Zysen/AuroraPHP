@@ -8,8 +8,9 @@ while($row = mysql_fetch_array($result)){
     
     $pathExplode = explode("/", $cPath);
     $count = 0;
+    if(count($pathExplode)>0){
     foreach($pathExplode as $key=>$value){
-        if($path[$key]==$value)
+        if(array_key_exists($key, $path)&&$path[$key]==$value)
             $count++;
         else
             break;
@@ -17,6 +18,7 @@ while($row = mysql_fetch_array($result)){
     if($count>$max){
         $max = $count;
         $maxTheme = array($row['theme_id'], $row['title']);
+    }
     }
 }
 if($max>0){
