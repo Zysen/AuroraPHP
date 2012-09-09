@@ -28,7 +28,7 @@ function EmailConfirmer(instanceId, data){
             document.getElementById(id).src = (valid)?window['SETTINGS']['theme']['path']+'tick.png':window['SETTINGS']['theme']['path']+'cross.png';
         }); 
         emailBlurE.mapE(function(){document.getElementById(id).src=SETTINGS['themeDir']+'loading_s.gif';});                                                                           
-    }
+    }                    
     this.build=function(){
         return "<img src=\"/resources/trans.png\" alt=\"\" class=\"loadingSpinner\" id=\""+id+"\" />";   //"+scriptPath+"themes/"+theme+"/loading_s.gif
     }
@@ -127,6 +127,47 @@ function ValidatedTextArea(instanceId, data){
         return "<textarea type=\"text\" id=\""+this.instanceId+"\" rows=\""+rows+"\" cols=\""+cols+"\"></textarea>";       
     }
 }
+function ValidatedPasswordWidget(instanceId, data){
+    this.instanceId = instanceId;
+    this.loader=function(){       
+        var valueName = (data.name==undefined)?"Password":data.name;
+        var formGroupB = DATA.get(data.formGroup, undefined, []); 
+        var txtValue1B = F.extractValueB(this.instanceId+"_pass1");
+        var txtValue2B = F.extractValueB(this.instanceId+"_pass2");
+        
+        var validB = F.liftB(function(text1, text2){
+            if(!good()||(text1.length==0||text2.length==0)){
+                return NOT_READY;
+            }
+            if(data.minChars && text1.length<data.minChars)
+                return false;
+            if(data.maxChars && text1.length>data.maxChars)
+                return false;
+            if(data.minChars && text2.length<data.minChars)
+                return false;
+            if(data.maxChars && text2.length>data.maxChars)
+                return false;
+            if(text1!=text2)
+                return false;
+            return true;
+        }, txtValue1B, txtValue2B);
+        var widgetValueB = F.liftB(function(valid, text){
+            if(!good()||text==null){
+                return {valid: false, value: "", name: valueName};
+            }
+            document.getElementById(instanceId+"_pass1").className = (text.length==0)?'':((valid)?'form_validator_validInput':'form_validator_invalidInput');
+            document.getElementById(instanceId+"_pass2").className = (text.length==0)?'':((valid)?'form_validator_validInput':'form_validator_invalidInput'); 
+            document.getElementById(instanceId+"_tick").src = (valid)?window['SETTINGS']['theme']['path']+'tick.png':window['SETTINGS']['theme']['path']+'cross.png';
+            //log({valid: valid, value: text, name: valueName});
+            return {valid: valid, value: text, name: valueName};
+        },validB,txtValue1B);  
+        
+        pushToValidationGroupBehaviour(formGroupB, widgetValueB);    
+    }             
+    this.build=function(){
+        return "<input type=\"password\" id=\""+this.instanceId+"_pass1\" />&nbsp;<img src=\"/resources/trans.png\" alt=\"\" class=\"loadingSpinner\" id=\""+this.instanceId+"_tick\" /><br /><input type=\"password\" id=\""+this.instanceId+"_pass2\" />";       
+    }
+}
 function ValidatedCalendar(instanceId, data){
     this.instanceId = instanceId;
     this.inputId = instanceId+"_input"   
@@ -165,7 +206,8 @@ function ValidatedCalendar(instanceId, data){
         //var calendarB = jQuery("#"+instanceId).fj('extValB').liftB(function(x){alert(x);});
 
 //widgetTypes['contactFormSubmitButton']=ContactFormSubmitButton;
-
+                                  
+WIDGETS.register("ValidatedPasswordWidget", ValidatedPasswordWidget); 
 WIDGETS.register("ValidatedSubmitButton", ValidatedSubmitButton);
 WIDGETS.register("ValidatedCalendar", ValidatedCalendar);
 WIDGETS.register("ValidatedTextArea", ValidatedTextArea);
@@ -183,7 +225,7 @@ function checkCharLength(text){
     return true;
 }     
 function ValidatedContactForm(instanceId, data){
-    var widgetId = instanceId+"_txtArea";
+    var widgetId = instanceId+"_txtArea";                         
     this.instanceId = instanceId;
     this.loader=function(){ 
         var fullnameValidB = F.extractValueB('fullname').liftB(checkCharLength);

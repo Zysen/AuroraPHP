@@ -565,3 +565,180 @@ function LoggedInImageMenuWidget(instanceId, data){
     }                         
 }
 WIDGETS.register("LoggedInImageMenuWidget", LoggedInImageMenuWidget);
+
+
+
+/**
+ *  UserGroupDivHiderWidget
+ * @constructor                         
+ */ 
+function UserGroupDivHiderWidget(instanceId, data){
+
+    
+    this.loader=function(){
+        var targetDiv = DOM.get(data.target);
+        var visibleGroups = data.visibleGroups;
+        userB.liftB(function(user){
+            if(!good())
+                return NOT_READY;
+            if(arrayContains(visibleGroups, parseInt(user.group_id))){
+                jQuery(targetDiv).fadeIn(300);
+                   
+            }
+            else{
+                jQuery(targetDiv).fadeOut(300);  
+            }
+        });                                   
+    }
+    this.destroy=function(){}
+    
+    this.build=function(){
+        return "";
+    }                         
+}
+WIDGETS.register("UserGroupDivHiderWidget", UserGroupDivHiderWidget);
+
+
+
+/**
+ *  FileSizeRenderer
+ * @constructor
+ */
+function FileSizeRenderer(value, cell, width){
+    var container = DOM.createDiv();
+    cell.appendChild(container);
+    
+    this.render = function(){
+    }
+    this.renderEditor = function(){        
+    }
+    this.setSelected = function(selected){
+        if(selected){
+            cell.className="TableWidgetCellSelected"; 
+        }                                  
+        else{
+            cell.className="TableWidgetCell"; 
+        }
+    }
+    this.getValue = function(){
+        return value; //force readonly for now.
+        var val = container.innerHTML;
+        if(val.length==0){
+            val = -1;
+        }
+        else{
+            val = parseInt(val);
+        }
+        return val;
+    }
+    this.setValue = function(newValue){
+        if(newValue<0||newValue==""){
+            newValue = "";
+        }
+        else if(newValue>1000000000000000){
+            newValue = ((newValue/1000000000000000).toFixed(2))+" PB";
+        }
+        else if(newValue>1000000000000){
+            newValue = ((newValue/1000000000000).toFixed(2))+" TB";
+        }
+        else if(newValue>1000000000){
+            newValue = ((newValue/1000000000).toFixed(2))+" GB";
+        }
+        else if(newValue>1000000){
+            newValue = ((newValue/1000000).toFixed(2))+" MB";
+        }
+        else if(newValue>1000){
+            newValue = ((newValue/1000).toFixed(2))+" KB";
+        }
+        else{
+            newValue = newValue+" B";
+        }
+        container.innerHTML = newValue;
+    }
+    this.getUpdateEvent = function(){
+        return F.zeroE();
+    }
+    this.setValue(value);
+}
+
+/**
+ *  FileSizeRendererColumn
+ * @constructor
+ */
+function FileSizeRendererColumn(){
+    this.getCellRenderer = function(value, cell, width){
+        if(cell==undefined){
+            return null;
+        }       
+        return new FileSizeRenderer(value, cell, width);    
+    }
+}
+
+
+
+
+
+
+/**
+ *  FileTypeRenderer
+ * @constructor
+ */
+function FileTypeRenderer(value, cell, width){
+    var img = DOM.createImg(undefined, undefined, window["SETTINGS"]["scriptPath"]+"resources/trans.png");
+    cell.appendChild(img);
+    cell.style.textAlign="center";
+    this.render = function(){
+    }
+    this.renderEditor = function(){        
+    }
+    this.setSelected = function(selected){
+        if(selected){
+            cell.className="TableWidgetCellSelected"; 
+        }                                  
+        else{
+            cell.className="TableWidgetCell"; 
+        }
+    }
+    this.getValue = function(){
+        return value;
+    }
+    this.setValue = function(val){
+        var src="";
+        if(val==undefined){
+        }
+        else if(val=="directory"){                
+            src=window["SETTINGS"]["theme"]["path"]+"tables/directory.png";
+        }
+        else if(val.contains("image")){                
+            src=window["SETTINGS"]["theme"]["path"]+"tables/image.png";
+        }
+        else if(val.contains("video")){                
+            src=window["SETTINGS"]["theme"]["path"]+"tables/video.png";
+        }
+        else if(val.contains("audio")){                
+            src=window["SETTINGS"]["theme"]["path"]+"tables/music.png";
+        }
+        else if(val.contains("text")){                
+            src=window["SETTINGS"]["theme"]["path"]+"tables/document.png";
+        }
+        if(src!=""){
+            img.src = src;
+        }
+    }
+    this.getUpdateEvent = function(){
+        return F.zeroE();
+    }
+    this.setValue(value);
+}
+/**
+ *  FileTypeRendererColumn
+ * @constructor
+ */
+function FileTypeRendererColumn(){
+    this.getCellRenderer = function(value, cell, width){
+        if(cell==undefined){
+            return null;
+        }       
+        return new FileTypeRenderer(value, cell, width);    
+    }
+}
