@@ -1,9 +1,10 @@
 goog['require']('F');
 var pageRenderedE = F.receiverE();
 var DATA = new BehaviourManager();
+var DOM = new AuroraDom();
 var ENUMS = {};
 window['WIDGETS'] = new WidgetManager();
-var POLL_RATES = {ONCE: 0, VERY_FAST: 500, FAST: 1500, NORMAL: 3000, SLOW: 5000, VERY_SLOW: 8000};
+var POLL_RATES = {ONCE: 0, VERY_FAST: 500, FAST: 1500, NORMAL: 3000, SLOW: 5000, VERY_SLOW: 30000};
 var CONSTANTS = {NOT_READY: 978000,NO_PERMISSION: 978001, RENDER_SIZE: {SMALL: 0, MEDIUM: 1, LARGE: 2}};
 var NOT_READY = CONSTANTS.NOT_READY;
 var NO_PERMISSION = CONSTANTS.NO_PERMISSION; 
@@ -12,6 +13,7 @@ var WIDGET = {
     getWidth: function(){return (data.placeholder==null)?data.width:data.placeholder.style.width.replace('px', '');},
     getHeight: function(){return (data.placeholder==null)?data.height:data.placeholder.style.height.replace('px', '');}
 }; 
+var userB = DATA.getRemote("aurora_current_user",undefined,NOT_READY, POLL_RATES.VERY_SLOW).behaviour;
 var widgets=new Array();
 
 /**
@@ -46,7 +48,6 @@ var pageDataB = F.liftB(function(pageData){
 ready(function() {
     var pageName = window['SETTINGS']['page']['name'];
     var href = window['SETTINGS']['scriptPath']+pageName;
-    log(pageName);
     if(history.pushState){
         history.pushState({page: pageName}, pageName, href);
         

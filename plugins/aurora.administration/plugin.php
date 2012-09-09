@@ -10,7 +10,12 @@
     $behaviourManager->registerBehaviour("aurora_permissions_set", "getBPermmissions", "setBPermmissions");
     $behaviourManager->registerBehaviour("aurora_settings", "getWebpageSettings", "setWebpageSettings");  
     $behaviourManager->registerBehaviour("aurora_theme_list", "getThemeList", "setThemeList");
+    $behaviourManager->registerBehaviour("aurora_current_user", "getCurrentUser");
     
+    function getCurrentUser($context){
+        global $current_user;
+        return $current_user->toJSON();
+    }
     function getThemeList($context){
         global $current_user;
         global $NO_PERMISSION;
@@ -212,8 +217,7 @@
         $result = mysql_query("SELECT * FROM `plugins` ORDER BY `reference` ASC;", getPrimarySQLConnection());
         $ret["DATA"]=array();
         while($row = mysql_fetch_array($result))
-            $settings[count($settings)] = array((int)$row['id'], $row['reference'], (boolean)$row['enabled']);
-        $ret["DATA"] = $settings;
+            $ret["DATA"][count($ret["DATA"])] = array((int)$row['id'], $row['reference'], (boolean)$row['enabled']);
         return $ret;
     }
     function setPlugins($data, $context){
