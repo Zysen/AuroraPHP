@@ -1,32 +1,32 @@
 function GoogleMapWidget(instanceId, data){
     var mapId = instanceId+"_map";
-    var geocoder = new google.maps.Geocoder();
-    this.loader=function(){
-        //var latlng = new google.maps.LatLng(-34.397, 150.644);
-        //var address="1 camperdown rd, miramar, wellington, new zealand";
-        var address = data.address;
-        var zoom = parseInt(data.zoom);
-        geocoder.geocode( { 'address': address}, function(results, status) {
-      if (status == google.maps.GeocoderStatus.OK) {
-        var myOptions = {
-          zoom: zoom,
-          center: results[0].geometry.location,
-          mapTypeId: google.maps.MapTypeId.ROADMAP
-        };
-        var map = new google.maps.Map(document.getElementById(mapId), myOptions);
-        
-      } else {
-        alert("Geocode was not successful for the following reason: " + status);
-      }
-    });
-
-        
+    var zoom = parseInt(data.zoom);
+    this.loader=function(addressB){
+        //var scriptLoadedE = loadScriptE("http://maps.googleapis.com/maps/api/js?key=AIzaSyCP1Ej3uTUHUBkzi4Q6F4vujwyWd3ocVNA&sensor=false");
+        var addressB = (addressB==undefined)?F.constantB(data.address):addressB;
+        var mapB = F.oneE().startsWith(NOT_READY).liftB(function(data){
+            if(!good())
+                return NOT_READY;
+            return new google.maps.Map(DOM.get(mapId), {zoom: zoom, mapTypeId: google.maps.MapTypeId.ROADMAP});
+        });
+        var locationB = geoCodeB(addressB);
+        F.liftB(function(map, geocode){
+            if(!good())
+                return NOT_READY;
+           if(geocode.results.length>0){
+               if(DOM.get(mapId).style.display=='none'){
+                    DOM.get(mapId).style.display = 'inline-block'; 
+               }
+               map.setCenter(geocode.results[0].geometry.location, zoom);
+           }
+           else{
+                DOM.get(mapId).style.display = 'none';
+           }
+        }, mapB, locationB);                
     }
-    this.build=function(){
-        /*var element = createDomElement("div", mapId, "googleMapSurround", "<div id=\""+mapId+"\" class=\"map_canvas\"></div>");
-        element.style = data.placeholder.style;
-        return element;   */
-        return "<div id=\""+mapId+"\" style=\"width: 400px; height: 400px;\">MAP</div>";
+    this.build=function(){   
+        var d = getPlaceholderDimensions(data.placeholder);
+        return "<span id=\""+mapId+"\" style=\"margin: 0 auto; display: none; width: "+d.width+d.wUnit+"; height: "+d.height+d.hUnit+";\">&nbsp;</span>";
     }
     this.destroy=function(){
     }
@@ -55,7 +55,6 @@ function GoogleMapWidgetConfigurator(){
 }  
 
 function GoogleStreetViewWidget(instanceId, data){
-    log(data);
     var mapId = instanceId+"_map";
     var geocoder = new google.maps.Geocoder();
     this.loader=function(){
@@ -124,3 +123,21 @@ function GoogleStreetViewWidgetConfigurator(){
 WIDGETS.register("googleMapWidget", GoogleMapWidget, GoogleMapWidgetConfigurator);
 WIDGETS.register("googleStreetViewWidget", GoogleStreetViewWidget, GoogleStreetViewWidgetConfigurator);                
 
+
+
+function geoCodeB(addressB){
+    var rec = F.receiverE();
+    addressB.liftB(function(address){  
+        if(!good())
+            return NOT_READY;
+        log("Geocoding: "+address);
+        var geocoder = new google.maps.Geocoder();
+        geocoder.geocode( { 'address': address}, function(results, status) {
+            log(status);
+            log(results);
+            rec.sendEvent({results: results, status: status});
+        });
+    });
+    
+    return rec.startsWith(NOT_READY); 
+}
