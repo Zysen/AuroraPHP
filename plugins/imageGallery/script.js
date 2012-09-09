@@ -129,3 +129,91 @@ function ImageGalleryWidget(instanceId,data){
 WIDGETS.register("imageWidget", ImageWidget);
 WIDGETS.register("imageGallery", ImageGalleryWidget);
 
+function UploadableImageWidget(instanceId, data){    
+    var width = data.placeholder.getAttribute("width");
+    var height = data.placeholder.getAttribute("height");
+    
+    data.acceptedTypes = ["image/jpg", "image/jpeg", "image/png", "image/gif"];
+    data.targetId = instanceId+"_container";
+    
+    var uploadWidget = new FileUploaderDragDropWidget(instanceId+"_dnd",data);   
+                         
+    this.loader=function(widgetRefB){ 
+        uploadWidget.loader();
+        var thumbPathB = widgetRefB.liftB(function(widgetRef){
+            if(!good())
+                return NOT_READY;
+            return window['SETTINGS']['scriptPath']+"resources/upload/public/imagegallery/thumbs/"+widgetRef+".png";
+        });
+        var imageExistsB = thumbPathB.liftB(function(imagePath){
+            if(!good())
+                return NOT_READY;
+            DOM.get(instanceId+"_img").src = imagePath+"?time="+(new Date()).getTime();
+            return UrlExists(imagePath);
+        });
+        
+        imageExistsB.liftB(function(imageExists){
+            if(!good())
+                return NOT_READY;
+                log(imageExistsB);
+            var dropZone = (!imageExists)?uploadWidget.getDropZone().outerHTML:uploadWidget.getPanel().outerHTML;
+            DOM.get(instanceId+"_progress").innerHTML = dropZone;
+            if(imageExists){
+                DOM.get(uploadWidget.getPanel().id).innerHTML = "";
+            }                                  
+            
+        });
+
+        var uploadCompleteB = uploadWidget.uploadCompleteE.mapE(function(response){
+            var path = response.path;
+            var dimension = (height>width)?" width=\""+width+"\"":" height=\""+height+"\"";       
+            return {path: path, width: width, height: height}; 
+        }).startsWith(NOT_READY);
+        
+        
+        var processRequestB = F.liftB(function(response, widgetRef){                                                                                                    
+            if(!good())
+                return NOT_READY;
+            response.id = widgetRef;
+            return response;
+        }, uploadCompleteB, widgetRefB);
+            
+        var imageProcessedE = getAjaxRequestB(uploadCompleteB, window['SETTINGS']['scriptPath']+"/request/IG_processImage").mapE(function(ret){
+            if(ret==NOT_READY)
+                return NOT_READY;
+            var container = DOM.get(instanceId+"_container");
+            var image = DOM.get(instanceId+"_img");
+            var progress = DOM.get(instanceId+"_progress"); 
+            
+            progress.innerHTML = uploadWidget.getPanel().outerHTML;
+            image.src = ret.path+"?time="+(new Date()).getTime();
+            DOM.get(uploadWidget.getPanel().id).innerHTML = "";
+        }); 
+        
+                                                                                     
+    }                                                  
+    this.build=function(){
+        return "<div id=\""+instanceId+"_container\" style=\"margin: 0 auto; position: inline-block; text-align: center; width: "+width+"px; height: "+height+"px;\">"+DOM.createImg(instanceId+"_img", "UploadableImageWidget", "/resources/trans.png").outerHTML+"<div id=\""+instanceId+"_progress\"></div></div>";   
+    }
+    this.destroy=function(){
+        uploadWidget.destroy();
+    }
+}
+
+
+function UploadableImageWidgetConfigurator(){
+    this['requiresRef'] = true;
+    this['render'] = function(newData){
+    }
+    this['getData'] = function(){
+        return {};
+    }
+    this['getName'] = function(){
+        return "Image Uploader Widget";
+    }
+    this['getDescription'] = function(){
+        return "A blank image which can be changed using drag and drop";
+    }
+    this['getImage'] = function(){}
+} 
+WIDGETS.register("UploadableImageWidget", UploadableImageWidget, UploadableImageWidgetConfigurator);
