@@ -847,16 +847,70 @@ objectEquals = function(ob1, x)
 }
 
 
-
-
-XMLHttpRequest.prototype.sendAsBinary = function(datastr) {
-log('sendAsBinary: '+datastr);
-function byteValue(x) {
-return x.charCodeAt(0) & 0xff;
-}
-var ords = Array.prototype.map.call(datastr, byteValue);
-var ui8a = new Uint8Array(ords);
-this.send(ui8a.buffer);
-};
-
          
+function loadScriptE(url){
+    var rec = F.receiverE();
+    var script = document.createElement("script")
+    script.type = "text/javascript";
+
+    if (script.readyState){  //IE
+        script.onreadystatechange = function(){
+            if (script.readyState == "loaded" || script.readyState == "complete"){
+                script.onreadystatechange = null;
+                rec.sendEvent(true);
+            }
+        };
+    } else {  //Others
+        script.onload = function(){
+            rec.sendEvent(true);
+        };
+    }
+
+    script.src = url;
+    document.getElementsByTagName("head")[0].appendChild(script);
+    return rec;
+}
+
+function UrlExists(url)
+{
+    var http = new XMLHttpRequest();
+    http.open('HEAD', url, false);
+    http.send();
+    return http.status!=404;
+}
+
+function aurora_requestWidgetRefE(page){
+    var rec = F.receiverE();
+    jQuery.ajax({
+        dataType: 'json',
+        type: "post",
+        data: {page: page},
+        url: SETTINGS.scriptPath+"request/getWidgetRef",
+        success: function(data){
+            rec.sendEvent(data);
+        },
+        error: connectionError
+    });
+    return rec;
+}
+function aurora_requestWidgetRef(page, callback){
+    jQuery.ajax({
+        dataType: 'json',
+        type: "post",
+        data: {page: page},
+        url: SETTINGS.scriptPath+"request/getWidgetRef",
+        success: function(data){
+            callback(data);
+        },
+        error: connectionError
+    });
+}
+function getPlaceholderDimensions(placeholder){
+    var width = placeholder.getAttribute('width');
+    var height = placeholder.getAttribute('height');
+    width = (width!=undefined)?width:placeholder.style.width;
+    height = (height!=undefined)?height:placeholder.style.height;
+    wUnit = width.contains("%")?"%":"px";
+    hUnit = height.contains("%")?"%":"px";
+    return {width: parseInt(width.replace('px', '')), height: parseInt(height.replace('px', '')), wUnit: wUnit, hUnit:hUnit};
+}

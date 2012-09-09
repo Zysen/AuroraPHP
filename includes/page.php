@@ -56,6 +56,7 @@ class AuroraPage {
            $this->registerScript("js/JSON.js");
            $this->registerScript("js/flapjax-jan2012.js");
            
+           $this->registerScript("js/aurora.dom.js");
            $this->registerScript("js/aurora.library.js");
            $this->registerScript("js/BehaviourManager.js");
            $this->registerScript("js/WidgetManager.js");
@@ -126,6 +127,7 @@ class AuroraPage {
             global $scriptPath;
             global $dowhat;
             global $current_user;
+        
            
             $this->registerScript("themes/".$this->_themeName."/script.js");
             $this->registerCSS("themes/".$this->_themeName."/style.css");
@@ -133,8 +135,8 @@ class AuroraPage {
             
             if($pageData!=FALSE)                                                                                                 
                 $this->addComponent($pageData['content']);
-            $page = array("name"=>$pageData['title'],"noPage"=>$pageData['noPage'], "ownerId"=>$pageData['user_id'], "permissions"=>$pageData['permissions'], "html"=>str_replace("\\\"", "\"", str_replace("\\'", "'", str_replace("<ROOT_URL>", "$scriptPath", $this->_content))));
-            $theme = array("name"=>$this->_themeName,"path"=>$scriptPath.'themes/'.$this->_themeName.'/', "html"=>str_replace("\\\"", "\"", str_replace("\\'", "'", str_replace("<ROOT_URL>", "$scriptPath", $this->getThemeTemplate($this->_theme)))));
+            $page = array("name"=>$pageData['title'],"noPage"=>(array_key_exists("noPage", $pageData)?$pageData['noPage']:false), "ownerId"=>$pageData['user_id'], "permissions"=>$pageData['permissions'], "html"=>str_replace("\\\"", "\"", str_replace("\\'", "'", str_replace("<ROOT_URL>", "$scriptPath", str_replace("<SCRIPT_PATH>", "$scriptPath", $this->_content)))));
+            $theme = array("name"=>$this->_themeName,"path"=>$scriptPath.'themes/'.$this->_themeName.'/', "html"=>str_replace("\\\"", "\"", str_replace("\\'", "'", str_replace("<ROOT_URL>", "$scriptPath", str_replace("<SCRIPT_PATH>", "$scriptPath", $this->getThemeTemplate($this->_theme))))));
                               
             $noPage = $this->_content=="";
             $this->_content=$noPage?getNoPageTemplate():$this->_content;
@@ -154,8 +156,8 @@ class AuroraPage {
             }
 
             //"externalCSS"=>$scriptData['externalCSS'],
-            $clientSettings = json_encode(array("user"=>array("groupid"=>$current_user->get_group_id(),"firstname"=>$current_user->get_firstname(), "lastname"=>$current_user->get_lastname(), "username"=>$current_user->get_username()), "updateWait"=>(int)$settings['aurora_updateTime'],"page"=>$page,"defaultPage"=>$settings['aurora_defaultAction'], "scriptPath"=>$scriptPath, "theme"=>$theme, "groups"=>$groups, "pagePermissions"=>$pageData['permissions'], "messages"=>$messages, "aurora_encapsulationMethod"=>$settings['aurora_encapsulationMethod']));
-            $htmlHead = $this->_head."\n<script type=\"text/javascript\" src=\"".$scriptPath."js/script-".$this->_themeName."".(($settings['closure_compile']=="1")?"-min":"").".js\"></script>\n";
+            $clientSettings = json_encode(array("user"=>array("groupid"=>$current_user->get_group_id(),"firstname"=>$current_user->get_firstname(), "lastname"=>$current_user->get_lastname(), "username"=>$current_user->get_username(), "id"=>$current_user->get_SqlId()), "updateWait"=>(int)$settings['aurora_updateTime'],"page"=>$page,"defaultPage"=>$settings['aurora_defaultAction'], "scriptPath"=>$scriptPath, "theme"=>$theme, "groups"=>$groups, "pagePermissions"=>$pageData['permissions'], "messages"=>$messages, "aurora_encapsulationMethod"=>$settings['aurora_encapsulationMethod']));
+            $htmlHead = "<script type=\"text/javascript\">var SETTINGS = $clientSettings;\n</script>\n".$this->_head."\n<script type=\"text/javascript\" src=\"".$scriptPath."js/script-".$this->_themeName."".(($settings['closure_compile']=="1")?"-min":"").".js\"></script>\n";                  
             
             //$scriptPath."js/".$this->_themeName."-script.js
             
@@ -170,11 +172,11 @@ class AuroraPage {
             }
             
             
-            $htmlHead.="<style type=\"text/css\" media=\"all\">@import \"".$scriptPath."themes/".$this->_themeName."/style-gen.css\";</style>\n<script type=\"text/javascript\">var SETTINGS = $clientSettings;\n";
+            $htmlHead.="<style type=\"text/css\" media=\"all\">@import \"".$scriptPath."themes/".$this->_themeName."/style-gen.css\";</style>\n";
             for($i=0;$i<count($this->_inlineScripts);$i++){
                 $htmlHead .= $this->_inlineScripts[$i]."\n";
             }
-            $htmlHead.="</script>\n<meta charset=\"utf-8\" />";
+            $htmlHead.="<meta charset=\"utf-8\" />";
             echo "<!DOCTYPE html>\n<html>\n<head>\n<title>$title</title>\n$htmlHead\n</head>\n<body class=\"themeAuroraBody\"><div id=\"body\"  style=\"display: none;\">".$page["html"]."</div></body>\n</html>";
         }
 } 

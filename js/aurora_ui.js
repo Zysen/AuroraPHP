@@ -24,9 +24,14 @@ function aurora_ui(){
             this.active = false;
             return blah
             
-        }
+        }                                  
     }
-    this.showMessage = function(title, message, callback){
+    this.showMessage = function(title, message, callback, options){
+        var modal = (options==undefined||options.modal==undefined)?true:options.modal;
+        var draggable = (options==undefined||options.draggable==undefined)?false:options.draggable;  
+        var resizable = (options==undefined||options.resizable==undefined)?false:options.resizable;
+        var width = (options==undefined||options.width==undefined)?"":options.width;
+        var height = (options==undefined||options.height==undefined)?"'600'":options.height; 
         if(typeof jQuery == 'undefined'){ 
             this.dialog(title, message, undefined, callback);
         }
@@ -35,10 +40,14 @@ function aurora_ui(){
             if(oldD!=null)
                 oldD.parentNode.removeChild(oldD);
             var dialog = createDomElement('div', 'aurora_dialog', '', message);
+            dialog.style.width = "100%";
             dialog.title = title;
             document.body.appendChild(dialog);
-            //f
-            jQuery( "#aurora_dialog").dialog({"modal": true,"draggable": false,"resizable": false,"buttons":[{"text": "Ok","click": function() { jQuery(this).dialog("close");if(callback!=undefined)callback();}}]});
+            var dialogOptions = {width: width, "modal": modal,"draggable": draggable,"resizable": resizable,"buttons":[{"text": "Ok","click": function() { jQuery(this).dialog("close");if(callback!=undefined)callback();}}]}
+            if(options!=undefined&&options.height!=undefined){
+                dialogOptions.height = options.height;    
+            }
+            jQuery("#aurora_dialog").dialog(dialogOptions);
         }
     }
     this.confirm = function(title, message, text1, callback1, text2, callback2, fullscreen, dialogOpenCallback){
