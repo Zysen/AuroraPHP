@@ -7,9 +7,10 @@ function renderPage(data){
         //log(key);
         widgetDef = widgetTypes[key];
         var i=0; 
-                                                                    
+        //log(key);                                                            
         var widgetPlaceholders = getElementsByClassName("widget_"+key, "img", elm);
         for (var index in widgetPlaceholders) {
+            //log("T: "+index);
             i++;
             var widgetPlaceholder = widgetPlaceholders[index];     
             var instanceId = (widgetPlaceholder.id!='')?widgetPlaceholder.id:key+i;
@@ -36,10 +37,13 @@ function renderPage(data){
             WIDGETS.add(widget);
             
             var wBuild = widget.build();
-            if(typeof(wBuild)=='string')
+            if(typeof(wBuild)=='undefined'){}
+            else if(typeof(wBuild)=='string'){
                 element.innerHTML = wBuild;
-            else
+            }
+            else{
                 element.appendChild(wBuild);
+            }
             widgetPlaceholder.parentNode.replaceChild(element, widgetPlaceholder);
         }
     } 
