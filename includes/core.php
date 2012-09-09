@@ -90,10 +90,11 @@ function aurora_recompile(){
         $newStyleFile = "themes/$themeName/style-gen.css";
         unlink($newStyleFile);
         $themeCSS = "themes/$themeName/style.css";
-        file_put_contents($newStyleFile, file_get_contents($themeCSS), FILE_APPEND);
+        file_put_contents($newStyleFile, str_replace("<SCRIPT_PATH>", "$scriptPath", file_get_contents($themeCSS)), FILE_APPEND);
         foreach ($styles as $style){
             echo "\tMerging: $style into $newStyleFile<br />\n";
-            file_put_contents($newStyleFile, file_get_contents($style), FILE_APPEND);
+            
+            file_put_contents($newStyleFile, str_replace("<SCRIPT_PATH>", "$scriptPath", file_get_contents($style)), FILE_APPEND);
         }    
     }
     
@@ -145,7 +146,7 @@ function compareAndDeleteRows($table, $matchingColumnName, $matchingColumnIndex,
 }
 
 function getEmptyTableDef(){
-    return array("COLUMNS"=>array(), "DATA"=>array(), "TABLEMETADATA"=>array("idColumn"=>""), "ROWMETADATA"=>array(), "CELLMETADATA"=>array(), "COLUMNMETADATA"=>array());
+    return array("COLUMNS"=>array(), "DATA"=>array(), "TABLEMETADATA"=>array("idColumn"=>"","sortColumn"=>0, "sortOrder"=>"DESC"), "ROWMETADATA"=>array(), "CELLMETADATA"=>array(), "COLUMNMETADATA"=>array());
 }
 
 function minifyCSS($buffer){
@@ -432,4 +433,11 @@ function TimestampToEngDatetime($Tstamp, $dateFormat=DateFormat::SHORT_ENGLISH, 
     }
    return array('date'=>$date, 'time'=>$time);
 }
+function deleteDir($path)
+{
+    return is_file($path) ?
+            @unlink($path) :
+            array_map(__FUNCTION__, glob($path.'/*')) == @rmdir($path);
+}
+
 ?>

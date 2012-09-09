@@ -25,6 +25,9 @@ function getUserDisplay($username, $firstname, $lastname){
             setcookie("pass", "", time()-3600);
             return $current_user;
         }
+        function toJSON(){
+            return array("username"=>$this->username, "firstname"=>$this->firstname, "lastname"=>$this->lastname, "group_id"=>$this->group_id, "email"=>$this->email, "avatar"=>$this->avatar);    
+        }
         function updateFromDataBase(){
             $result = mysql_query("SELECT *, `groups`.`name` AS `groupName` FROM `users` LEFT JOIN `groups` ON `users`.`group_id`=`groups`.`id` WHERE user_id='".$this->sqlId."' LIMIT 1;");
             if(mysql_num_rows($result)==1)
@@ -149,6 +152,7 @@ function getUserDisplay($username, $firstname, $lastname){
                     return $row;
                 $result2 = mysql_query("SELECT * FROM `page_permissions` WHERE `page_id`=".$row['page_id']." AND (`user_id`=".$this->get_SqlId()." OR `group_id`=".$this->get_group_id().") LIMIT 1;", $connection);                                
                 if(mysql_num_rows($result2)>0){
+                    $row['noPage'] = false;
                     return $row;
                 }
                 return 0;   //No Access
@@ -189,7 +193,7 @@ session_start();
                 //header("Location: ".$scriptPath);
                 if(isset($_POST['emailAddress'])){
                     $page->addToMessage("Welcome ".$current_user->get_firstname()." you have successfully logged in.");
-                    if($_SESSION['aurora_requestedPage']&&count($_SESSION['aurora_requestedPage'])>0){
+                    if(isset($_SESSION['aurora_requestedPage'])&&count($_SESSION['aurora_requestedPage'])>0){
                         $path = $_SESSION['aurora_requestedPage'];
                         //session_destroy();
                     }
