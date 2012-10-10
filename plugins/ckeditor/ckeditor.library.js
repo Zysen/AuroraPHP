@@ -1,5 +1,8 @@
 window['CKEDITOR_BASEPATH'] = window['SETTINGS']['scriptPath']+'plugins/ckeditor/ckeditor/';
-pageRenderedE.calmE().mapE(function(){
+pageDataB.calmB().liftB(function(pageData){
+    if(pageData==NOT_READY){
+        return NOT_READY;
+    }
  //getElementById("content")
  var element = document.createElement("span");
 if(window['SETTINGS']['page']['permissions']['canEdit'] || window['SETTINGS']['page']['permissions']['canDelete']){

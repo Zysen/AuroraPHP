@@ -172,10 +172,8 @@ session_start();
                 $email = mysql_escape_string($_POST['emailAddress']);
                 $password = mysql_escape_string(md5($_POST['password']));
             }
-                                       //`user_id`, `validated`, `loggedIn`, `email`
+
         $result = mysql_query("SELECT * FROM `users` WHERE email='$email' AND password='$password' LIMIT 1;", getPrimarySQLConnection());
-        if(mysql_num_rows($result)==0)
-            $result = mysql_query("SELECT * FROM `users` WHERE email='$postEmail' AND password='$postPass' LIMIT 1;", getPrimarySQLConnection());
         if(mysql_num_rows($result)>0){
             $row = mysql_fetch_array($result);
             if($settings['aurora_requireEmailValidation']==0||$row['validated']=="1"){
@@ -188,9 +186,9 @@ session_start();
                     if(!isset($_COOKIE['pass']))
                         setcookie("pass", custom_encrypt(md5($_POST['password']), $blowfish), time()+60*60*24*30);
                 }
-                if(isset($_SESSION['loginRedirect']))
+                /*if(isset($_SESSION['loginRedirect']))
                     header("Location: ".$_SESSION['loginRedirect']);
-                //header("Location: ".$scriptPath);
+                *///header("Location: ".$scriptPath);
                 if(isset($_POST['emailAddress'])){
                     $page->addToMessage("Welcome ".$current_user->get_firstname()." you have successfully logged in.");
                     if(isset($_SESSION['aurora_requestedPage'])&&count($_SESSION['aurora_requestedPage'])>0){

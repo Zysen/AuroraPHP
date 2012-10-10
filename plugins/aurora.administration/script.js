@@ -29,10 +29,9 @@ function WebpageSettingsWidget(instanceId, data){
                 var description = getTableValue(settingTable, rowIndex, "description");
                 var value = getTableValue(settingTable, rowIndex, "value");
                 var valueColIndex = getColumnIndex(settingTable, "value");
-                
-                                                                              
+                                     
                 if(CELL_RENDERERS[type]!=undefined){
-                    var renderer = new BasicCellRenderer(type, name);
+                    var renderer = new BasicCellRenderer(type, name);   
                     cellMetaDataRow[valueColIndex] = {"renderer": renderer};    
                 }
                 else if(type=="userDisplay"){
@@ -167,7 +166,12 @@ function BehaviourPermissionsWidget(instanceId, data){
                             bPermissionPermission = auroraParseBoolean(bPermissionPermission);
                         }
         			    dataRow[colIndex] = bPermissionPermission;
+                        if(cellMetaDataRow[colIndex]==undefined){
+                            cellMetaDataRow[colIndex] = {"permissionId":bPermissionId};
+                        }
+                        else{
                         cellMetaDataRow[colIndex]["permissionId"] = bPermissionId;
+                        }
                         if(bPermissionGroupId==3&&(bPermissionsBehaviourId==2||bPermissionsBehaviourId==4||bPermissionsBehaviourId==5))
                             cellMetaDataRow[colIndex]["permissions"] = {"canEdit": false};
         		    }
@@ -547,9 +551,24 @@ WIDGETS.register("LoggedInImageWidget", LoggedInImageWidget);
  * @constructor
  */ 
 function LoggedInImageMenuWidget(instanceId, data){
-    var href = (window['SETTINGS']['user']['groupid']==1)?data.outURL:data.inURL;
-    var src = (window['SETTINGS']['user']['groupid']==1)?data.outSRC:data.inSRC;
-    this.loader=function(){
+    this.loader=function(){                                 
+        var targetGroupId = (data.targetGroup==undefined)?1:data.targetGroup;
+/*        log("lOGGED IN id");
+        log(data);
+        log(window['SETTINGS']['user']['groupid']);
+        log("Target");
+        log(targetGroupId);
+        log((window['SETTINGS']['user']['groupid']==targetGroupId)?data.outSRC:data.inSRC);
+        log((window['SETTINGS']['user']['groupid']==targetGroupId));  */
+        var li = document.createElement('li');                  
+        var src = (window['SETTINGS']['user']['groupid']==targetGroupId)?data.outSRC:data.inSRC;
+        var url = (window['SETTINGS']['user']['groupid']==targetGroupId)?data.outURL:data.inURL;
+        log(url);
+        log(src);
+        li.innerHTML = "<a id=\""+instanceId+"_anchor\" href=\""+url+"\"><img id=\""+instanceId+"_img\" src=\""+src+"\" alt=\"\" /></a>";           
+        //DOM.get(data.target).insertBefore(DOM.get(data.target).firstChild, li);
+        jQuery(li).prependTo(jQuery("#"+data.target));
+        
         /*setTimeout(function(){
             document.getElementById(instanceId+"_anchor").setAttribute('href',href);
             document.getElementById(instanceId+"_img").setAttribute('onclick',function(){window.location('/logout');});
@@ -558,11 +577,7 @@ function LoggedInImageMenuWidget(instanceId, data){
     }
     this.destroy=function(){}
     
-    this.build=function(){
-        if(href=="")
-            return "";
-        return "<li><a id=\""+instanceId+"_anchor\" href=\""+href+"\"><img id=\""+instanceId+"_img\" src=\""+src+"\" alt=\"\" /></a></li>";
-    }                         
+    this.build=function(){}                         
 }
 WIDGETS.register("LoggedInImageMenuWidget", LoggedInImageMenuWidget);
 
@@ -720,6 +735,30 @@ function FileTypeRenderer(value, cell, width){
         }
         else if(val.contains("text")){                
             src=window["SETTINGS"]["theme"]["path"]+"tables/document.png";
+        }
+        else if(val.contains("torrent")){                
+            src=window["SETTINGS"]["theme"]["path"]+"tables/torrent.png";
+        }
+        else if(val.contains("zip")){                
+            src=window["SETTINGS"]["theme"]["path"]+"tables/zip.png";
+        }
+        else if(val.contains("g-zip")){                
+            src=window["SETTINGS"]["theme"]["path"]+"tables/gzip.png";
+        }
+        else if(val.contains("excel")){                
+            src=window["SETTINGS"]["theme"]["path"]+"tables/excel.png";
+        }
+        else if(val.contains("word")){                
+            src=window["SETTINGS"]["theme"]["path"]+"tables/word.png";
+        }
+        else if(val.contains("font")){                
+            src=window["SETTINGS"]["theme"]["path"]+"tables/font.png";
+        }
+        else if(val.contains("pdf")){                
+            src=window["SETTINGS"]["theme"]["path"]+"tables/pdf.png";
+        }
+        else if(val.contains("kml")){                
+            src=window["SETTINGS"]["theme"]["path"]+"tables/kml.png";
         }
         if(src!=""){
             img.src = src;

@@ -907,14 +907,18 @@ F.EventStream.prototype.filterRepeatsE = function(optStart) {
   var prev = optStart;
 
   return this.filterE(function (v) {
-    if (!hadFirst || prev !== v) {
+    if(typeof(v)=='object'){
+        if(!objectEquals(v, prev)){
+            prev = clone(v);
+            return true;
+        }
+    }
+    else if (!hadFirst || prev !== v) {
       hadFirst = true;
       prev = v;
       return true;
     }
-    else {
-      return false;
-    }
+    return false;
   });
 };
 
@@ -997,6 +1001,21 @@ F.Behavior.prototype.valueNow = function() {
  */
 F.Behavior.prototype.changes = function() {
   return this.underlying;
+};
+
+/**
+ * @returns {F.Behavior}
+ */
+F.Behavior.prototype.firedBefore = function(b2) {
+  return this.stamp<b2.stamp;
+};
+
+
+/**
+ * @returns {F.Behavior}
+ */
+F.Behavior.prototype.firedAfter = function(b2) {
+  return this.stamp>b2.stamp;  
 };
 
 /**

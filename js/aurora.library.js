@@ -449,9 +449,49 @@ function makeUnselectable(node) {
         child = child.nextSibling;
     }
 }
+
+function objectEquals(ob1, ob2)
+{
+    if(typeof(ob1)=='undefined'||typeof(ob2)=='undefined'){
+        return (typeof(ob1)=='undefined'&&typeof(ob2)=='undefined');
+    }
+
+
+  var p;
+  for(p in ob1) {
+      if(typeof(ob2)=='undefined'||typeof(ob2[p])=='undefined') {return false;}
+  }
+
+  for(p in ob1) {
+      if (ob1[p]) {
+          switch(typeof(ob1[p])) {
+              case 'object':
+                  if (!objectEquals(ob1[p], ob2[p])) { return false; } break;
+              case 'function':
+                  if (typeof(ob2)=='undefined' || typeof(ob2[p])=='undefined' ||
+                      (p != 'equals' && ob1[p].toString() != ob2[p].toString()))
+                      return false;
+                  break;
+              default:
+                  if (ob1[p] != ob2[p]) { return false; }
+          }
+      } else {
+          if (ob2[p])
+              return false;
+      }
+  }
+
+  for(p in ob2) {
+      if(typeof(ob1)=='undefined'||typeof(ob1[p])=='undefined') {return false;}
+  }
+
+  return true;
+}   
+//Object.prototype.equals = objectEquals;
 function clone(source){
     return cloneObject(source);
 }  
+//Object.prototype.clone = clone;
 function cloneObject(source) {
    if (source instanceof Array) {
         var copy = [];
@@ -814,7 +854,7 @@ var MD5 = function (string) {
     return temp.toLowerCase();
 }
 
-objectEquals = function(ob1, x)
+/*objectEquals = function(ob1, x)
 {
   for(p in ob1) {
       if(typeof(x[p])=='undefined') {return false;}
@@ -844,7 +884,7 @@ objectEquals = function(ob1, x)
   }
 
   return true;
-}
+} */
 
 
          
@@ -914,3 +954,11 @@ function getPlaceholderDimensions(placeholder){
     hUnit = height.contains("%")?"%":"px";
     return {width: parseInt(width.replace('px', '')), height: parseInt(height.replace('px', '')), wUnit: wUnit, hUnit:hUnit};
 }
+
+function getObjectValues(ob){
+    var ret = [];
+    for(index in ob){
+        ret.push(ob[index]);
+    }
+    return ret;
+}     

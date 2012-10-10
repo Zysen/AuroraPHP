@@ -191,7 +191,13 @@ function UploadableImageWidget(instanceId, data){
         }); 
         
                                                                                      
-    }                                                  
+    }      
+    this.hide = function(){
+        DOM.get(instanceId+"_container").style.display = 'none';
+    }              
+    this.show = function(){
+        DOM.get(instanceId+"_container").style.display = 'block';
+    }                                
     this.build=function(){
         return "<div id=\""+instanceId+"_container\" style=\"margin: 0 auto; position: inline-block; text-align: center; width: "+width+"px; height: "+height+"px;\">"+DOM.createImg(instanceId+"_img", "UploadableImageWidget", "/resources/trans.png").outerHTML+"<div id=\""+instanceId+"_progress\"></div></div>";   
     }

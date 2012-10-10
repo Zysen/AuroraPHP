@@ -1,9 +1,11 @@
 //BLO
-function pushToValidationGroupBehaviour(validationGroupB, val){                    
+function pushToValidationGroupBehaviour(key, validationGroupB, val){                    
     if(val==NOT_READY)
         return;
+    log(key);
     var validationGroup = validationGroupB.valueNow();
-        validationGroup.push(val);
+        validationGroup[key] = val;
+        log(validationGroup);
         validationGroupB.sendEvent(validationGroup);
 }
 function EmailConfirmer(instanceId, data){
@@ -16,12 +18,12 @@ function EmailConfirmer(instanceId, data){
         var emailRequestB = emailBlurE.snapshotE(emailValueB).mapE(function(text){return {email: ""+text};}).startsWith(NOT_READY);
         var emailValidE = getAjaxRequestB(emailRequestB, SETTINGS['scriptPath']+"request/form_validator_check_email/").mapE(function(data){return data.valid;});
         var emailValidB = emailValidE.startsWith(false);
-        var formGroupB = DATA.get(data.formGroup, undefined, []);
+        var formGroupB = DATA.get(data.formGroup, undefined, {});
         var widgetValueB = F.liftB(function(emailValid, emailValue){
             return {value: emailValue, valid: emailValid, name: valueName};
         },emailValidB, emailValueB);
         
-        pushToValidationGroupBehaviour(formGroupB, widgetValueB); 
+        pushToValidationGroupBehaviour(instanceId, formGroupB, widgetValueB); 
         
         emailValidE.mapE(function(valid){
             document.getElementById(data.target).className = (valid)?'form_validator_validInput':'form_validator_invalidInput';
@@ -36,27 +38,30 @@ function EmailConfirmer(instanceId, data){
 function ValidatedSubmitButton(instanceId, data){
     this.elementId = instanceId+'_submit';  
     this.loader=function(){
-        var formGroupB = DATA.get(data.formGroup, undefined, []);
+        var formGroupB = DATA.get(data.formGroup, undefined, {});
         var groupValidB = formGroupB.liftB(function(validationMap){
             //seperate validation behaviour from value beahviour
             return F.liftB.apply(this,[function(){
                 var trueCount=0;
+                log("Checking Arguments");
+                log(arguments);
                 for(index in arguments){
-                    //log("arguments[index]="+arguments[index]);
-                   //log(arguments[index]);
                     if(!arguments[index].valid){
-                        //log("Truecount: "+trueCount);
+                        log(arguments[index]);
                         return false;
+                    }
+                    else{
+                        log("TRUE");
                     }
                     trueCount++;
                 }
-                //log("Truecount: "+trueCount);
                 return true;
-            }].concat(validationMap));
+            }].concat(getObjectValues(validationMap)));
         }).switchB();
         var elementId = this.elementId;
         jQuery("#"+elementId).button();
         groupValidB.liftB(function(valid){
+            log("Button valid "+valid);
            jQuery("#"+elementId).button((valid)?'enable':'disable');
         });
     }
@@ -68,7 +73,7 @@ function ValidatedTextBox(instanceId, data){;
     this.instanceId = instanceId;
     this.loader=function(){    
         var valueName = (data.name==undefined)?"Email":data.name; 
-        var formGroupB = DATA.get(data.formGroup, undefined, []); 
+        var formGroupB = DATA.get(data.formGroup, undefined, {}); 
         var txtValueB = F.extractValueB(this.instanceId);
        
         var validB = txtValueB.liftB(function(text){
@@ -86,18 +91,49 @@ function ValidatedTextBox(instanceId, data){;
             return {value: text, valid: valid, name: valueName};
         }, validB, txtValueB);  
         
-        //pushToValidationGroupBehaviour(validationGroupB, validB);
-        pushToValidationGroupBehaviour(formGroupB, widgetResponseB);  
+        //pushToValidationGroupBehaviour(instanceId, validationGroupB, validB);
+        pushToValidationGroupBehaviour(instanceId, formGroupB, widgetResponseB);  
     }      
     this.build=function(){
         return "<input type=\"text\" value=\"\" id=\""+this.instanceId+"\"  />";                   //disabled=\"disabled\"
     }
-}                                       
+}     
+
+function ValidatedSelectField(instanceId, data){;
+    this.instanceId = instanceId;
+    this.loader=function(){    
+        var valueName = (data.name==undefined)?"Email":data.name; 
+        var formGroupB = DATA.get(data.formGroup, undefined, {}); 
+        var selectValueB = F.extractValueB(this.instanceId);
+        var validB = selectValueB.liftB(function(text){
+            return true;
+        });
+        var widgetResponseB = F.liftB(function(valid, text){
+            if(!good()||text==null){
+                return NOT_READY;
+            }
+            document.getElementById(instanceId).className = (text.length==0)?'':((valid)?'form_validator_validInput':'form_validator_invalidInput');
+            return {value: text, valid: valid, name: valueName};
+        }, validB, selectValueB);  
+        
+        //pushToValidationGroupBehaviour(instanceId, validationGroupB, validB);
+        pushToValidationGroupBehaviour(instanceId, formGroupB, widgetResponseB);  
+    }      
+    this.build=function(){
+        var select = DOM.create('select');
+        select.id = this.instanceId;
+        for(index in data.options){
+            select.appendChild(DOM.createOption(this.instanceId+"_"+index, undefined, data.options[index]+"", index+""));
+        }
+        return select;         
+    }
+} 
+                                  
 function ValidatedTextArea(instanceId, data){
     this.instanceId = instanceId;
     this.loader=function(){       
         var valueName = (data.name==undefined)?"Email":data.name;
-        var formGroupB = DATA.get(data.formGroup, undefined, []); 
+        var formGroupB = DATA.get(data.formGroup, undefined, {}); 
         var txtValueB = F.extractValueB(this.instanceId);
         
         var validB = txtValueB.liftB(function(text){
@@ -115,7 +151,7 @@ function ValidatedTextArea(instanceId, data){
             return {valid: valid, value: text, name: valueName};
         },validB,txtValueB);  
         
-        pushToValidationGroupBehaviour(formGroupB, widgetValueB);    
+        pushToValidationGroupBehaviour(instanceId, formGroupB, widgetValueB);    
     }      
     this.build=function(){
         var cols = 10;
@@ -131,7 +167,7 @@ function ValidatedPasswordWidget(instanceId, data){
     this.instanceId = instanceId;
     this.loader=function(){       
         var valueName = (data.name==undefined)?"Password":data.name;
-        var formGroupB = DATA.get(data.formGroup, undefined, []); 
+        var formGroupB = DATA.get(data.formGroup, undefined, {}); 
         var txtValue1B = F.extractValueB(this.instanceId+"_pass1");
         var txtValue2B = F.extractValueB(this.instanceId+"_pass2");
         
@@ -162,7 +198,7 @@ function ValidatedPasswordWidget(instanceId, data){
             return {valid: valid, value: text, name: valueName};
         },validB,txtValue1B);  
         
-        pushToValidationGroupBehaviour(formGroupB, widgetValueB);    
+        pushToValidationGroupBehaviour(instanceId, formGroupB, widgetValueB);    
     }             
     this.build=function(){
         return "<input type=\"password\" id=\""+this.instanceId+"_pass1\" />&nbsp;<img src=\"/resources/trans.png\" alt=\"\" class=\"loadingSpinner\" id=\""+this.instanceId+"_tick\" /><br /><input type=\"password\" id=\""+this.instanceId+"_pass2\" />";       
@@ -173,7 +209,7 @@ function ValidatedCalendar(instanceId, data){
     this.inputId = instanceId+"_input"   
     
     this.loader=function(){       
-        var formGroupB = DATA.get(data.formGroup, undefined, []);  
+        var formGroupB = DATA.get(data.formGroup, undefined, {});  
         var valueName = (data.name==undefined)?"Email":data.name;
         var dateE = F.receiverE();
         var dateB = dateE.startsWith(null);
@@ -189,7 +225,7 @@ function ValidatedCalendar(instanceId, data){
             document.getElementById(instanceId).className = (text.length==0)?'':((valid)?'form_validator_validInput':'form_validator_invalidInput');
             return {valid: valid, value: text, name: valueName};
         },validB,dateB);  
-        pushToValidationGroupBehaviour(formGroupB, widgetValueB);  
+        pushToValidationGroupBehaviour(instanceId, formGroupB, widgetValueB);  
     }      
     this.build=function(){
         return "<span id=\""+instanceId+"\"></span>";//"<input id=\""+this.inputId+"\" type=\"text\">";         
@@ -213,6 +249,8 @@ WIDGETS.register("ValidatedCalendar", ValidatedCalendar);
 WIDGETS.register("ValidatedTextArea", ValidatedTextArea);
 WIDGETS.register("ValidatedTextBox", ValidatedTextBox);
 WIDGETS.register("EmailConfirmer", EmailConfirmer);
+WIDGETS.register("ValidatedSelectField", ValidatedSelectField);
+
 
 
 var minChars = 1;

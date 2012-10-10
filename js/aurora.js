@@ -1,5 +1,4 @@
 goog['require']('F');
-var pageRenderedE = F.receiverE();
 var DATA = new BehaviourManager();
 var DOM = new AuroraDom();
 var ENUMS = {};
@@ -16,6 +15,9 @@ var WIDGET = {
 var userB = DATA.getRemote("aurora_current_user",undefined,NOT_READY, POLL_RATES.VERY_SLOW).behaviour;
 var widgets=new Array();
 
+
+//var docReadyE = jQuery(document).fj('extEvtE', 'ready'); 
+
 /**
 * @type {F.Event}
 */
@@ -27,7 +29,7 @@ var pageB = pageE.startsWith(NOT_READY);
 
 var pageDataB = F.liftB(function(pageData){
     if(pageData==NOT_READY)
-        return NOT_READY;
+        return NOT_READY;      
     var page = pageData.page;
     var theme = pageData.theme;
     var permissions = pageData.permissions;
@@ -37,9 +39,9 @@ var pageDataB = F.liftB(function(pageData){
     document.getElementById("content").innerHTML = renderPage(page.html);
         
     WIDGETS.load();
-    pageRenderedE.sendEvent(true); 
     if(window['SETTINGS']['messages']!=""){
-        UI.showMessage('', window['SETTINGS']['messages'], function(){}); 
+        UI.showMessage('', window['SETTINGS']['messages']);
+        window['SETTINGS']['messages'] = "";      
     }
     document.getElementById("body").style.display = 'block';   // Page data is output in php pre JS render but the body div is hidden so its not visible. This is for SEO
 },pageB);
@@ -49,18 +51,20 @@ ready(function() {
     var pageName = window['SETTINGS']['page']['name'];
     var href = window['SETTINGS']['scriptPath']+pageName;
     if(history.pushState){
-        history.pushState({page: pageName}, pageName, href);
-        
+        history.pushState({page: pageName}, pageName, href);    
     }
     else{
         //window.location = href;
-    } 
-    pageE.sendEvent({page: window['SETTINGS']['page'], theme: SETTINGS['theme'], permissions: SETTINGS['pagePermissions']});
+    }  
     DATA.startPolling();
 });
 window.addEventListener('popstate', function(ev) {
   if(ev.state && ev.state.page){
     loadPageE.sendEvent(ev.state.page);
+  }
+  else{
+    pageE.sendEvent({page: window['SETTINGS']['page'], theme: SETTINGS['theme'], permissions: SETTINGS['pagePermissions']});
+    //loadPageE.sendEvent(document.URL.replace(SETTINGS['scriptPath'], ''))
   }
 });
 //})(F);

@@ -8,19 +8,23 @@
         if(count($_POST)>0){
             $message = "";
             $nameField = "";
-            $emailField = "";
+            $emailField = "noreply@konfidentkidzone.com";
             foreach($_POST as $name=>$value){
                 if($name=="target" || $name=="subject")
                     continue;
                 $message .= "$name: $value<br />";
                 if(stristr($name, "name")&&$nameField=="")
                     $nameField = $value;
-                if(stristr($name, "email")&&$emailField=="")
+                if(stristr($name, "email"))
                     $emailField = $value;    
-            }                 
-                $email = new Email($settings['contact_form_target'], $nameField."<".$emailField.">", $settings['contact_form_subject']);
+            } 
+            $targets = explode(",", $settings['contact_form_target']);
+            for($i=0;$i<count($targets);$i++){
+                $target = trim($targets[$i]);            
+                $email = new Email($target, $nameField."<".$emailField.">", $settings['contact_form_subject']);
                 $email->SetHtmlContent($message);
                 $email->Send();
+            }
         }    
     }
 ?>

@@ -82,7 +82,7 @@ function getAjaxRequestE(triggerE, url, timeout){
 function getAjaxRequestB(triggerB, url){
     var rec = F.receiverE();                     
     triggerB.liftB(function(requestData){
-        if(requestData!=NOT_READY){
+        if(requestData!=NOT_READY){                                 
         jQuery.ajax({
             type: "post",
             data: requestData,
@@ -118,4 +118,71 @@ function getAjaxFileRequest(triggerE, url, contentType){
         };
     });
     return rec;
+}
+
+function AuroraTaskQueue(dequeueEventE){ 
+    return new AuroraTaskQueueStack(dequeueEventE, "queue");
+}
+function AuroraTaskStack(dequeueEventE){ 
+    return new AuroraTaskQueueStack(dequeueEventE, "stack");
+}
+function AuroraTaskQueueStack(dequeueEventE, type){
+    var taskqueustack = this;
+    var collectionType = (type==undefined)?"stack":"queue";
+    this.enqueueE = F.receiverE();
+   
+   this.dequeueEventE = dequeueEventE;
+   this.push = function(val){
+    this.enqueueE.sendEvent(val); 
+   };
+   this.enqueue = function(val){
+    this.enqueueE.sendEvent(val);
+   };
+  
+  
+   var dequeueEventE = F.receiverE();
+   this.dequeueEventE = dequeueEventE;
+   var finishedE = F.receiverE();
+   this.finishedE = finishedE.filterE(function(val){return val;});
+   var finishedB = finishedE.filterRepeatsE().startsWith(true);
+   var startQueueE = F.receiverE();
+   
+   this.jobQueueE = F.mergeE(this.enqueueE, this.finishedE.mapE(function(finished){return NOT_READY;})).collectE([],function(newVal,arr) {
+        if(newVal==NOT_READY){
+            return [];
+        }
+        arr.push(newVal);
+        return arr;
+   });
+   
+   var queueE = F.mergeE(this.enqueueE).collectE([],function(newVal,arr) {
+        arr.push(newVal);
+        return arr;
+   });
+   this.queueB = queueE.startsWith([]);
+    this.kickstartE = F.liftB(function(queue, finished){
+        if(!good()){
+            return NOT_READY;
+        }
+        return {queue: queue, finished: finished};
+    }, this.queueB, finishedB).changes().filterE(function(queueAndFinished){
+        return queueAndFinished!=NOT_READY && (queueAndFinished.finished && queueAndFinished.queue.length>0);
+    }).mapE(function(queueAndFinished){
+        finishedE.sendEvent(false);
+        startQueueE.sendEvent(true);     
+    }); 
+    
+    var loopedQueueE = startQueueE.snapshotE(this.queueB);
+    var emptyQueueE = loopedQueueE.filterE(function(queue){return queue!=NOT_READY&&queue.length==0;});
+    var notEmptyQueueE = loopedQueueE.filterE(function(queue){return queue!=NOT_READY&&queue.length!=0;});
+    emptyQueueE.mapE(function(){
+        finishedE.sendEvent(true);
+    });
+    notEmptyQueueE.mapE(function(queue){
+        var val = (collectionType=="stack")?queue.pop():queue.shift();
+        dequeueEventE.sendEvent(val);
+    });
+    this.next = function(){
+         startQueueE.sendEvent(true);      
+    };                   
 }

@@ -518,7 +518,7 @@ function IntegerCellRenderer(value, cell, width){
     }
 }
 
-/**
+/**                            
  *  TableWidgetB
  * @constructor
  */
@@ -567,6 +567,7 @@ function TableWidgetB(instanceId, widgetData, dataB){
     var sortingDOMColumnB = sortingDOMColumnE.startsWith(NOT_READY);
     
     var sortedTableB = F.liftBI(function(sortingDOMColumn, table){
+        //log("sortedTableB");
         if(table==NOT_READY){
             return NOT_READY;
         }
@@ -585,6 +586,7 @@ function TableWidgetB(instanceId, widgetData, dataB){
                 }               
             }
         }
+        
         return table;
     },function(value){
         return [NOT_READY, value];
@@ -669,6 +671,7 @@ function TableWidgetB(instanceId, widgetData, dataB){
            
     
     var pageRenderedB = F.liftBI(function(tableData){
+        //log("pageRenderedB");
         table.removeChildren();
         addRow.removeChildren();
         //If not ready, show a loading icon
@@ -706,7 +709,7 @@ function TableWidgetB(instanceId, widgetData, dataB){
         jQuery(controlsCell).attr('colspan',columns.length); 
         for(index in columns){ 
             var col = columns[index];
-            
+            //log(col);
             if(col.visible){
                 var cell = document.createElement("th");
                 if(col.width!=undefined){
@@ -921,6 +924,7 @@ function TableWidgetB(instanceId, widgetData, dataB){
         // Table of Cell Renderers, The Dom Table, the raw table data
        // log("Checking Change");
         var rendererTable = renderedData[0];
+        
         var domTable = renderedData[1];
         var dataTable = renderedData[2]["DATA"];
         /*var newRenderTable = renderedData[3]; */       
@@ -931,7 +935,7 @@ function TableWidgetB(instanceId, widgetData, dataB){
                 //log("Getting Renderer Value");
                 
                 if((renderCell["renderer"]).getValue()!=dataCell){
-                    
+   /*                 
                     log("DIFF");
                     log(renderCell["renderer"].getValue()+" != "+dataCell);
                 log(renderCell["renderer"]);
@@ -940,7 +944,7 @@ function TableWidgetB(instanceId, widgetData, dataB){
                 log(renderCell);
                 log(dataCell);
                 log(dataTable);
-                log("/DIFF");  
+                log("/DIFF");  */
                     return true; 
                 
                 }
@@ -1066,6 +1070,15 @@ function TableWidgetB(instanceId, widgetData, dataB){
         }); 
     });
     
+    domTableB.delayB(1000).liftB(function(domTable){
+        /*jQuery(domTable).colResizable({
+            liveDrag:true, 
+            gripInnerHtml:"<div class='grip'></div>", 
+            draggingClass:"dragging", 
+            onResize:function(resize){
+                log(resize);
+            }}); */
+    });
     return domTableB
 }
 function getTableRowId(table, rowIndex){

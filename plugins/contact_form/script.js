@@ -4,17 +4,17 @@ function ContactFormSubmitButton(instanceId, data){
     var submitButton = new ValidatedSubmitButton(instanceId,data);
     this.loader=function(){           
         
-        var formDataGroupB = DATA.get(data.formGroup, undefined, []); 
+        var formDataGroupB = DATA.get(data.formGroup, undefined, {}); 
         var formDataB = formDataGroupB.liftB(function(validationMap){
             return F.liftB.apply(this,[function(){
                 var dataOb = {};
-                for(index in arguments){
+                for(index in arguments){         
                     if(arguments[index].valid){
                         dataOb[arguments[index].name] = arguments[index].value;                            
                     }
                 }
                 return dataOb;
-            }].concat(validationMap));
+            }].concat(getObjectValues(validationMap)));
         }).switchB();
         
         submitButton.loader();    

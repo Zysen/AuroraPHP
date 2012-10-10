@@ -8,14 +8,26 @@ error_reporting(E_ALL);
 ini_set('display_errors', 'On');
 
 
+
+
+
+
+
+
 $NO_PERMISSION = 978001;
 
 include("includes/mysqldata.php");
 include("includes/log.php");
 include("includes/settings.php");
+
 include("includes/requestHandler.php");
 include("includes/core.php"); 
 include("includes/php-closure.php");
+
+if($settings["aurora_scriptPath"]!=getURL()){
+    header("Location: ".$settings["aurora_scriptPath"]);
+    exit;
+}
 
 $scriptPath = (array_key_exists('HTTPS', $_SERVER)&&$_SERVER['HTTPS'])?$settings['aurora_secureScriptPath']:$settings['aurora_scriptPath'];
 $path = getCleanPathVariables();  
@@ -34,7 +46,6 @@ else{
 
 $requestManager = new RequestManager();
 $behaviourManager = new BehaviourManager();
-
 
 /*$pluginSelectResult = mysql_query("SELECT * FROM `plugins` WHERE `enabled`=1;", $connection);
 while($row = mysql_fetch_array($pluginSelectResult)){
@@ -67,9 +78,7 @@ foreach($orderedPlugins as $loadOrder=>$plugins){
 }    
 
 
-
-
-                    
+         
 if(count($path)>0 && $path[0]!=""){
     switch($path[0]){
         case "logout":
@@ -133,12 +142,13 @@ if(count($path)>0 && $path[0]!=""){
         default:
             $dowhat=getRestOfPath();
             //$dowhat=$path[0];
-    }   
+    }
 }
-else
+else{
     $dowhat=$settings['aurora_defaultAction'];
+}
      
-     
+    
      
 
 $page->renderPage(getPageData($dowhat));

@@ -1,3 +1,32 @@
+.UploadProgressCellRenderer{
+    text-align: center;
+    font-weight: bold;
+    
+}
+.ui-progressbar-value {
+    font-size: 9px;
+    text-align: center;
+    font-weight: bold;
+    line-height: 18px;
+}
+
+/*#UploadProgressCellRenderer .ui-progressbar {
+  position: relative;
+}
+
+#UploadProgressCellRenderer .ui-progressbar-value {
+  margin-top: -20px;
+}
+
+#UploadProgressCellRenderer span.UploadProgressCaption {
+  display: block;                                                   
+  position: static;
+  text-align: center;
+}       */
+
+
+
+
 .FileUploaderDragDropWidget{
     background-color: #F0F0F0;
     border: solid 1px #000000;
@@ -51,13 +80,13 @@
 
 .auroraUploadQueue{
     padding: 15px;
-    font-family: arial;
+    font-family: verdana;
     margin-top: 0px;
-    color: #5c7a93;
-    font-weight: bold
-    font-size: 10pt;
-    background-color: #FFFFFF; 
-    -webkit-border-radius: 10px;
+    color: #000000;
+    font-weight: bold;
+    font-size: 8pt;
+    background-color: #f0f0f0; 
+/*    -webkit-border-radius: 10px;
   -moz-border-radius: 10px;
   -ms-border-radius: 10px;
   border-radius: 10px;
@@ -66,5 +95,5 @@
   box-shadow: inset -1px 2px 4px grey, -2px 2px 8px 0px black;
     -o-box-shadow: inset -1px 2px 4px grey, -2px 2px 8px 0px black;  
     -webkit-box-shadow: inset -1px 2px 4px grey, -2px 2px 8px 0px black;  
-    -moz-box-shadow: inset -1px 2px 4px grey, -2px 2px 8px 0px black; 
+    -moz-box-shadow: inset -1px 2px 4px grey, -2px 2px 8px 0px black;  */
 }

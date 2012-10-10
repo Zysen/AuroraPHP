@@ -62,8 +62,9 @@ loadPageE.mapE(function(pageName){
     });    
 }); 
 function loadPage(pageName){
-    window.location = window['SETTINGS']['scriptPath']+pageName;
-    return;
+    /*window.location = window['SETTINGS']['scriptPath']+pageName;
+    return;*/
+    log("Loadpage");
     if(history.pushState){
         history.pushState({page: pageName}, pageName, window['SETTINGS']['scriptPath']+pageName);
         loadPageE.sendEvent(pageName);

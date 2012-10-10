@@ -26,29 +26,30 @@
         }    */
         $ret = getEmptyTableDef();
         $ret["TABLEMETADATA"] = array("permissions"=>array("canEdit"=>true, "canAdd"=>false, "canDelete"=>true));
-        $ret["COLUMNMETADATA"] = array(array("permissions"=>"R"),array("permissions"=>"RW"),array("permissions"=>"R"),array("permissions"=>"R"),array("permissions"=>"R"),array("permissions"=>"R")); 
-        $ret["COLUMNS"] = array(
+        $ret["COLUMNMETADATA"] = array(array("permissions"=>"R"),array("permissions"=>"RW"),array("permissions"=>"R"),array("permissions"=>"R"),array("permissions"=>"R"),array("permissions"=>"R"),array("permissions"=>"R")); 
+        $ret["COLUMNS"] = array(              
                 array("reference"=>"type", 'display'=>"", 'type'=>"string", 'visible'=>true, 'readonly'=>true),
                 array("reference"=>"filename", 'display'=>"Filename", 'type'=>"string", 'visible'=>true, 'readonly'=>true),
                 array("reference"=>"origfilename", 'display'=>"Filename", 'type'=>"string", 'visible'=>false, 'readonly'=>true),
                 array("reference"=>"path", 'display'=>"Path", 'type'=>"string", 'visible'=>false, 'readonly'=>true),
                 array("reference"=>"filesize", 'display'=>"Size", 'type'=>"int", 'visible'=>true, 'readonly'=>true, 'width'=>75),
-                array("reference"=>"type", 'display'=>"Type", 'type'=>"string", 'visible'=>true, 'readonly'=>true)
+                array("reference"=>"type", 'display'=>"Type", 'type'=>"string", 'visible'=>true, 'readonly'=>true),
+                array("reference"=>"uploadprogress", 'display'=>"", 'type'=>"string", 'visible'=>true, 'readonly'=>true, 'width'=>125) 
         );
         $handle = opendir($dir);
         while($name = readdir($handle)) {
             $path = "$dir$name";
             if(is_dir($path)) {
                 if($name != '.' && $name != '..') {
-                        $ret["DATA"][count($ret["DATA"])] = array("directory", $name,$name, $path, -1, "directory");
+                        $ret["DATA"][count($ret["DATA"])] = array("directory", $name,$name, $path, -1, "directory", "");
                 }
             }
             elseif(is_link("$dir/$name")) {
-                $ret["DATA"][count($ret["DATA"])] = array("link", $name,$name, $path, -1, "link");
+                $ret["DATA"][count($ret["DATA"])] = array("link", $name,$name, $path, -1, "link", "");
             }
             else {
                 $type = mime_content_type($path);
-                $ret["DATA"][count($ret["DATA"])] = array($type, $name,$name, $path, filesize($path), $type);
+                $ret["DATA"][count($ret["DATA"])] = array($type, $name,$name, $path, filesize($path), $type, "");
             }
         }
         closedir($handle);    

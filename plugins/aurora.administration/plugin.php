@@ -48,7 +48,7 @@
             return $NO_PERMISSION;
         $ret = getEmptyTableDef();  
         $ret["COLUMNS"] = array(
-                array("reference"=>"name", 'display'=>"Name", 'type'=>"int", 'visible'=>false, 'readonly'=>true),
+                array("reference"=>"name", 'display'=>"Name", 'type'=>"string", 'visible'=>false, 'readonly'=>true),
                 array("reference"=>"description", 'display'=>"Description", 'type'=>"string", 'visible'=>true, 'readonly'=>true),
                 array("reference"=>"value", 'display'=>"Value", 'type'=>"int", 'visible'=>true, 'readonly'=>false),
                 array("reference"=>"type", 'display'=>"Type", 'type'=>"string", 'visible'=>false, 'readonly'=>false)

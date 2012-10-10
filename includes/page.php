@@ -4,15 +4,16 @@ function getPageData($pageId){
     global $current_user;
     global $settings;
     global $path;
-    
     $pageData = $current_user->canAccessPage($pageId);
     if($pageData==-1){
-        $pageData = getNoPageTemplate($pageId); 
+        $pageData = getNoPageTemplate($pageId);
+        $pageData['title'] = $pageId;  
     }
     else if($pageData==0){
         //session_register("aurora_requestedPage");
         $_SESSION['aurora_requestedPage'] = $path;   
         $pageData = getNoPermissionTemplate();
+        $pageData['title'] = $pageId;
     }
     if(array_key_exists("page_id", $pageData)){
         //session_destroy();
