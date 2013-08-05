@@ -453,7 +453,8 @@ function FirstNameWidget(instanceId, data){
  * @constructor
  */ 
 function FirstNameWidgetConfigurator(){
-    this['render'] = function(newData){}
+    this['load'] = function(newData){}
+    this['build'] = function(newData){}
     this['getData'] = function(){}
     this['getName'] = function(){
         return "First Name Widget";
@@ -461,7 +462,12 @@ function FirstNameWidgetConfigurator(){
     this['getDescription'] = function(){
         return "Text showing the current users first name";
     }
-    this['getImage'] = function(){}
+    this['getPackage'] = function(){
+        return "Users";
+    }
+    this['getPlaceholder'] = function(editor, dataString){
+    	return CKEDITOR.dom.element.createFromHtml("<span class=\"widget_FirstNameWidget\">[FIRST_NAME]<span>");
+    }
 } 
 WIDGETS.register("FirstNameWidget", FirstNameWidget, FirstNameWidgetConfigurator); 
 
@@ -481,15 +487,21 @@ function FullNameWidget(instanceId, data){
  * @constructor
  */ 
 function FullNameWidgetConfigurator(){
-    this['render'] = function(newData){}
+    this['load'] = function(newData){}
+    this['build'] = function(newData){}
     this['getData'] = function(){}
     this['getName'] = function(){
-        return "Last Name Widget";
+        return "Full Name Widget";
     }
     this['getDescription'] = function(){
-        return "Text showing the current users last name";
+        return "Text showing the current users full name";
     }
-    this['getImage'] = function(){}
+    this['getPackage'] = function(){
+        return "Users";
+    }
+    this['getPlaceholder'] = function(editor, dataString){
+    	return CKEDITOR.dom.element.createFromHtml("<span class=\"widget_FullNameWidget\">[FULL_NAME]<span>");
+    }
 } 
 WIDGETS.register("FullNameWidget", FullNameWidget, FullNameWidgetConfigurator); 
 
@@ -510,7 +522,8 @@ function UsernameWidget(instanceId, data){
  * @constructor
  */                                                      
 function UsernameWidgetConfigurator(){
-    this['render'] = function(newData){}
+    this['load'] = function(newData){}
+    this['build'] = function(newData){}
     this['getData'] = function(){}
     this['getName'] = function(){
         return "User Name Widget";
@@ -518,7 +531,12 @@ function UsernameWidgetConfigurator(){
     this['getDescription'] = function(){
         return "Text showing the current users user name";
     }
-    this['getImage'] = function(){}
+    this['getPackage'] = function(){
+        return "Users";
+    }
+    this['getPlaceholder'] = function(editor, dataString){
+    	return CKEDITOR.dom.element.createFromHtml("<span class=\"widget_UsernameWidget\">[USER_NAME]<span>");
+    }
 } 
 WIDGETS.register("UsernameWidget", UsernameWidget, UsernameWidgetConfigurator); 
 //HASHffff
@@ -551,29 +569,19 @@ WIDGETS.register("LoggedInImageWidget", LoggedInImageWidget);
  * @constructor
  */ 
 function LoggedInImageMenuWidget(instanceId, data){
-    this.loader=function(){                                 
-        var targetGroupId = (data.targetGroup==undefined)?1:data.targetGroup;
-/*        log("lOGGED IN id");
-        log(data);
-        log(window['SETTINGS']['user']['groupid']);
-        log("Target");
-        log(targetGroupId);
-        log((window['SETTINGS']['user']['groupid']==targetGroupId)?data.outSRC:data.inSRC);
-        log((window['SETTINGS']['user']['groupid']==targetGroupId));  */
-        var li = document.createElement('li');                  
-        var src = (window['SETTINGS']['user']['groupid']==targetGroupId)?data.outSRC:data.inSRC;
-        var url = (window['SETTINGS']['user']['groupid']==targetGroupId)?data.outURL:data.inURL;
-        log(url);
-        log(src);
+    this.loader=function(){                
+        var li = document.createElement('li');
+        if(data.targetGroupId==undefined){
+            var src = (window['SETTINGS']['user']['groupid']!=1)?data.inSRC:data.outSRC;
+            var url = (window['SETTINGS']['user']['groupid']!=1)?data.inURL:data.outURL;    
+        } 
+        else{                
+            var targetGroupId = data.targetGroupId;             
+            var src = (window['SETTINGS']['user']['groupid']==targetGroupId)?data.inSRC:data.outSRC;
+            var url = (window['SETTINGS']['user']['groupid']==targetGroupId)?data.inURL:data.outURL;
+        }
         li.innerHTML = "<a id=\""+instanceId+"_anchor\" href=\""+url+"\"><img id=\""+instanceId+"_img\" src=\""+src+"\" alt=\"\" /></a>";           
-        //DOM.get(data.target).insertBefore(DOM.get(data.target).firstChild, li);
         jQuery(li).prependTo(jQuery("#"+data.target));
-        
-        /*setTimeout(function(){
-            document.getElementById(instanceId+"_anchor").setAttribute('href',href);
-            document.getElementById(instanceId+"_img").setAttribute('onclick',function(){window.location('/logout');});
-            document.getElementById(instanceId+"_img").setAttribute('style',"cursor: pointer;");
-        }, 1000);  */
     }
     this.destroy=function(){}
     

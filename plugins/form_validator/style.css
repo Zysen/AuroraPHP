@@ -5,9 +5,8 @@
     
 }
 .form_validator_invalidInput{
-    border-color: #FF0000;
-    background-color: #FF9393;
-    color: #FFFFFF;
+    border-color: #FF0000 !important;
+    background-color: #FFE0E0 !important;
 }
 .validatedCalendar{
 }
@@ -19,8 +18,76 @@
 .ui-datepicker td a { text-decoration: none;
     font-size: 8pt;
     font-weight: normal;
-    }
-    a { text-decoration: none;
-    font-size: 8pt;
+}
+a{ text-decoration: none;
+	font-size: 8pt;
     font-weight: normal;
-    }
+}
+
+.formValidatorInput{
+	float: left;
+	display: inline-block;
+	margin-right: 20px;
+}
+.formValidatorStatusIcon{
+	float: left;
+	width: 20px;
+	margin-top: 5px;
+	text-align: left;
+}
+.emailConfirmer_tip{
+	text-align: left;
+	font-family: verdana;
+}
+/*
+.ui-widget-content{
+	background: rgb(178,0,0); 
+	background: -moz-linear-gradient(left, rgba(178,0,0,1) 0%, rgba(229,99,0,1) 27%, rgba(75,173,32,1) 98%);
+	background: -webkit-gradient(linear, left top, right top, color-stop(0%,rgba(178,0,0,1)), color-stop(27%,rgba(229,99,0,1)), color-stop(98%,rgba(75,173,32,1)));
+	background: -webkit-linear-gradient(left, rgba(178,0,0,1) 0%,rgba(229,99,0,1) 27%,rgba(75,173,32,1) 98%); 
+	background: -o-linear-gradient(left, rgba(178,0,0,1) 0%,rgba(229,99,0,1) 27%,rgba(75,173,32,1) 98%); 
+	background: -ms-linear-gradient(left, rgba(178,0,0,1) 0%,rgba(229,99,0,1) 27%,rgba(75,173,32,1) 98%);
+	background: linear-gradient(to right, rgba(178,0,0,1) 0%,rgba(229,99,0,1) 27%,rgba(75,173,32,1) 98%); 
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#b20000', endColorstr='#4bad20',GradientType=1 ); 
+}*/
+
+
+.complexityBarNumber{
+	/*position: absolute;
+	top: 0px;
+	left: 0px;*/
+	color: #000000;
+	padding-top: 5px;
+	width: 100%;
+	text-align: center;
+	text-shadow: 0;
+}
+
+.passwordWeakText{
+	text-shadow: 2em #FFFFFF !important;
+	color: #dd0000;
+	font-weight: bold;
+	font-family: verdana;
+	font-size: 11pt;
+}
+.passwordAverageText{
+	text-shadow: 2em #FFFFFF !important;
+	color: #ff8833;
+	font-weight: bold;
+	font-family: verdana;
+	font-size: 11pt;
+}
+.passwordStrongText{
+	text-shadow: 2em #FFFFFF !important;
+	color: #00CC00;
+	font-weight: bold;
+	font-family: verdana;
+	font-size: 11pt;
+}
+.passwordExcellentText{
+	text-shadow: 2em #FFFFFF !important;
+	color: #FFF000;
+	font-weight: bold;
+	font-family: verdana;
+	font-size: 11pt;
+}

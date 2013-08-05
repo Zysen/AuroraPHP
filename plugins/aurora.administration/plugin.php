@@ -2,6 +2,12 @@
     $page->registerScript("plugins/aurora.administration/script.js");
     $page->registerCSS("plugins/aurora.administration/style.css");
     
+	$behaviourManager->registerBehaviour("aurora_passwordRequirements", "aurora_getPasswordRequirements");
+	function aurora_getPasswordRequirements($context){
+		global $settings;
+		return array("requireUpper"=>$settings['aurora_passwordRequireUpper']==1, "requireNumber"=>$settings['aurora_passwordRequireNumber']==1, "requireLower"=>$settings['aurora_passwordRequireLower']==1, "requireSpecial"=>$settings['aurora_passwordRequireSpecial']==1, "minChars"=>$settings['aurora_passwordLength'], "maxChars"=>$settings['aurora_maxPasswordLength']);
+	}
+	
     $behaviourManager->registerBehaviour("aurora_pluginPermissions", "getPluginPermissions", "setPluginPermissions");
     $behaviourManager->registerBehaviour("aurora_groups", "getGroups", "setGroups"); 
     $behaviourManager->registerBehaviour("aurora_users", "getUsers", "setUsers");
@@ -71,11 +77,11 @@
         $settings = $data["DATA"];
         for($i=0; $i<count($settings);$i++){
             $setting = $settings[$i];
-            $name = mysql_escape_string($setting[0]);
-            $description = mysql_escape_string($setting[1]);
-            $value = mysql_escape_string($setting[2]); 
+            $name = mysql_real_escape_string($setting[0]);
+            $description = mysql_real_escape_string($setting[1]);
+            $value = mysql_real_escape_string($setting[2]); 
             $value = $setting[2]; 
-            $type = mysql_escape_string($setting[3]); 
+            $type = mysql_real_escape_string($setting[3]); 
             if($type=="boolean"){
                 $value = ($value=="true"||$value=="1")?"1":"0";
             }
@@ -150,11 +156,11 @@
                 array("reference"=>"uid", 'display'=>"user_id", 'type'=>"int", 'visible'=>false, 'readonly'=>true),
                 array("reference"=>"firstname", 'display'=>"First Name", 'type'=>"string", 'visible'=>true, 'readonly'=>false, 'width'=>75),
                 array("reference"=>"lastname", 'display'=>"Last Name", 'type'=>"string", 'visible'=>true, 'readonly'=>false, 'width'=>75),
-                array("reference"=>"username", 'display'=>"Username", 'type'=>"string", 'visible'=>true, 'readonly'=>false, 'width'=>75),
+                array("reference"=>"username", 'display'=>"Username", 'type'=>"string", 'visible'=>false, 'readonly'=>false, 'width'=>75),
                 array("reference"=>"email", 'display'=>"Email Address", 'type'=>"string", 'visible'=>true, 'readonly'=>false, 'width'=>115),
                 array("reference"=>"password", 'display'=>"Password", 'type'=>"string", 'visible'=>true, 'readonly'=>false, 'width'=>75),
                 array("reference"=>"group", 'display'=>"Group", 'type'=>"auroraGroup", 'visible'=>true, 'readonly'=>false),
-                array("reference"=>"validated", 'display'=>"Validated", 'type'=>"boolean", 'visible'=>true, 'readonly'=>false, 'width'=>20),
+                array("reference"=>"validated", 'display'=>"Validated", 'type'=>"boolean", 'visible'=>false, 'readonly'=>false, 'width'=>20),
                 array("reference"=>"gender", 'display'=>"Gender", 'type'=>"gender", 'visible'=>true, 'readonly'=>false),
                 array("reference"=>"dob", 'display'=>"Date Of Birth", 'type'=>"date", 'visible'=>true, 'readonly'=>false, 'width'=>75)
         );
@@ -178,15 +184,15 @@
         compareAndDeleteRows("users", "user_id", 0, $existingUsers, $data);
         for($i=0; $i<count($data);$i++){
             $setting = $data[$i];
-            $user_id = mysql_escape_string($setting[0]);
+            $user_id = mysql_real_escape_string($setting[0]);
             $user_id = ($user_id=="undefined")?'NULL':$user_id;
-            $firstname = mysql_escape_string($setting[1]);
-            $lastname = mysql_escape_string($setting[2]);
-            $username = mysql_escape_string($setting[3]);
-            $emailaddress = mysql_escape_string($setting[4]);
-            $password = mysql_escape_string($setting[5]); 
-            $group_id = mysql_escape_string($setting[6]);
-            $validated = mysql_escape_string($setting[7]);
+            $firstname = mysql_real_escape_string($setting[1]);
+            $lastname = mysql_real_escape_string($setting[2]);
+            $username = mysql_real_escape_string($setting[3]);
+            $emailaddress = mysql_real_escape_string($setting[4]);
+            $password = mysql_real_escape_string($setting[5]); 
+            $group_id = mysql_real_escape_string($setting[6]);
+            $validated = mysql_real_escape_string($setting[7]);
             $validated = ($validated=="false")?0:($validated=="true")?1:$validated;
             if($validated=="false")
                 $validated = 0;
@@ -194,8 +200,8 @@
             if(!(!empty($password) && preg_match('/^[a-f0-9]{32}$/', $password))){
                 $password = md5($password);    
             }
-            $gender = mysql_escape_string($setting[8]);
-            $dob = mysql_escape_string($setting[9]);
+            $gender = mysql_real_escape_string($setting[8]);
+            $dob = mysql_real_escape_string($setting[9]);
             $query = "INSERT INTO `users` (`firstname`,`lastname`,`username`,`email`,`password`, `group_id`, `validated`, `gender`, `dob`, `user_id`) VALUES ('$firstname', '$lastname', '$username', '$emailaddress','$password', $group_id, $validated, '$gender', '$dob', $user_id) ON DUPLICATE KEY UPDATE `firstname`='$firstname',`lastname`='$lastname',`username`='$username',`email`='$emailaddress',`password`='$password',`group_id`=$group_id,`validated`=$validated,`gender`='$gender', `dob`='$dob';";
             mysql_query($query, getPrimarySQLConnection());        
         }
@@ -229,11 +235,11 @@
         compareAndDeleteRows("plugins", "id", 0, $existingPlugins["DATA"], $settings);
         for($i=0; $i<count($settings);$i++){
             $setting = $settings[$i];
-            $id = mysql_escape_string($setting[0]);
+            $id = mysql_real_escape_string($setting[0]);
             $id = ($id=="undefined"||$id=="")?'NULL':$id; 
-            $reference = mysql_escape_string($setting[1]);
+            $reference = mysql_real_escape_string($setting[1]);
             
-            $enabled = mysql_escape_string($setting[2]);
+            $enabled = mysql_real_escape_string($setting[2]);
             $enabled = ($enabled=='true'||$enabled=='1')?1:0;
             $query = "INSERT INTO `plugins` (`id`, `reference`, `enabled`) VALUES($id, '$reference', $enabled) ON DUPLICATE KEY UPDATE `reference`='$reference',`enabled`=$enabled;";
             mysql_query($query, getPrimarySQLConnection()); 
@@ -313,13 +319,13 @@
         $existingPlugins = $existingPlugins["DATA"]; 
         for($i=0; $i<count($settings);$i++){
             $setting = $settings[$i];
-            $permissionId = mysql_escape_string($setting[0]);
+            $permissionId = mysql_real_escape_string($setting[0]);
             $permissionId = ($permissionId=="undefined")?'NULL':$permissionId; 
-            $behaviourId = mysql_escape_string($setting[1]);
-            $groupId = mysql_escape_string($setting[2]);  
-            $userId = mysql_escape_string($setting[3]); 
+            $behaviourId = mysql_real_escape_string($setting[1]);
+            $groupId = mysql_real_escape_string($setting[2]);  
+            $userId = mysql_real_escape_string($setting[3]); 
             $userId = ($userId=="undefined")?'NULL':$userId; 
-            $permissions = mysql_escape_string($setting[4]); 
+            $permissions = mysql_real_escape_string($setting[4]); 
             $query = "INSERT INTO `permissions` (`permissionId`, `permissionRegisterId`, `group_id`, `user_id`, `permissions`) VALUES($permissionId, $behaviourId, $groupId, $userId, '$permissions') ON DUPLICATE KEY UPDATE `permissions`='$permissions'";
             if(!($groupId==3&&($behaviourId==2||$behaviourId==4||$behaviourId==5))){   
                   //echo $query;
