@@ -19,6 +19,9 @@ function ContactFormSubmitButton(instanceId, data){
         
         submitButton.loader();    
         var submitClickedE = jQuery("#"+submitButton.elementId).fj('extEvtE', 'click').snapshotE(formDataB).mapE(function(formData){
+            if(data.subject!=undefined){
+                	formData.subject = data.subject;
+                }
             return formData;
         });
         var submitClickedB = submitClickedE.startsWith(NOT_READY);
@@ -28,7 +31,7 @@ function ContactFormSubmitButton(instanceId, data){
             return formDataB;
         });   */            
         getAjaxRequestB(submitClickedB, SETTINGS['scriptPath']+"request/contactForm_sendMessage/").mapE(function(valid){
-            UI.showMessage('Contact Form', 'Your request has been sent.');
+            UI.showMessage('Contact Form', (data.text!=undefined?data.text:'Your request has been sent.'));
             return valid;    
         });  
         //groupValidB

@@ -6,6 +6,7 @@
     function contactForm_sendMessage($path){    
         global $settings;
         if(count($_POST)>0){
+        	$subject = (array_key_exists('subject', $_POST)?$_POST['subject']:$settings['contact_form_subject']);
             $message = "";
             $nameField = "";
             $emailField = "noreply@konfidentkidzone.com";
@@ -21,7 +22,7 @@
             $targets = explode(",", $settings['contact_form_target']);
             for($i=0;$i<count($targets);$i++){
                 $target = trim($targets[$i]);            
-                $email = new Email($target, $nameField."<".$emailField.">", $settings['contact_form_subject']);
+                $email = new Email($target, $nameField."<".$emailField.">", $subject);
                 $email->SetHtmlContent($message);
                 $email->Send();
             }
