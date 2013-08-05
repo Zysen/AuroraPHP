@@ -93,10 +93,10 @@ function resizeImage($filename, $fileLocation, $mime, $target_path, $w, $h, $all
     function IG_processImage($path){
         global $current_user;
         global $scriptPath;
-        $filePath = str_replace("/resources/", "resources/", str_replace($scriptPath, "", mysql_escape_string($_POST['path'])));
-        $width = intval(mysql_escape_string($_POST['width']));
-        $height = intval(mysql_escape_string($_POST['height']));
-        $id = str_replace("/","_", mysql_escape_string($_POST['id']));
+        $filePath = str_replace("/resources/", "resources/", str_replace($scriptPath, "", mysql_real_escape_string($_POST['path'])));
+        $width = intval(mysql_real_escape_string($_POST['width']));
+        $height = intval(mysql_real_escape_string($_POST['height']));
+        $id = str_replace("/","_", mysql_real_escape_string($_POST['id']));
          
         $type = mime_content_type($filePath);
         $target_path = "resources/upload/public/imagegallery/thumbs/$id.png"; 
@@ -109,6 +109,7 @@ function resizeImage($filename, $fileLocation, $mime, $target_path, $w, $h, $all
         }
         
         resizeImage($id, $filePath,$type, $target_path, $width, $height, false, "png");
+        unlink($filePath);
         echo json_encode(array("status"=>1, "path"=>"/$target_path"));
         exit;            
     }

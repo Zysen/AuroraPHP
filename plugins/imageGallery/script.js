@@ -129,68 +129,78 @@ function ImageGalleryWidget(instanceId,data){
 WIDGETS.register("imageWidget", ImageWidget);
 WIDGETS.register("imageGallery", ImageGalleryWidget);
 
-function UploadableImageWidget(instanceId, data){    
-    var width = data.placeholder.getAttribute("width");
-    var height = data.placeholder.getAttribute("height");
+/*function UploadableImageWidget(instanceId, data){    
+	var width = data.placeholder.getAttribute("width");
+    width=(width==null?data.placeholder.style.width.replace('px', ''):width);
+	var height = data.placeholder.getAttribute("height");
+	height=(height==null?data.placeholder.style.height.replace('px', ''):height);
+    this.imageLoadE = F.receiverE();
     
+    var parent = this;
     data.acceptedTypes = ["image/jpg", "image/jpeg", "image/png", "image/gif"];
     data.targetId = instanceId+"_container";
     
     var uploadWidget = new FileUploaderDragDropWidget(instanceId+"_dnd",data);   
                          
-    this.loader=function(widgetRefB){ 
-        uploadWidget.loader();
+    this.loader=function(widgetRefB){
+    	DOM.get(instanceId+"_img").onload = function(event){
+        	DOM.get(instanceId+"_container").style.width = DOM.get(instanceId+"_img").clientWidth+"px";
+        	DOM.get(instanceId+"_container").style.height = DOM.get(instanceId+"_img").clientHeight+"px";
+        	parent.imageLoadE.sendEvent(DOM.get(instanceId+"_img"));
+        }
+    	uploadWidget.loader();
         var thumbPathB = widgetRefB.liftB(function(widgetRef){
             if(!good())
                 return NOT_READY;
             return window['SETTINGS']['scriptPath']+"resources/upload/public/imagegallery/thumbs/"+widgetRef+".png";
         });
         var imageExistsB = thumbPathB.liftB(function(imagePath){
-            if(!good())
+        	var imageFrame = DOM.get(instanceId+"_img");
+        	if(!good())
                 return NOT_READY;
-            DOM.get(instanceId+"_img").src = imagePath+"?time="+(new Date()).getTime();
+        	imageFrame.style.display = 'none';
+            imageFrame.src = imagePath+"?time="+(new Date()).getTime();
             return UrlExists(imagePath);
         });
         
         imageExistsB.liftB(function(imageExists){
             if(!good())
                 return NOT_READY;
-                log(imageExistsB);
             var dropZone = (!imageExists)?uploadWidget.getDropZone().outerHTML:uploadWidget.getPanel().outerHTML;
-            DOM.get(instanceId+"_progress").innerHTML = dropZone;
+            DOM.get(instanceId+"_dz").innerHTML = dropZone;
             if(imageExists){
                 DOM.get(uploadWidget.getPanel().id).innerHTML = "";
             }                                  
             
         });
-
+        
+        uploadWidget.sendProgressE.mapE(function(progress){
+        	jQuery(DOM.get(instanceId+"_progress")).progressbar({value: Math.ceil(progress.queuePercentageComplete)});
+        });
+        
         var uploadCompleteB = uploadWidget.uploadCompleteE.mapE(function(response){
-            var path = response.path;
-            var dimension = (height>width)?" width=\""+width+"\"":" height=\""+height+"\"";       
-            return {path: path, width: width, height: height}; 
+            return {path: response.path, width: width, height: height}; 
         }).startsWith(NOT_READY);
         
-        
-        var processRequestB = F.liftB(function(response, widgetRef){                                                                                                    
+        var processRequestB = F.liftB(function(request, widgetRef){                                                                                                    
             if(!good())
                 return NOT_READY;
-            response.id = widgetRef;
-            return response;
+            request.id = widgetRef;
+            return request;
         }, uploadCompleteB, widgetRefB);
             
-        var imageProcessedE = getAjaxRequestB(uploadCompleteB, window['SETTINGS']['scriptPath']+"/request/IG_processImage").mapE(function(ret){
+        var imageProcessedE = getAjaxRequestB(processRequestB, window['SETTINGS']['scriptPath']+"/request/IG_processImage").mapE(function(ret){
             if(ret==NOT_READY)
                 return NOT_READY;
             var container = DOM.get(instanceId+"_container");
             var image = DOM.get(instanceId+"_img");
+            log(image.clientWidth+" "+image.clientHeight);
             var progress = DOM.get(instanceId+"_progress"); 
-            
-            progress.innerHTML = uploadWidget.getPanel().outerHTML;
+            jQuery(DOM.get(instanceId+"_progress")).progressbar("destroy");
+            //progress.innerHTML = uploadWidget.getPanel().outerHTML;
             image.src = ret.path+"?time="+(new Date()).getTime();
             DOM.get(uploadWidget.getPanel().id).innerHTML = "";
-        }); 
-        
-                                                                                     
+        });                                                                 
     }      
     this.hide = function(){
         DOM.get(instanceId+"_container").style.display = 'none';
@@ -199,27 +209,176 @@ function UploadableImageWidget(instanceId, data){
         DOM.get(instanceId+"_container").style.display = 'block';
     }                                
     this.build=function(){
-        return "<div id=\""+instanceId+"_container\" style=\"margin: 0 auto; position: inline-block; text-align: center; width: "+width+"px; height: "+height+"px;\">"+DOM.createImg(instanceId+"_img", "UploadableImageWidget", "/resources/trans.png").outerHTML+"<div id=\""+instanceId+"_progress\"></div></div>";   
+        log("School Logo Widget BUILD");
+    	return "<div id=\""+instanceId+"_container\" style=\"margin: 0 auto; text-align: center; width: "+width+"px; height: "+height+"px;\">"+DOM.createImg(instanceId+"_img", "UploadableImageWidget", "/resources/trans.png").outerHTML+"<div id=\""+instanceId+"_dz\"></div><div id=\""+instanceId+"_progress\"></div></div>";   
     }
     this.destroy=function(){
         uploadWidget.destroy();
     }
+    
+}*/
+
+
+
+
+function UploadableImageWidget(instanceId, data){  
+	var UPLOAD = new AuroraUploadManager(data); 
+	var parent = this;
+	var acceptedTypes = ["image/jpg", "image/jpeg", "image/png", "image/gif"];
+	//Configure Dimensions 
+	
+	var dropHtml = data.dropHtml;
+	var dropHoverHtml = data.dropHoverHtml;
+	
+	var width = data.placeholder.getAttribute("width");
+    width=(width==null?data.placeholder.style.width.replace('px', ''):width);
+	var height = data.placeholder.getAttribute("height");
+	height=(height==null?data.placeholder.style.height.replace('px', ''):height);
+	
+    this.loader=function(widgetRefB){
+    	widgetRefB = widgetRefB==undefined?F.constantB(data.widgetRef):widgetRefB;
+    	var imageZone = DOM.get(instanceId+"_imagezone");
+    	var imageElement = DOM.get(instanceId+"_imagezone");
+    	parent.dropE = F.mergeE(F.extractEventE(imageZone, 'drop'), F.extractEventE(imageElement, 'dragenter')).cancelDOMBubbleE();
+        parent.dragOverE = F.mergeE(F.extractEventE(imageZone, 'dragover'), F.extractEventE(imageElement, 'dragenter')).cancelDOMBubbleE().mapE(function(event){
+        	event.dataTransfer.dropEffect = 'move';
+            if(imageZone.innerHTML==dropHtml){
+            	imageZone.innerHTML = dropHoverHtml;
+            }
+            return event;
+        });
+        
+        parent.dragEnterE = F.mergeE(F.extractEventE(imageZone, 'dragenter'), F.extractEventE(imageElement, 'dragenter')).mapE(function(event){
+        	if(imageZone.innerHTML==dropHtml){
+        		imageZone.innerHTML = dropHoverHtml;
+        	}
+            return event;
+        });
+        
+        parent.dragExitE = F.mergeE(F.extractEventE(imageZone, 'dragleave'), F.extractEventE(imageElement, 'dragenter')).mapE(function(event){
+        	if(imageZone.innerHTML==dropHoverHtml){
+        		imageZone.innerHTML = dropHtml;
+        	}
+            return event;
+        });     
+        parent.dragExitE = F.mergeE(F.extractEventE(imageZone, 'dragend'), F.extractEventE(imageElement, 'dragenter')).mapE(function(event){
+        	if(imageZone.innerHTML==dropHoverHtml){
+        		imageZone.innerHTML = dropHtml;
+        	}
+            return event;
+        });
+    
+        parent.filesDropE = parent.dropE.filterE(function(event){
+        	var files = event.target.files || event.dataTransfer.files; 
+        	if(files!=undefined && files.length>1){
+        		UI.showMessage("Upload Error", "Unable to process multiple images, please upload a single image.");
+        		return false;
+            }
+        	return files!=undefined;
+        	
+        }).mapE(function(event){ 
+        	var files = event.target.files || event.dataTransfer.files;  
+            var totalBytes = 0;
+            var fileArray = [];
+            if(files[0]!=undefined && files[0].size!=undefined){
+                if(files[0].type!="" && arrayContains(acceptedTypes, files[0].type)){
+                    totalBytes=files[0].size;
+                    UPLOAD.add(files[0]);
+                }
+                else{
+                    log("Unable to upload directories skipping "+files[0].type);
+                }
+            }
+            return {size: totalBytes, files:files};
+        }).filterE(function(fileData){
+        	return fileData.size>0;
+        });
+        parent.uploadCompleteE = UPLOAD.uploadCompleteE;
+        parent.allUploadsCompleteE = UPLOAD.allUploadsCompleteE;
+              
+        var sendProgressE = UPLOAD.progressUpdateB.changes().filterE(function(val){return val!=NOT_READY;}).mapE(function(progress){              
+               var total = progress.total;
+               var loaded = progress.loaded;
+               var queuePercentage = (loaded/total)*100; 
+               queuePercentage = queuePercentage<0?0:(queuePercentage>100?100:queuePercentage); 
+               DOM.get(instanceId+"_status").innerHTML = "Uploading "+Math.ceil(queuePercentage)+"%";
+               jQuery(DOM.get(instanceId+"_progress")).progressbar({value: Math.ceil(queuePercentage)});
+               return {filePercentageComplete:queuePercentage, queuePercentageComplete:queuePercentage,currentFile:progress.currentFile, rate:progress.rate, queue:progress.queue, formattedTotal:progress.formattedTotal}; 
+        });     
+        
+        var thumbPathB=widgetRefB.liftB(function(ref){log(ref);if(!good()){return NOT_READY;}return window['SETTINGS']['scriptPath']+"resources/upload/public/imagegallery/thumbs/"+ref+".png";});
+        
+        imageElement.onload = function(){
+        	imageElement.style.width = imageElement.clientWidth+"px";
+        	imageElement.style.height = imageElement.clientHeight+"px";
+        }
+        
+        var imageExistsB = thumbPathB.liftB(function(imagePath){
+        	if(!good())
+                return NOT_READY;
+            if(UrlExists(imagePath)){
+            	DOM.get(instanceId+"_img").src = imagePath+"?time="+(new Date()).getTime();
+            	return true;
+            }
+            else if(dropHtml!=undefined){
+            	DOM.get(instanceId+"_imagezone").innerHTML = dropHtml;
+            }
+            else{
+            	DOM.get(instanceId+"_imagezone").innerHTML = "<div style=\"width:"+width+"px;height:"+height+"px\">Drop an image here</div>";
+            }
+            return false;
+        });
+        
+        var processRequestB = F.liftB(function(uploadRequest, ref){                                                                                                    
+            if(!good())
+                return NOT_READY;
+            return {id: ref, path: uploadRequest.path, width: width, height: height};
+        }, parent.uploadCompleteE.filterE(function(res){
+        	if(res.status==NO_PERMISSION){
+        		log("Permission Error, You do not have permission to upload to this path");
+        		UI.showMessage("Permission Error","You do not have permission to upload to this path");
+        	}
+        	return res.status==1;}).startsWith(NOT_READY), widgetRefB);
+            
+        var imageProcessedE = getAjaxRequestB(processRequestB, window['SETTINGS']['scriptPath']+"/request/IG_processImage").mapE(function(ret){
+            if(ret==NOT_READY)
+                return NOT_READY;
+            DOM.get(instanceId+"_imagezone").innerHTML = "<img src=\""+ret.path+"?time="+(new Date()).getTime()+"\" alt=\"\" />";
+            DOM.get(instanceId+"_status").innerHTML = "";
+            jQuery(DOM.get(instanceId+"_progress")).progressbar("destroy");
+        });                                                                 
+    }      
+    this.hide = function(){
+        DOM.get(instanceId+"_container").style.display = 'none';
+    }              
+    this.show = function(){
+        DOM.get(instanceId+"_container").style.display = 'block';
+    }                                
+    this.build=function(){
+    	return "<div id=\""+instanceId+"_container\" style=\"margin: 0 auto; width: "+width+"px;\"><div id=\""+instanceId+"_imagezone\"><img id=\""+instanceId+"_img\" alt=\"\" /></div><div id=\""+instanceId+"_progress\"></div><div id=\""+instanceId+"_status\" style=\"position: relative; top: -25px;\" class=\"imageGallery_status\"></div></div>";   
+    }
+    this.destroy=function(){
+
+    }
 }
+
+
+
 
 
 function UploadableImageWidgetConfigurator(){
     this['requiresRef'] = true;
-    this['render'] = function(newData){
-    }
-    this['getData'] = function(){
-        return {};
-    }
+	this['load'] = function(newData){}
+    this['build'] = function(newData){}
+    this['getData'] = function(){}
     this['getName'] = function(){
         return "Image Uploader Widget";
     }
     this['getDescription'] = function(){
         return "A blank image which can be changed using drag and drop";
     }
-    this['getImage'] = function(){}
+    this['getPackage'] = function(){
+        return "Image Gallery";
+    }
 } 
 WIDGETS.register("UploadableImageWidget", UploadableImageWidget, UploadableImageWidgetConfigurator);
