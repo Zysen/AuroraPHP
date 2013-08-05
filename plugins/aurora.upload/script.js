@@ -5,53 +5,82 @@ function FileUploaderDragDropWidget(instanceId,data){
     var acceptedTypes = (data.acceptedTypes==undefined)?[]:data.acceptedTypes;                      
     var textStatus = DOM.createDiv(instanceId+"_status", "Drop Files Here");
     textStatus.className = "auroraUpload_dropZoneProgress";
+    
+    
+    var dropHoverHtml = data.dropHoverHtml;
+    
+    
     var dropZone = DOM.createDiv(instanceId+"_dropZone"); 
-    dropZone.appendChild(textStatus);
-    dropZone.className = 'UploadDropZone';
-    dropZone.style.display = 'inline-block';
-    dropZone.style.width = ((data.placeholder!=undefined)?data.placeholder.getAttribute('width'):data.width)+'px';
-    dropZone.style.height = ((data.placeholder!=undefined)?data.placeholder.getAttribute('height'):data.height)+'px';
-            
-            
+    if(data.dropHtml!=undefined){
+    	dropZone.innerHTML = data.dropHtml;
+    }
+    else{
+    	dropZone.appendChild(textStatus);
+    	dropZone.className = 'UploadDropZone';
+    }
+    
+    //dropZone.style.display = 'inline-block';
+    var width = data.placeholder.getAttribute('width');
+    if(width==undefined){
+    	width = data.placeholder.style.width.replace('px', '');
+    }
+    var height = data.placeholder.getAttribute('height');
+    if(height==undefined){
+    	height = data.placeholder.style.height.replace('px', '');
+    }
+    
+    dropZone.style.width = width+'px';
+    dropZone.style.height = height+'px';
     this.getDropZone = function(){return dropZone;};
     this.getPanel = function(){return textStatus;};
     this.loader=function(){     
         var dr = DOM.get((data.targetId!=undefined)?data.targetId:dropZone.id);
-        dr.style.backgroundColor = "#FF0000";
+        //dr.style.backgroundColor = "#FF0000";
         var dropE = F.extractEventE(dr, 'drop').mapE(function(event){
             DOM.stopEvent(event); 
             //log(event);
-            if(DOM.get(dropZone.id))
+            if(DOM.get(dropZone.id)){
                     DOM.get(dropZone.id).className = "UploadDropZone";
-  
+            }
             return event;    
         }); 
         this.dropE = dropE;
         var dragOverE = F.extractEventE(dr, 'dragover').mapE(function(event){
             DOM.stopEvent(event); 
-            if(DOM.get(dropZone.id))
-                DOM.get(dropZone.id).className = "UploadDropZoneHover";
+            
             event.dataTransfer.dropEffect = 'move';
+            
+            if(data.dropHoverHtml!=undefined){
+            	DOM.get(dropZone.id).innerHTML = data.dropHoverHtml;
+            }
+            else if(DOM.get(dropZone.id)){
+                DOM.get(dropZone.id).className = "UploadDropZoneHover";
+            }
             return event;
         });
         
         var dragEnterE = F.extractEventE(dr, 'dragenter').mapE(function(event){
             DOM.stopEvent(event); 
-            if(DOM.get(dropZone.id))
+            
+            if(data.dropHoverHtml!=undefined){
+            	DOM.get(dropZone.id).innerHTML = data.dropHoverHtml;
+            }
+            else if(DOM.get(dropZone.id)){
                 DOM.get(dropZone.id).className = "UploadDropZoneEnter";
+            }
             return event;
         });
         
-        var dragExitE = F.extractEventE(dr, 'dragexit').mapE(function(event){
+        var dragExitE = F.extractEventE(dr, 'dragleave').mapE(function(event){
             DOM.stopEvent(event); 
-            if(DOM.get(dropZone.id))
-                DOM.get(dropZone.id).className = "UploadDropZone";
+            if(data.dropHtml!=undefined){
+            	DOM.get(dropZone.id).innerHTML = data.dropHtml;
+            }
+            else if(DOM.get(dropZone.id)){
+                    DOM.get(dropZone.id).className = "UploadDropZone";
+            }
             return event;
-        });
-        
-    
-    
-                                     
+        });               
     
         var filesDropE = dropE.mapE(function(event){ 
             var files = event.target.files || event.dataTransfer.files;  
@@ -113,8 +142,7 @@ function FileUploaderDragDropWidget(instanceId,data){
         
     }
     this.build=function(){
-        if(!data.targetId){
-            
+        if(!data.targetId){ 
             return dropZone.outerHTML;
         }
         //textStatus.innerHTML = "";
@@ -123,7 +151,8 @@ function FileUploaderDragDropWidget(instanceId,data){
     this.destroy=function(){
         /*log('Destroying FileUploader');
         document.getElementById(id).removeEventListener('drop', this.dragDrop);
-        document.getElementById(id).removeEventListener('dragover', this.dragOver);*/
+        document.getElementById(id).removeEventListener('dragover', this.dragOver);
+        */
     }
 }
   
@@ -140,7 +169,9 @@ function AuroraBlankFileUpload(fileE, url){
         this.uploadCompleteE = F.zeroE();                       
 }  
 function AuroraFileUpload(fileE, url){
-    var uploadRequestE = fileE.mapE(function(file){
+    var uploadRequestE = fileE.mapE(function(fileData){
+    	var file = fileData.file;
+    	var path = fileData.path;
         var xhrObj = new XMLHttpRequest();  
         var upload = (xhrObj.upload!=undefined)?xhrObj.upload:xhrObj;
         var sendLoadStartE = F.extractEventE(upload, 'loadstart');     
@@ -161,7 +192,16 @@ function AuroraFileUpload(fileE, url){
             if(file.currentFile!=undefined){
                 file = file.currentFile;
             } 
-        xhrObj.open("POST", url, true);  
+        
+            
+        if(path!=undefined && path!=""){
+        	path = "?path="+path;
+        }
+        else{
+        	path = "";
+        }
+        
+        xhrObj.open("POST", url+path, true);  
         xhrObj.setRequestHeader("Content-type", file.type);  
         xhrObj.setRequestHeader("X_FILE_NAME", file.name);  
         xhrObj.send(file);                 
@@ -385,17 +425,19 @@ function AuroraFileBrowserWidget(instanceId,data){
 }
 WIDGETS.register("AuroraFileBrowserWidget", AuroraFileBrowserWidget);
 
-function AuroraUploadManager(){
+function AuroraUploadManager(args){
    
     // sendLoadStartE sendProgressE  uploadCompleteE
     var queue = new AuroraTaskQueue();
     var uploader = new AuroraFileUpload(queue.dequeueEventE, window['SETTINGS']['scriptPath']+"request/aurora.uploader");     
-   
     this.getUploader = function(){
         return uploader;
     };
-    this.add = function(upload){
-        queue.enqueue(upload);
+    this.add = function(upload, path){
+    	if(path==undefined&&args!=undefined&&args.path!=undefined){
+    		path = args.path;
+    	}
+        queue.enqueue({file: upload, path: path});
     };
     this.progressUpdateE = uploader.sendProgressE.mapE(function(progress){
         return progress;
@@ -414,26 +456,26 @@ function AuroraUploadManager(){
     this.dequeueEventE = queue.dequeueEventE;    
     var lastStamp = undefined;
     var lastBytes = undefined;  
-    this.progressUpdateB = F.liftB(function(allQueue, queue, progressUpdate, currentFile){
+    this.progressUpdateB = F.liftB(function(allQueue, queue, progressUpdate, currentItem){
         if(!good()){
             return NOT_READY;                             
         }   
+        var currentFile = currentItem.file;
+        var path = currentFile.path;
+        log(currentItem);
         var totalSize = 0;
         var totalTransfered = progressUpdate.loaded;
         for(index in allQueue){    
-            var file = allQueue[index];  
+            var file = allQueue[index].file;  
             var name = file.name;
             var size = file.size;
-            
-               
-            
             totalSize+=size;
             if(name==currentFile.name){
                 continue;
             } 
             var match = false;
             for(index in queue){
-                if(queue[index].name == name){
+                if(queue[index].file.name == name){
                     match=true;
                     break;
                 }
@@ -480,7 +522,7 @@ function AuroraUploadManager(){
             else if(totalSize>1000){
                 formattedTotal = (totalSize/1000).toFixed(2)+" KB";    
             }
-            else formattedTotal = totalSize+" Bps"
+            else formattedTotal = totalSize+" Bps";
             
     lastBytes = totalTransfered;
     lastStamp = stamp;

@@ -1,18 +1,73 @@
 <?php                                         
     $page->registerScript("plugins/aurora.upload/script.js");
     $page->registerCSS("plugins/aurora.upload/style.css");
+	
+	$behaviourManager->registerBehaviour("aurora_file_rights", "getFileRights");
+    function getFileRights($context){
+		return json_encode(array("read"=>true, "write"=>userCanUploadTo($context)!=false)); 
+    }
+    
+    
+function userCanUploadTo($path){
+	global $current_user;
+	$result = mysql_query("SELECT `path` FROM `aurora_uploadPermissions` NATURAL JOIN  `aurora_uploadPermissionRegister` WHERE `user_id`=".$current_user->get_SqlId()." OR `group_id`=".$current_user->get_group_id().";");	
+	while($row = mysql_fetch_array($result)){
+		$lastChar = $row['path'][strlen($row['path'])-1];
+		$checkRow = ($lastChar=='/'||$lastChar=='\\')?$row['path']:$row['path']."/";
+		
+		$lastChar = $path[strlen($path)-1];
+		$path = ($lastChar=='/'||$lastChar=='\\')?$path:$path."/";
+		
+		if(startsWith($path, $checkRow)){
+			return $path;
+		}
+	}
+	return false;	
+}
+	
+	
+	
+	
+	
+
+	
+	
+	
+	
+	
     $requestManager->registerRequestHandler("aurora.uploader", "fileuploader_receiveFile");
     function fileuploader_receiveFile($path){
         global $current_user;
         global $scriptPath;
+        global $NO_PERMISSION;
+		if(!$current_user->canReadPermission("aurora_upload_files")){
+            echo json_encode(array("status"=>$NO_PERMISSION)); 
+            exit;
+		}
         $fn = (isset($_SERVER['HTTP_X_FILE_NAME']) ? $_SERVER['HTTP_X_FILE_NAME'] : false); 
         $newPath = "";
-        if ($fn) {  
-            $newPath = "resources/upload/".$current_user->get_SqlId()."/$fn";
-            if(!file_exists("resources/upload/".$current_user->get_SqlId())){
-                mkdir("resources/upload/".$current_user->get_SqlId());
-            }
-            file_put_contents("$newPath", file_get_contents('php://input'));  
+        if ($fn) {
+        	if(array_key_exists("path", $_GET)){
+        		$path = userCanUploadTo($_GET['path']);
+				if($path!=false){
+					$newPath = $path.$fn;
+					if(!file_exists($path)){
+		                mkdir($path);
+		            }
+				}
+				else{
+					echo json_encode(array("status"=>$NO_PERMISSION)); 
+            		exit;
+				}
+			}
+			else{
+				if(!file_exists("resources/upload/".$current_user->get_SqlId())){
+                	mkdir("resources/upload/".$current_user->get_SqlId());
+               	}
+				$newPath = "resources/upload/".$current_user->get_SqlId()."/$fn";	
+			}
+			
+            file_put_contents($newPath, file_get_contents('php://input'));  
         }
         echo json_encode(array("status"=>1, "path"=>$scriptPath."$newPath")); 
     exit();  
