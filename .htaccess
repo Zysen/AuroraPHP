@@ -1,5 +1,5 @@
 RewriteEngine on
-RewriteCond $1 !^(index\.php|dadabik|guacamole|dynmap|phpvirtualbox|unsorted|plugins|resources|plugins|scripts|artis*|.*\.html|images|.*\.css|content|themes|robots\.txt|phpinfo\.php|phpmyadmin)
+RewriteCond $1 !^(index\.php|unsorted|resources|plugins|scripts|artis*|.*\.html|images|.*\.css|content|themes|robots\.txt|phpinfo\.php|phpmyadmin)
 RewriteRule ^(.*)$ index.php/$1 [L]
 AddType video/ogg .ogv
 AddType video/mp4 .mp4
