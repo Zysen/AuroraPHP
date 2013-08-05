@@ -24,7 +24,7 @@
             return "";
         }
         public function getBehaviours(){
-            $behaviours = array_key_exists("database", $_POST)?$_POST['database']:$_GET['database']; 
+            $behaviours = json_decode(str_replace("\\\"", "\"", array_key_exists("database", $_POST)?$_POST['database']:$_GET['database']), true);
             $returnArray=Array();
             foreach ($behaviours as $reactiveData){
                 $bKey = $reactiveData['key'];
@@ -42,8 +42,9 @@
                 }
                 $reactiveData['data'] = ($hash!=$newHash)?$value:"";
                 $reactiveData['hash'] = $newHash;
-                if($hash!=$newHash || $setValue)
-                    $returnArray[$bKey][$context] = $reactiveData;              
+                if($hash!=$newHash || $setValue){
+                    $returnArray[$bKey][$context] = $reactiveData;       
+				}       
             }                
             return json_encode($returnArray);
         }

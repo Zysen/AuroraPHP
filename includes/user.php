@@ -14,16 +14,18 @@ function getUserDisplay($username, $firstname, $lastname){
         var $username;
         var $firstname;
         var $lastname;
-        var $group_id;
+        var $group_id; 
         var $sqlId=-1;
         var $email;
         var $avatar="";
         function AuroraLogout(){
-            $current_user = createGuestUser();
-            $_SESSION['USER'] = $current_user; 
+			$_SESSION['USER'] = null;
+			session_destroy();
+			session_start();
+            $_SESSION['USER'] = createGuestUser(); 
             setcookie("emailAddress", "", time()-3600);
             setcookie("pass", "", time()-3600);
-            return $current_user;
+            return $_SESSION['USER'];
         }
         function toJSON(){
             return array("username"=>$this->username, "firstname"=>$this->firstname, "lastname"=>$this->lastname, "group_id"=>$this->group_id, "email"=>$this->email, "avatar"=>$this->avatar);    
@@ -121,6 +123,13 @@ function getUserDisplay($username, $firstname, $lastname){
         function getPermission($reference){
             global $connection;            //`permissions`
             $result = mysql_query("SELECT * FROM `permission_register` NATURAL JOIN `permissions` WHERE `name`='$reference' AND (`permissions`.`user_id`=".$this->get_SqlId()." OR `permissions`.`group_id`=".$this->get_group_id().") LIMIT 1;", $connection);
+            if(!$result){
+				echo "SELECT * FROM `permission_register` NATURAL JOIN `permissions` WHERE `name`='$reference' AND (`permissions`.`user_id`=".$this->get_SqlId()." OR `permissions`.`group_id`=".$this->get_group_id().") LIMIT 1;";
+				print_r($_SESSION['USER']);
+            	echo mysql_error();
+				$group_id = $this->group_id;
+				$sqlId = $this->sqlId;
+            }
             if(mysql_num_rows($result)>0){
                 $row = mysql_fetch_array($result);
                 return $row['permissions'];
@@ -161,53 +170,64 @@ function getUserDisplay($username, $firstname, $lastname){
         }
     }
     $blowfish = $settings['aurora_secret'];
+    
+    
 session_start();
-/* Login Procedure */       
-        if(array_key_exists("login", $_POST)||((!isset($_SESSION['USER']))&&isset($_COOKIE['emailAddress']))){            
-            if(isset($_COOKIE['emailAddress'])&&isset($_COOKIE['pass'])){
-                $email = mysql_escape_string($_COOKIE['emailAddress']);
-                $password =mysql_escape_string(custom_decrypt($_COOKIE['pass'], $blowfish));
-            }
-            else{
-                $email = mysql_escape_string($_POST['emailAddress']);
-                $password = mysql_escape_string(md5($_POST['password']));
-            }
 
-        $result = mysql_query("SELECT * FROM `users` WHERE email='$email' AND password='$password' LIMIT 1;", getPrimarySQLConnection());
-        if(mysql_num_rows($result)>0){
-            $row = mysql_fetch_array($result);
-            if($settings['aurora_requireEmailValidation']==0||$row['validated']=="1"){
-                $current_user = new AuroraUser();
-                $current_user->updateFromArray($row);
-                $_SESSION['USER'] = $current_user;
-                if(isset($_POST['remember'])&&$_POST['remember']=="on"){
-                    if(!isset($_COOKIE['emailAddress']))
-                      setcookie("emailAddress", $email, time()+60*60*24*30);
-                    if(!isset($_COOKIE['pass']))
-                        setcookie("pass", custom_encrypt(md5($_POST['password']), $blowfish), time()+60*60*24*30);
-                }
-                /*if(isset($_SESSION['loginRedirect']))
-                    header("Location: ".$_SESSION['loginRedirect']);
-                *///header("Location: ".$scriptPath);
-                if(isset($_POST['emailAddress'])){
-                    $page->addToMessage("Welcome ".$current_user->get_firstname()." you have successfully logged in.");
-                    if(isset($_SESSION['aurora_requestedPage'])&&count($_SESSION['aurora_requestedPage'])>0){
-                        $path = $_SESSION['aurora_requestedPage'];
-                        //session_destroy();
-                    }
-                    else
-                        $path = array($settings["aurora_defaultAction"]);
-                }
-                    
-            }
-            else{
-                $page->addtomessage("Error - your account has not been activated. Activation has not yet been implemented, and you should not be here. Please contact a system administrator");
-                //showValidationBox($row['email']);
-            }   
-        }
-        else{
-            $path = array("login");
-            $page->addtomessage("Login Error - Username or password incorrect");
-        }
+
+/* Login Procedure    
+*/
+
+if(array_key_exists("login", $_POST)||(isset($_COOKIE['emailAddress'])&&(!isset($_SESSION['USER'])))){
+	if(isset($_COOKIE['emailAddress'])&&isset($_COOKIE['pass'])){
+    	$email = mysql_real_escape_string($_COOKIE['emailAddress']);
+        $password =mysql_real_escape_string(custom_decrypt($_COOKIE['pass'], $blowfish));
     }
+    else{
+    	$email = mysql_real_escape_string($_POST['emailAddress']);
+        $password = mysql_real_escape_string(md5($_POST['password']));
+    }
+	$result = mysql_query("SELECT * FROM `users` WHERE email='$email' AND password='$password' LIMIT 1;", getPrimarySQLConnection());
+    //echo "SELECT * FROM `users` WHERE email='$email' AND password='$password' LIMIT 1;";
+    if(mysql_num_rows($result)>0){
+	    $row = mysql_fetch_array($result);
+	    if($settings['aurora_requireEmailValidation']==0||$row['validated']=="1"){
+	    	$current_user = new AuroraUser();
+	        $current_user->updateFromArray($row);
+	        $_SESSION['USER'] = $current_user;
+	        if(isset($_POST['remember'])&&$_POST['remember']=="on"){
+	        	if(!isset($_COOKIE['emailAddress']))
+	            	setcookie("emailAddress", $email, time()+60*60*24*30);
+	            if(!isset($_COOKIE['pass']))
+	              	setcookie("pass", custom_encrypt(md5($_POST['password']), $blowfish), time()+60*60*24*30);
+	        }
+	        /*if(isset($_SESSION['loginRedirect']))
+	        	header("Location: ".$_SESSION['loginRedirect']);
+	        *///header("Location: ".$scriptPath);
+	        if(isset($_POST['emailAddress'])){
+	        	$page->addToMessage("Welcome ".$current_user->get_firstname()." you have successfully logged in.");
+	                   /* if(isset($_SESSION['aurora_requestedPage'])&&count($_SESSION['aurora_requestedPage'])>0){
+	                        $path = $_SESSION['aurora_requestedPage'];
+	                        //session_destroy();
+	                    }
+	                    else
+	                        $path = array($settings["aurora_defaultAction"]); */
+	        }           
+		}
+	    else{
+	    	$page->addtomessage("Error - your account has not been activated. Activation has not yet been implemented, and you should not be here. Please contact a system administrator");
+	        //showValidationBox($row['email']);
+	    }   
+	}
+	else{
+		$path = array("login");
+	    $page->addtomessage("Login Error - Username or password incorrect");
+	}
+}
+else if(isset($_SESSION['USER']) && (!isset($_COOKIE['emailAddress'])) && $_SESSION['USER']->sqlId==""){
+	$_SESSION['USER'] = null;	
+	session_destroy();
+	header("Location: /login");
+	exit;
+}
 ?>

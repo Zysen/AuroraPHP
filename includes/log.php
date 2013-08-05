@@ -1,7 +1,7 @@
 <?php
 function AuroraLog($tag, $message){
-    $message = mysql_escape_string($message);
-    mysql_query("INSERT INTO `aurora`.`logs` (`id`, `entry`, `tag`, `timestamp`) VALUES (NULL, '$message', '$tag',  CURRENT_TIMESTAMP);");   
+    $message = mysql_real_escape_string($message);
+    mysql_query("INSERT INTO `logs` (`id`, `entry`, `tag`, `timestamp`) VALUES (NULL, '$message', '$tag',  CURRENT_TIMESTAMP);");   
 }
 /*    class log {
   private $_level;
@@ -28,7 +28,7 @@ function AuroraLog($tag, $message){
         }
       }
       
-      $message = mysql_escape_string($message);
+      $message = mysql_real_escape_string($message);
       mysql_query("INSERT INTO `aurora`.`logs` (`id`, `entry`, `timestamp`) VALUES (NULL, '$message', CURRENT_TIMESTAMP);");
   }
 }   */
