@@ -159,17 +159,16 @@ function BehaviourManager(){
         return this.data[key].behaviour; */
     }
     this.getDataRequest = function(){
-        //log("Data request");
         var arr = new Array();       
-        for(index in this.data){
+        for(var index in this.data){
             var dataR = this.data[index];                            //rDatashow
+            //log(dataR);
             if(dataR.requiresPoll()){
                 var packet = dataR.dirty?{key: dataR.key, context: dataR.context, data: dataR.data}:{key: dataR.key, context: dataR.context, hash: dataR.hash};
                 arr.push(packet);
             }
-        }   
-        arr = cleanFunctions(arr);              
-        return {"database": arr};
+        }           
+        return {"database": cleanFunctions(arr)};
     }
     this.startPolling = function(){
         var localData = this.localData;
@@ -186,19 +185,18 @@ function BehaviourManager(){
         var dataRequestReady = requestReadyE.snapshotE(nowB).mapE(function(x){return DATA.getDataRequest();}); 
         var serverResponseE = sendServerRequestE(dataRequestReady, window['SETTINGS']['scriptPath']+'getBehaviours');
         var localSyncE = serverResponseE.mapE(function(retData){                  
-            for(key in retData){
+        	for(key in retData){
                 var dataRow = retData[key];
                 for(context in dataRow){
-                
-                var newKey = key;
-                if(context!=undefined&&context.length!=0){
-                    newKey+="___"+context;
-                }
-                    var serverData = dataRow[context];
-                   var localData = data[key+"___"+context]; 
-                    //Pre getKey() check for json object contexts. 
+	                var newKey = key;
+	                if(context!=undefined&&context.length!=0){
+	                    newKey+="___"+context;
+	                }
+	                var serverData = dataRow[context];
+                    var localData = data[newKey]; 
+                   //Pre getKey() check for json object contexts. 
                     //var newKey = new CompositKey(key, context);
-                    localData = (localData!=null)?localData:data[newKey];
+                   // localData = (localData!=null)?localData:data[newKey];
                     localData.updateFromServer(serverData.data, serverData.hash);
                 }                                  
             }
@@ -213,6 +211,7 @@ function sendServerRequestE(triggerE, url, timeout){
     var rec = F.receiverE();                       
     triggerE.mapE(function(requestData){
         if(requestData["database"].length>0){
+        requestData.database = JSON.stringify(requestData.database);
         jQuery.ajax({
             type: "post",
             async: true,

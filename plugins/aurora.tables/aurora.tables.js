@@ -926,6 +926,7 @@ function TableWidgetB(instanceId, widgetData, dataB){
         var rendererTable = renderedData[0];
         
         var domTable = renderedData[1];
+        var columns = renderedData[2]["COLUMNS"];
         var dataTable = renderedData[2]["DATA"];
         /*var newRenderTable = renderedData[3]; */       
         for(var rowIndex in rendererTable){
@@ -934,17 +935,17 @@ function TableWidgetB(instanceId, widgetData, dataB){
                 var dataCell = dataTable[rowIndex][colIndex];
                 //log("Getting Renderer Value");
                 
-                if((renderCell["renderer"]).getValue()!=dataCell){
-   /*                 
-                    log("DIFF");
+                if(columns[colIndex].visible&&(renderCell["renderer"]).getValue()!=dataCell){
+                    
+   /*                log("DIFF");
                     log(renderCell["renderer"].getValue()+" != "+dataCell);
                 log(renderCell["renderer"]);
-                log(typeof(rowIndex)+" "+typeof(colIndex)) 
+                log(typeof(rowIndex)+" "+typeof(colIndex));
                 log(rowIndex+" "+colIndex);
                 log(renderCell);
                 log(dataCell);
                 log(dataTable);
-                log("/DIFF");  */
+                log("/DIFF"); */
                     return true; 
                 
                 }
@@ -1060,7 +1061,7 @@ function TableWidgetB(instanceId, widgetData, dataB){
         var columns = data.renderedData[2]["COLUMNS"];
         for(index=0;index<rowSelections.length;index++){
             arrayCut(data.renderedData[2]["DATA"], (rowSelections[index]-1));
-        }              
+        }      
         UI.confirm("Delete Rows", "Are you sure you wish to delete these "+rowSelections.length+" row(s)", "Yes", function(val){
             rowSelectionResetE.sendEvent(true);
             pageRenderedB.sendEvent(data.renderedData[2]);

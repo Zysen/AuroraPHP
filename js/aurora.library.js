@@ -258,10 +258,37 @@ String.prototype.startsWith = function(prefix) {
 String.prototype.endsWith = function(suffix) {
     return this.match(suffix+"$") == suffix;
 };
+if(!String.prototype.trim) {
+  String.prototype.trim = function () {
+    return this.replace(/^\s+|\s+$/g,'');
+  };
+}
 
 String.prototype.replaceAll = function(replace, with_this) {
   return this.replace(new RegExp(replace, 'g'),with_this);
 };
+/*if (!document.addEventListener && document.attachEvent)
+{
+    Object.prototype.addEventListener = function(eventName, func, capture)
+    {
+        if (this.attachEvent)
+            this.attachEvent('on' + eventName, func);
+    }
+
+    var i, l = document.all.length;
+
+    for (i = 0; i < l; i++)
+        document.all[i].addEventListener = Object.prototype.addEventListener;
+
+    window.addEventListener = Object.prototype.addEventListener;
+    document.addEventListener = Object.prototype.addEventListener;
+}*/
+if(!window.addEventListener && document.attachEvent){
+window.addEventListener = function(eventName, func, capture){
+        this.attachEvent('on' + eventName, func);
+    }
+}
+
 
 /*document.getElementsByClassName = function(cl) {
 var retnode = [];
@@ -310,10 +337,7 @@ else // Internet Explorer
   }
 return xmlDoc;
 }
-/*document.getElementsByClassName = function(class_name) {
-    return getElementsByClassName(class_name, '', null); 
-}*/
-getElementsByClassName = function(class_name, tag, elm) {
+var getElementsByClassName = function(class_name, tag, elm) {
     doc = elm || this;
     var docList = doc.all || doc.getElementsByTagName('*');
     var matchArray = new Array();
@@ -328,92 +352,6 @@ getElementsByClassName = function(class_name, tag, elm) {
     }
     return matchArray;
 }
-
-/*var getElementsByClassName = function (className, tag, elm){
-    if (document.getElementsByClassName) {
-        getElementsByClassName = function (className, tag, elm) {
-            elm = elm || document;
-            var elements = elm.getElementsByClassName(className),
-                nodeName = (tag)? new RegExp("\\b" + tag + "\\b", "i") : null,
-                returnElements = [],
-                current;
-            for(var i=0, il=elements.length; i<il; i+=1){
-                current = elements[i];
-                if(!nodeName || nodeName.test(current.nodeName)) {
-                    returnElements.push(current);
-                }
-            }
-            return returnElements;
-        }; 
-    }
-    else if (document.evaluate) {
-        getElementsByClassName = function (className, tag, elm) {
-            tag = tag || "*";
-            elm = elm || document;
-            var classes = className.split(" "),
-                classesToCheck = "",
-                xhtmlNamespace = "http://www.w3.org/1999/xhtml",
-                namespaceResolver = (document.documentElement.namespaceURI === xhtmlNamespace)? xhtmlNamespace : null,
-                returnElements = [],
-                elements,
-                node;
-            for(var j=0, jl=classes.length; j<jl; j+=1){
-                classesToCheck += "[contains(concat(' ', @class, ' '), ' " + classes[j] + " ')]";
-            }
-            try    {
-                elements = document.evaluate(".//" + tag + classesToCheck, elm, namespaceResolver, 0, null);
-            }
-            catch (e) {
-                elements = document.evaluate(".//" + tag + classesToCheck, elm, null, 0, null);
-            }
-            while ((node = elements.iterateNext())) {
-                returnElements.push(node);
-            }
-            return returnElements;
-        };
-    }
-    else {
-        getElementsByClassName = function (className, tag, elm) {
-            tag = tag || "*";
-            elm = elm || document;
-            var classes = className.split(" "),
-                classesToCheck = [],
-                elements = (tag === "*" && elm.all)? elm.all : elm.getElementsByTagName(tag),
-                current,
-                returnElements = [],
-                match;
-            for(var k=0, kl=classes.length; k<kl; k+=1){
-                classesToCheck.push(new RegExp("(^|\\s)" + classes[k] + "(\\s|$)"));
-            }
-            for(var l=0, ll=elements.length; l<ll; l+=1){
-                current = elements[l];
-                match = false;
-                for(var m=0, ml=classesToCheck.length; m<ml; m+=1){
-                    match = classesToCheck[m].test(current.className);
-                    if (!match) {
-                        break;
-                    }
-                }
-                if (match) {
-                    returnElements.push(current);
-                }
-            }
-            return returnElements;
-        };
-    }
-    return getElementsByClassName(className, tag, elm);
-};
-        */ 
-function createDomElement(type, id, className, innerHTML){
-    var ele = document.createElement(type);
-    if(id.length>0)
-    ele.id = id;
-    if(className.length>0)
-    ele.className = className; 
-    if(innerHTML.length>0)
-    ele.innerHTML = innerHTML;
-    return ele; 
-}
 function getElement(id){
     return document.getElementById(id);
 }
@@ -427,6 +365,7 @@ function disableEventPropagation(event)
    }
 } 
 function disableHighlight(target){
+	target = (typeof(target)=='string')?DOM.get(target):target;
     if(document.all)
         target.onselectstart = handleSelectAttempt;
     target.onmousedown = handleSelectAttempt;   
@@ -957,7 +896,10 @@ function getPlaceholderDimensions(placeholder){
 
 function getObjectValues(ob){
     var ret = [];
+    log("getObjectValues");
     for(index in ob){
+    	log(index);
+    	log(ob[index]);
         ret.push(ob[index]);
     }
     return ret;

@@ -13,7 +13,8 @@ var WIDGET = {
     getHeight: function(){return (data.placeholder==null)?data.height:data.placeholder.style.height.replace('px', '');}
 }; 
 var userB = DATA.getRemote("aurora_current_user",undefined,NOT_READY, POLL_RATES.VERY_SLOW).behaviour;
-var widgets=new Array();
+//var widgets=new Array();
+var getVars = readGET();
 
 
 //var docReadyE = jQuery(document).fj('extEvtE', 'ready'); 
@@ -39,23 +40,24 @@ var pageDataB = F.liftB(function(pageData){
     document.getElementById("content").innerHTML = renderPage(page.html);
         
     WIDGETS.load();
-    if(window['SETTINGS']['messages']!=""){
-        UI.showMessage('', window['SETTINGS']['messages']);
-        window['SETTINGS']['messages'] = "";      
-    }
     document.getElementById("body").style.display = 'block';   // Page data is output in php pre JS render but the body div is hidden so its not visible. This is for SEO
 },pageB);
-
-
 ready(function() {
     var pageName = window['SETTINGS']['page']['name'];
     var href = window['SETTINGS']['scriptPath']+pageName;
     if(history.pushState){
-        history.pushState({page: pageName}, pageName, href);    
+        //history.pushState({page: pageName}, pageName, href);    
     }
     else{
         //window.location = href;
     }  
+    pageE.delayE(1000).mapE(function(){   //TODO: Fix this dodgey bandaid which fixed the firefox dialog box issue
+        if(window['SETTINGS']['messages']!=""){
+            UI.showMessage('', window['SETTINGS']['messages']);
+            window['SETTINGS']['messages'] = "";      
+        }
+    });
+    pageE.sendEvent({page: window['SETTINGS']['page'], theme: SETTINGS['theme'], permissions: SETTINGS['pagePermissions']});
     DATA.startPolling();
 });
 window.addEventListener('popstate', function(ev) {
@@ -63,7 +65,7 @@ window.addEventListener('popstate', function(ev) {
     loadPageE.sendEvent(ev.state.page);
   }
   else{
-    pageE.sendEvent({page: window['SETTINGS']['page'], theme: SETTINGS['theme'], permissions: SETTINGS['pagePermissions']});
+    
     //loadPageE.sendEvent(document.URL.replace(SETTINGS['scriptPath'], ''))
   }
 });

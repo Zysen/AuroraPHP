@@ -4,7 +4,7 @@ function AuroraDom(){
             return document.getElementById(id);
         }
         return id;
-    }                                                 
+    }                           
     this.createDiv = function(id, innerHTML, className){//TODO: refactor this to go id, className, innerHTML
         log("CREATE DIVV");
         return this.create('div', id, className, innerHTML);
@@ -49,6 +49,19 @@ function AuroraDom(){
         event.stopPropagation();  
         event.preventDefault();
     }
+    
+    	this.getElementsByClassName = function(class_name, tag, elm) {
+        var docList = elm.getElementsByTagName('*');
+        var matchArray = [];
+
+        var re = new RegExp("(?:^|\\s)"+class_name+"(?:\\s|$)");
+        for (var i = 0; i < docList.length; i++) {
+            if (re.test(docList[i].className) ) {
+                matchArray.push(docList[i]);
+            }                                                  
+        }
+        return matchArray;
+    }
 }
 
 function parseMysqlDate(mysql_string){ 
@@ -70,26 +83,14 @@ function createButton(value, className){
 String.prototype['contains'] = function(str){
     return (this.indexOf(str) >= 0);
 }
-getElementsByClassName = function(class_name, tag, elm) {
-    doc = elm || this;
-    var docList = doc.all || doc.getElementsByTagName('*');
-    var matchArray = new Array();
-
-    /*Create a regular expression object for class*/
-    var re = new RegExp("(?:^|\\s)"+class_name+"(?:\\s|$)");
-    for (var i = 0; i < docList.length; i++) {
-        //showObj(docList[i]);
-        if (re.test(docList[i].className) ) {
-            matchArray[matchArray.length] = docList[i];
+//window.getElementsByClassName = DOM.getElementsByClassName;
+if(typeof(Element)!='undefined'){
+    Element.prototype.removeChildren = function(element){
+        if(element==undefined)
+            element = this;
+        while (element.hasChildNodes()) {
+            element.removeChild(element.lastChild);
         }
-    }
-    return matchArray;
-}
-Element.prototype.removeChildren = function(element){
-    if(element==undefined)
-        element = this;
-    while (element.hasChildNodes()) {
-        element.removeChild(element.lastChild);
     }
 }
 function getMilliseconds(){

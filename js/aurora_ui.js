@@ -44,6 +44,10 @@ function aurora_ui(){
             dialog.title = title;
             document.body.appendChild(dialog);
             var dialogOptions = {width: width, "modal": modal,"draggable": draggable,"resizable": resizable,"buttons":[{"text": "Ok","click": function() { jQuery(this).dialog("close");if(callback!=undefined)callback();}}]}
+            if(options!=undefined && options.fullscreen!=undefined&&options.fullscreen==true){
+            	dialogOptions.minWidth = 1000;
+            	dialogOptions.minHeight = jQuery(window).height()-100;
+        	}
             if(options!=undefined&&options.height!=undefined){
                 dialogOptions.height = options.height;    
             }
@@ -71,6 +75,10 @@ function aurora_ui(){
         if(fullscreen!=undefined&&fullscreen==true){
             options.minWidth = 1000;
             options.minHeight = jQuery(window).height()-100;
+            options.position = ["left","top"];
+          	options.width = "100%";
+          	options.height = jQuery(window).height();
+          	options.zIndex = 1000;
         }
     
         var oldD =  document.getElementById('aurora_dialog');
@@ -79,7 +87,7 @@ function aurora_ui(){
         var dialog = createDomElement('div', 'aurora_dialog', '', message);
         dialog.title = title;
         document.body.appendChild(dialog);
-        jQuery( "#aurora_dialog").dialog(options);
+        window.top.jQuery("#aurora_dialog").dialog(options);
        }
     }
     
