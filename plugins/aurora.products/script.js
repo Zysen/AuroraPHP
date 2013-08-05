@@ -30,12 +30,13 @@ function ProductWidget(instanceId, data){
 }
                      
 /**
- *  UsernameWidgetConfigurator
+ *  ProductWidgetConfigurator
  * @constructor
  */                                                      
 function ProductWidgetConfigurator(){
+	this['load'] = function(newData){}
     var id = "ProductWidgetConfigurator";
-    this['render'] = function(newData){
+    this['build'] = function(newData){
         var productId = "";
         var title = ""; 
         var description = ""; 
@@ -52,7 +53,7 @@ function ProductWidgetConfigurator(){
         "Price: <input type=\"text\" id=\""+id+"_price\" value=\""+price+"\" />";
     }
     this['getData'] = function(){
-        return {"productId": document.getElementById(id+'_id').value, "title": document.getElementById(id+'_title').value, "description": document.getElementById(id+'_description').value, "price": document.getElementById(id+'_price').value};
+        return {productId: document.getElementById(id+'_id').value, title: document.getElementById(id+'_title').value, description: document.getElementById(id+'_description').value, price: document.getElementById(id+'_price').value};
     }
     this['getName'] = function(){
         return "Product Widget";
@@ -60,73 +61,19 @@ function ProductWidgetConfigurator(){
     this['getDescription'] = function(){
         return "A product item with an add to cart button";
     }
-    this['getImage'] = function(){}
+    this['getPackage'] = function(){
+        return "Products";
+    }
+/*    this['getPlaceholder'] = function(editor){
+    	var data = this.getData();
+    	var abbr = editor.document.createElement('span');
+		abbr.setAttribute('class', "widget_ProductWidget");
+        abbr.setAttribute('title', JSON.stringify(data).replace('"', "'"));
+		abbr.$.innerHTML = BuildProductWidgetHTML(data.productId, data.title, data.description, data.price, data.text);
+        return abbr;
+    }*/
 } 
-WIDGETS.register("ProductWidget", ProductWidget, ProductWidgetConfigurator); 
-
-
-
-/**
- *  ProductWidget
- * @constructor
- */ 
-function ViewCartWidget(instanceId, data){
-    var id = instanceId+"_container";
-    
-    var identifier = (data.code!=undefined)?"<input type=\"hidden\" name=\"encrypted\" value=\""+data.code+"\">":"<input type=\"hidden\" name=\"business\" value=\""+data.business+"\">"
-    this.loader=function(){}
-    this.destroy=function(){}
-    this.build=function(){           //<input type=\"hidden\" name=\"encrypted\" value=\""+code+"\">
-        return "<form target=\"paypal\" action=\"https://www.paypal.com/cgi-bin/webscr\" method=\"post\">"+identifier+"<input type=\"hidden\" name=\"cmd\" value=\"_s-xclick\"><input class=\"viewCart\" type=\"image\" src=\"/plugins/aurora.products/cart.png\" border=\"0\" name=\"submit\" alt=\"PayPal - The safer, easier way to pay online!\"></form>";
-    }                         
-}
-
-/*<form target="_self" action="https://www.paypal.com/cgi-bin/webscr"  
-        method="post">  
-  
-    <!-- Identify your business so that you can collect the payments. -->  
-    <input type="hidden" name="business" value="kin@kinskards.com">  
-  
-    <!-- Specify a PayPal Shopping Cart View Cart button. -->  
-    <input type="hidden" name="cmd" value="_cart">  
-    <input type="hidden" name="display" value="1">  
-  
-    <!-- Display the View Cart button. -->  
-    <input type="image" name="submit" border="0"  
-        src="https://www.paypal.com/en_US/i/btn/btn_viewcart_LG.gif"   
-        alt="PayPal - The safer, easier way to pay online">  
-    <img alt="" border="0" width="1" height="1"  
-        src="https://www.paypal.com/en_US/i/scr/pixel.gif" >  
-</form> */
-
-                     
-/**
- *  UsernameWidgetConfigurator
- * @constructor
- */                                                      
-function ViewCartWidgetConfigurator(){
-    var id = "ViewCartWidgetConfigurator";
-    this['render'] = function(newData){
-        var code = "";
-        if(newData!=undefined){
-            code = newData['code'];
-        }
-        return "Product Id: <input type=\"text\" id=\""+id+"_code\" value=\""+code+"\" />";
-    }
-    this['getData'] = function(){
-        return {"code": document.getElementById(id+'_code').value};
-    }
-    this['getName'] = function(){
-        return "Product View Cart Button";
-    }
-    this['getDescription'] = function(){
-        return "A button that takes you to your shopping cart";
-    }
-    this['getImage'] = function(){}
-} 
-WIDGETS.register("ViewCartWidget", ViewCartWidget, ViewCartWidgetConfigurator); 
-
-
+WIDGETS.register("ProductWidget", ProductWidget); //ProductWidgetConfigurator 
 
 
 /*
@@ -151,8 +98,9 @@ function VideoPlayerWidget(instanceId, data){
     }
 }     
 function VideoPlayerWidgetConfigurator(){
+	this['load'] = function(newData){}
     var id = "VideoWidgetCont";
-    this['render'] = function(newData){
+    this['build'] = function(newData){
         var poster = (newData!=undefined&&newData['poster']!=undefined)?newData['poster']:"";
         var returnString = "";
         var src1 = "";
@@ -210,5 +158,7 @@ function VideoPlayerWidgetConfigurator(){
     this['getDescription'] = function(){
         return "An mp4 player";
     }
-    this['getImage'] = function(){}
+    this['getPackage'] = function(){
+        return "Audio/Video";
+    }
 } */
