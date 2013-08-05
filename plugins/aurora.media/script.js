@@ -44,7 +44,8 @@ function VideoPlayerWidget(instanceId, data){
 
 function VideoPlayerWidgetConfigurator(){
     var id = "VideoWidgetCont";
-    this['render'] = function(newData){
+    this['load'] = function(newData){}
+    this['build'] = function(newData){
         var poster = (newData!=undefined&&newData['poster']!=undefined)?newData['poster']:"";
         var autoplay = (newData!=undefined&&newData['autoplay']!=undefined)?newData['autoplay']:"false";
         var returnString = "";
@@ -102,6 +103,8 @@ function VideoPlayerWidgetConfigurator(){
     this['getDescription'] = function(){
         return "An mp4 player";
     }
-    this['getImage'] = function(){}
+    this['getPackage'] = function(){
+        return "Audio/Video";
+    }
 } 
 WIDGETS.register("VideoPlayerWidget", VideoPlayerWidget, VideoPlayerWidgetConfigurator); 
