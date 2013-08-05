@@ -11,9 +11,9 @@
         $tableData = $data['DATA'];
         for($i=0; $i<count($tableData);$i++){
             $row = $tableData[$i];
-            $name = mysql_escape_string($row[0]);
-            $mac = mysql_escape_string($row[1]); 
-            $ip = mysql_escape_string($row[2]); 
+            $name = mysql_real_escape_string($row[0]);
+            $mac = mysql_real_escape_string($row[1]); 
+            $ip = mysql_real_escape_string($row[2]); 
             if(strlen($mac)==0){
                 $mac = $ip;
             }

@@ -20,7 +20,8 @@ function NetworkStatusWidget(instanceId, data){
 
 /*function VideoPlayerWidgetConfigurator(){
     var id = "VideoWidgetCont";
-    this['render'] = function(newData){
+    this['load'] = function(newData){}
+    this['build'] = function(newData){
         var poster = (newData!=undefined&&newData['poster']!=undefined)?newData['poster']:"";
         var returnString = "";
         var src1 = "";
@@ -78,6 +79,8 @@ function NetworkStatusWidget(instanceId, data){
     this['getDescription'] = function(){
         return "An mp4 player";
     }
-    this['getImage'] = function(){}
+    this['getPackage'] = function(){
+        return "Network";
+    }
 }         */
 WIDGETS.register("NetworkStatusWidget", NetworkStatusWidget/*, VideoPlayerWidgetConfigurator*/);
