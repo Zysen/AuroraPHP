@@ -47,7 +47,6 @@ function cleanUpHtml(html){
     findLinks(element, function(child){
         var pageName = child.href.replaceAll(window['SETTINGS']['scriptPath'], "");
         child.href = child.href.replaceAll(window['SETTINGS']['scriptPath'], "page://");
-        log('Hurr2');  
         child.onclick = function(){loadPage(pageName)};
     });
     return element.innerHTML;
@@ -60,7 +59,6 @@ function cleanDownHtml(html){
     element = findLinks(element, function(child){
     var pageName = child.href.replaceAll("page://", "");
         child.href = child.href.replaceAll("page://", window['SETTINGS']['scriptPath']);
-        log('Hurr');
         child.onclick = function(){loadPage(pageName);return false;};
     });
     return element.innerHTML;

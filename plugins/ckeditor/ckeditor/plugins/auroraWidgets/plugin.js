@@ -9,97 +9,169 @@
             abbr.setAttribute('alt', dataString);
         return abbr;
     };
+    var selectedWidget = undefined;
+    var selectedWidType = undefined;
     var saveCmd =
     {
         modes: { wysiwyg: 1, source: 1 },                    
         exec: function(editor) {
             var sel = editor.getSelection();
             var element = sel.getStartElement();
-            if(element.$!=undefined&&element.$.className.contains("widget_")){
-                var altText = element.$.alt.replaceAll("'", "\"");
+
+            //IF EDITING WIDGET
+            if(element.$!=undefined&&(element.$.alt!=undefined||element.$.title!=undefined)&&element.$.className.contains("widget_")){
+                var altText = ((element.$.alt!=undefined)?element.$.alt:element.$.title).replaceAll("'", "\"");
+                var tagName = element.$.className.replace("widget_", "");
                 if(altText!="{}"){
-                    var tagName = element.$.className.replace("widget_", "");
                     var existingData = JSON.parse(altText);
+                    existingData.placeholder = element.$;
                     var optionsDef = WIDGETS.getWidgetInterface(tagName);
-                    if(optionsDef!=undefined){
-                        var options = new optionsDef();
-                        var interfaceElements = WIDGETS.renderWidget(options, JSON.parse(altText));
-                        UI.confirm("Please Configure Your Widget", interfaceElements,"OK", function(arg){
-                            var data = options.getData(); 
-                            var dataString = JSON.stringify(data).replaceAll("\"", "'");
-                            element.setAttribute( "alt", dataString);
-                        },
-                        "Cancel",
-                        function(arg){
-                        }); 
-                    }
+                                        if(optionsDef!=undefined){
+                                            var options = new optionsDef();
+                                            var interfaceElements = WIDGETS.renderWidget(options, existingData);
+                                            UI.confirm("Please Configure Your Widget", interfaceElements,"OK", function(arg){
+                                                var newPlaceholder = options.getPlaceholder(editor);
+                                                editor.insertHtml(newPlaceholder.$.outerHTML);
+                                            },
+                                            "Cancel",
+                                            function(arg){
+                                            }, true,
+                                            function(){
+                                            	options.load(existingData);
+                                            }); 
+                                        }
                 }
             }
             else{
-
-            
+            var packages = {};
+            var widgetDefinitions = {};
             var editorHTML = [];
             for(widType in WIDGETS.getWidgetTypes()){
                     var optionsDef = WIDGETS.getWidgetInterface(widType);
-                    if(optionsDef!=undefined){
-                        var options = new optionsDef();
-                        //var image = WIDGETS.getImage(options);
-                        var image = options.getImage();
-                        var description = options.getDescription();
-                        var name = options.getName();
-                        var img = (image!=undefined)?"<img src=\""+image['src']+"\" style=\"float: right; width: 100px;\" alt=\"\" />":"";
-                        editorHTML.push({value: widType, display: "<div class=\"dialogHeading\">"+name+"</div>"+img+description+"<div style=\"width: 100%; clear: both;\"></div>"});
+                    try{
+	                    if(optionsDef!=undefined){
+	                        var options = new optionsDef();
+	                        var description = options.getDescription();
+	                        var name = options.getName();
+	                        var packageName = options.getPackage();
+	                        if(packages[packageName]==undefined){
+	                        	packages[packageName] = {};
+	                        }
+	                        packages[packageName][widType]=name;
+	                        widgetDefinitions[widType+""] = {name: name, description:description, packageName:packageName};
+	                        editorHTML.push({value: widType, display: "<div class=\"dialogHeading\">"+name+"</div>"+"<div style=\"width: 100%; clear: both;\">"+options.build()+"</div>"});
+	                    }
+                    }
+                    catch(e){
+                    	log("Widget Interface Error");
+                    	log(e);
                     }
             }
+            var listViewHtml = "<div id=\"widgetSelector\" style=\"text-align: left;\"><ul>";
+            for(var packageName in packages){
+            	var widgets = packages[packageName];
+            	listViewHtml += "<li class=\"folder\">"+packageName+"<ul>";
+            	for(var widType in widgets){
+            		var widgetName = widgets[widType];
+            		listViewHtml+="<li id=\""+widType+"\" class=\"ckeditor_widgetSelection\">"+widgetName+"</li>";
+            	}
+            	listViewHtml+="</ul></li>";
+            }
+            listViewHtml+="</ul></div>";
             var HTMLSelectWidgetDef = WIDGETS.getWidgetDef("HTMLSelectWidget");
             var selectionWidgetW = new HTMLSelectWidgetDef("aurora_widgetSelector", {dataB: createBehaviour(editorHTML)});
-
-            UI.confirm("Please Select Your Widget", WIDGETS.buildWidget(selectionWidgetW),"OK", function(arg){
-                var widType = selectionWidgetW.selectedValue();
-                var optionsDef = WIDGETS.getWidgetInterface(widType);
-                if(optionsDef!=undefined){
-                    var options = new optionsDef();  
-                    
-                    var handleWidgetOptions = function(options, widId){
-                        var widgetData = options.getData();
-                        if(widId>=0){
-                            widgetData.widgetRef = widId;
-                        }
-                        var jsonString = JSON.stringify(widgetData);
-                        var dataString = jsonString.replaceAll("\"", "'");//.replace('"', "'").replace('&quot;', '\''); 
-                                
-                        var interfaceElements = WIDGETS.renderWidget(options);            
-                        if(interfaceElements==undefined||interfaceElements==null){
-                            editor.insertElement(getPlaceholder(editor, widType, dataString));
-                        }
-                        else{
-                            interfaceElements = (typeof(interfaceElements)=='string')?interfaceElements:interfaceElements.innerHTML;
-                            UI.confirm("Please Configure Your Widget", interfaceElements,"OK", function(arg){
-                                editor.insertElement(getPlaceholder(editor, widType, dataString));
-                            }, "Cancel", function(arg){});
-                        }
-                    };
-                    
-                    if(options.requiresRef){
-                        aurora_requestWidgetRef("page", function(data){
-                            handleWidgetOptions(options, data.id);
-                        })
-                    }
-                    else{
-                        handleWidgetOptions(options, -1);
-                    }
+			var pageHTML = "<table id=\"widgetSelectionTable\" height=\"100%\"><tr><td id=\"widgetTreePanel\" valign=\"top\">"+listViewHtml+"</td><td id=\"widgetDescription\" valign=\"top\">Please browse through the widget tree in the left panel. Information and configuration options will appear in this panel when a widget is selected.</td></tr></table>";
+			//WIDGETS.buildWidget(selectionWidgetW)
+			var widType = undefined;
+            UI.confirm("Widget Browser", pageHTML,"Add to Page", function(arg){
+                var widType = selectedWidType;
+                if(widType==undefined){
+                	return;
                 }
-                else{
-                    editor.insertElement(getPlaceholder(editor, widType));
+                if(selectedWidget!=undefined){
+                	var selectedData = selectedWidget.getData();
+                	var dataString = "{}";
+                	if(selectedData!=undefined){
+                		try{
+                			var dataString = JSON.stringify(selectedData).replaceAll("\"", "'");	
+                		}
+                		catch(e){log(e);}
+                	}   
+                	if(selectedWidget.getPlaceholder==undefined){       
+		            	editor.insertElement(getPlaceholder(editor, widType, dataString));
+	                }   
+	                else{
+	                	editor.insertElement(selectedWidget.getPlaceholder(editor));
+	                }              
                 }
             },
             "Cancel",
             function(arg){
                 
             },
-            false,
+            true,
             function(){
-                WIDGETS.loadWidget(selectionWidgetW);
+                //WIDGETS.loadWidget(selectionWidgetW);
+                
+                $("#widgetSelector").dynatree({
+                	noLink: true,
+		            onActivate: function(node) {
+		                widType = node.data.key; //widgetDescription
+		                var widget = widgetDefinitions[widType];
+		                if(widget==undefined){
+		                	jQuery(".ui-dialog-buttonpane button:contains('Add to Page')").button("disable");
+		                }
+		                else{
+		                	var optionsDef = WIDGETS.getWidgetInterface(widType);
+		                	var configurator = new optionsDef();
+		                	selectedWidget = configurator;
+		            		selectedWidType = widType;
+		                	log("PRE BUILD");
+		                	var renderData = configurator.build();
+		                	log("MID BUILD");
+		                	log(renderData);
+		                	var renderData = (renderData==undefined)?"":renderData;
+		                	log("POST BUILD");
+		                	log(renderData);
+		                	jQuery("#widgetDescription").html(renderData);//"<h2>"+widget.name+"</h2>"+widget.description+"<br /><br />"+
+		                	//DOM.get("widgetDescription").innerHTML = image+"<h2>"+widget.name+"</h2>"+widget.description+render;
+		            		jQuery(".ui-dialog-buttonpane button:contains('Add to Page')").button("enable");
+		            		configurator.load();
+		            		
+		            	}
+						//{name: name, description:description, image:image, packageName:packageName};
+		            },
+		            classNames: {
+				        container: "dynatree-container",
+				        node: "dynatree-node",
+				        folder: "dynatree-folder",
+				
+				        empty: "dynatree-empty",
+				        vline: "dynatree-vline",
+				        expander: "dynatree-expander",
+				        connector: "dynatree-connector",
+				        checkbox: "dynatree-checkbox",
+				        nodeIcon: "dynatree-icon",
+				        title: "ckeditor_widgetSelection",
+				        noConnector: "dynatree-no-connector",
+				
+				        nodeError: "dynatree-statusnode-error",
+				        nodeWait: "dynatree-statusnode-wait",
+				        hidden: "dynatree-hidden",
+				        combinedExpanderPrefix: "dynatree-exp-",
+				        combinedIconPrefix: "dynatree-ico-",
+				        hasChildren: "dynatree-has-children",
+				        active: "dynatree-active",
+				        selected: "dynatree-selected",
+				        expanded: "dynatree-expanded",
+				        lazy: "dynatree-lazy",
+				        focused: "dynatree-focused",
+				        partsel: "dynatree-partsel",
+				        lastsib: "dynatree-lastsib"
+				    }
+		        });
+        
+        
             });
             
             

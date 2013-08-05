@@ -2,7 +2,7 @@
 $page->registerScript($scriptPath."plugins/ckeditor/ckeditor/ckeditor.js", false, false); 
 //$page->registerScript($scriptPath."plugins/ckeditor/ckeditor/adapters/jquery.js", false, false); 
 $page->registerScript($scriptPath."plugins/ckeditor/ckeditor.library.js", true, true);
-//$page->registerCSS("plugins/ckeditor/style.css");
+$page->registerCSS("plugins/ckeditor/ckeditor.css");
 
 $requestManager->registerRequestHandler("commitPage", "ckeditor_commitPage");
 $requestManager->registerRequestHandler("deletePage", "ckeditor_deletePage");
@@ -12,13 +12,13 @@ function ckeditor_commitPage($restOfPath){
 	global $current_user;
     global $settings;
     
-    $pageName = mysql_escape_string($_POST['pageName']);
-    $pageContent = mysql_escape_string($_POST['content']);
+    $pageName = mysql_real_escape_string($_POST['pageName']);
+    $pageContent = mysql_real_escape_string($_POST['content']);
 
     
     
     if(array_key_exists("template", $_POST)&&$current_user->permissionContains("aurora_mod_template", "W"))
-        mysql_query("UPDATE `themes` SET `theme_content` = '".mysql_escape_string($_POST['template'])."' WHERE `theme_id` = ".$settings['aurora_theme']." LIMIT 1;", getPrimarySQLConnection());                  
+        mysql_query("UPDATE `themes` SET `theme_content` = '".mysql_real_escape_string($_POST['template'])."' WHERE `theme_id` = ".$settings['aurora_theme']." LIMIT 1;", getPrimarySQLConnection());                  
     $row = getPageData($pageName);
     $page_id = $row['page_id'];
     
@@ -41,7 +41,7 @@ function ckeditor_commitPage($restOfPath){
 function ckeditor_deletePage(){
     global $current_user;
     global $settings;
-    $pageName = mysql_escape_string($_POST['pageName']);
+    $pageName = mysql_real_escape_string($_POST['pageName']);
     $row = getPageData($pageName);
     if(($row['title']!=$settings['aurora_defaultAction'])&&$row!=FALSE&&($row['user_id']==$current_user->get_SqlId()||$current_user->permissionContains("aurora_all_pages", "W"))){
         mysql_query("DELETE FROM `pages` WHERE `title`='$pageName' LIMIT 1;", getPrimarySQLConnection());

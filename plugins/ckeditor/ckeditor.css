@@ -1,0 +1,19 @@
+#widgetSelectionTable{
+	height: 100%;
+	width: 100%;
+}
+#widgetTreePanel{
+	background-color: #FFFFFF;
+	min-height: 400px;
+	width: 30%;
+	overflow: scroll;
+}
+#widgetDescription{
+}
+.ckeditor_widgetSelection{
+	cursor: pointer;
+}
+
+.ckeditor_widgetSelection:hover{
+	background-color: #AED0EA;
+}
