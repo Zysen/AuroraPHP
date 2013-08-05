@@ -1,5 +1,6 @@
 function good(){
-    var args = arguments.callee.caller.arguments;
+    //var args = arguments.callee.caller.arguments;
+    var args = Array.prototype.slice.call(arguments.callee.caller.arguments);
     for(index in args){
         if(args[index]==NOT_READY)
             return false;
@@ -21,6 +22,7 @@ function jFadeInE(triggerE, elementId, time){
     });
     return rec;
 }
+
 function FileReaderLoadedE(fr){
     var rec = receiverE();
     fr.onload = function(event){
@@ -83,16 +85,16 @@ function getAjaxRequestB(triggerB, url){
     var rec = F.receiverE();                     
     triggerB.liftB(function(requestData){
         if(requestData!=NOT_READY){                                 
-        jQuery.ajax({
-            type: "post",
-            data: requestData,
-            dataType: 'json',
-            url: url.replace("<VAL>", requestData),
-            success: function(data){
-                rec.sendEvent(data);
-            },
-            error: function(data){rec.sendEvent(data);}
-        });
+	        jQuery.ajax({
+	            type: "post",
+	            data: requestData,
+	            dataType: 'json',
+	            url: url.replace("<VAL>", requestData),
+	            success: function(data){
+	                rec.sendEvent(data);
+	            },
+	            error: function(data){rec.sendEvent(data);}
+	        });
         }
     });                                          
     return rec;
@@ -186,3 +188,61 @@ function AuroraTaskQueueStack(dequeueEventE, type){
          startQueueE.sendEvent(true);      
     };                   
 }
+
+
+
+//{type, data, dataType, url, timeout}
+F.EventStream.prototype.ajaxRequestE = function(){
+    return this.mapE(function(request){
+    	var timeout = (request.timeout==undefined)?15000:request.timeout;
+    	var dataType = (request.dataType==undefined)?'text':request.dataType;
+    	var rec = F.receiverE(); 
+        jQuery.ajax({				
+            type: request.type,
+            data: request.data,
+            dataType: dataType,
+            url: request.url,
+            timeout: timeout,
+            success: function(data){
+            	rec.sendEvent(data);
+            },
+            error: function(data){log("getAjaxRequestE ERROR on URL: "+request.url);}
+        });
+        return rec;
+    }).switchE();                                          
+}
+F.EventStream.prototype.ajaxRequestB = function(){
+    return this.startsWith(NOT_READY).ajaxRequestB();                                          
+}
+F.Behavior.prototype.ajaxRequestB = function(){
+    return this.liftB(function(request){
+    	if(!good()){
+    		 return NOT_READY;
+    	}
+    	var timeout = (request.timeout==undefined)?15000:request.timeout;
+    	var dataType = (request.dataType==undefined)?'text':request.dataType;
+    	var rec = F.receiverE(); 
+        jQuery.ajax({				
+            type: request.type,
+            data: request.data,
+            dataType: dataType,
+            url: request.url,
+            timeout: timeout,
+            success: function(data){
+            	rec.sendEvent(data);
+            },
+            error: function(data){log("getAjaxRequestB ERROR on URL: "+request.url);}
+        });
+        return rec.startsWith(NOT_READY);
+    }).switchB();                                          
+}
+F.Behavior.prototype.ajaxRequestE = function(){
+    return this.changes().ajaxRequestE();                                          
+}
+
+F.EventStream.prototype.cancelDOMBubbleE = function(){
+	return this.mapE(function(event){DOM.stopEvent(event);return event;});
+}
+
+
+
