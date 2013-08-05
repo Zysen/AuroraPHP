@@ -1,5 +1,4 @@
-
-/*function BehaviourTree(instanceId,data){
+function BehaviourTree(instanceId,data){
     var domId=instanceId+"_tree";
     var width = (data.placeholder==null)?data.width:data.placeholder.style.width.replace('px', '');
     var height = (data.placeholder==null)?data.height:data.placeholder.style.height.replace('px', '');
@@ -25,9 +24,8 @@
         return "<div class=\"behaviourTree\" style=\"width:"+width+"px; height: "+height+"px\"><div id=\""+domId+"\"></div></div>";
     }
 }
-widgetTypes['BehaviourTree']=BehaviourTree;
-
-
+WIDGETS.register("BehaviourTree", BehaviourTree);  
+/*
 function BehaviourTest(instanceId,data){
     var domId=instanceId+"_tree";
     var width = (data.placeholder==null)?data.width:data.placeholder.style.width.replace('px', '');
