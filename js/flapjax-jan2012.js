@@ -31,7 +31,44 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Miscellaneous functions
 
-// Hacks to build standalone or as a module.
+
+
+
+if (!Array.prototype.map) {
+  Array.prototype.map = function(callback, thisArg) {
+    var T, A, k;
+    if (this == null) {
+      throw new TypeError(" this is null or not defined");
+    }
+    var O = Object(this);
+    var len = O.length >>> 0;
+    if ({}.toString.call(callback) != "[object Function]") {
+      throw new TypeError(callback + " is not a function");
+    }
+    if (thisArg) {
+      T = thisArg;
+    }
+    A = new Array(len); 
+    k = 0;
+    while(k < len) {
+      var kValue, mappedValue;
+      if (k in O) {
+        kValue = O[ k ];
+        mappedValue = callback.call(T, kValue, k, O);
+        A[ k ] = mappedValue;
+      }
+      k++;
+    }
+    return A;
+  };      
+}
+
+
+
+
+
+
+// Hacks to build standalone or as a module.           
 /** @suppress JSC_UNDEFINED_VARIABLE */
 var gProvide = goog['provide'];
 gProvide('F');
@@ -445,6 +482,7 @@ F.Behavior = function (event, init, updater, upstreamTransformation, parents) {
   
   var behave = this;
   this.last = init;
+  this.stamp = 0;
   
   //sendEvent to this might impact other nodes that depend on this event
   //sendF.Behavior defaults to this one
@@ -454,9 +492,11 @@ F.Behavior = function (event, init, updater, upstreamTransformation, parents) {
   this.underlying = new F.EventStream([event], updater 
     ? function (p) {
         behave.last = updater(p.value); 
+        behave.stamp = p.stamp;
         p.value = behave.last; return p;
       } 
     : function (p) {
+    	behave.stamp = p.stamp;
         behave.last = p.value;
         return p;
       });
@@ -1034,7 +1074,12 @@ F.Behavior.prototype.switchB = function() {
   new F.EventStream(
     [behaviourCreatorsB.changes()],
     function (p) {
-      if (!(p.value instanceof F.Behavior)) { throw 'switchB: expected F.Behavior as value of F.Behavior of first argument'; } //SAFETY
+    
+    if(p.value===978000){
+            p.value = F.constantB(978000);
+        }
+    
+      if (!(p.value instanceof F.Behavior)) { log("SwitchB Error5: "); log(typeof(p.value)); log(p.value); log(arguments.callee.caller); printStackTrace(); throw 'switchB: expected F.Behavior as value of first argument'; } //SAFETY
       if (prevSourceE != null) {
         prevSourceE.removeListener(receiverE);
       }
@@ -1526,9 +1571,6 @@ F.dom_.staticEnstyle = function(obj, prop, val) {
  */
 F.dom_.dynamicEnstyle = function(obj, prop, val) {
 //alert(F.dom_);
-log(obj);
-log(prop);
-log(val);
   if (val instanceof F.Behavior) {
     // TODO: redundant? F.liftB will call anyway ...
     F.dom_.staticEnstyle(obj, prop, val.valueNow()); 
@@ -1758,8 +1800,13 @@ F.dom_.extractEventStaticE = function(elt, eventName, useCapture) {
   var callback = function(evt) {
     eventStream.sendEvent(evt); 
   };
-  elt.addEventListener(eventName, callback, useCapture);
-  return eventStream;
+  if(elt.addEventListener){
+    elt.addEventListener(eventName, callback, useCapture);
+  }
+  else{
+    elt.attachEvent("on"+eventName, callback);
+  }
+  return eventStream;  
 };
 
 /**
@@ -1808,14 +1855,11 @@ F.oneEvent = function(elt, eventName) {
  * @returns {F.EventStream}
  */
 F.extractEventsE = function (domObj, var_args) {
-  var eventNames = Array.prototype.slice.call(arguments, 1);
-  
-  var events = (eventNames.length === 0 ? [] : eventNames)
-    .map(function (eventName) {
-           return F.extractEventE(domObj, eventName); 
-         });
-  
-  return F.mergeE.apply(null, events);
+    var eventNames = Array.prototype.slice.call(arguments, 1);
+    var events = (eventNames.length === 0 ? [] : eventNames).map(function (eventName) {
+        return F.extractEventE(domObj, eventName);
+    });
+    return F.mergeE.apply(null, events);
 };
 
 /**extractDomFieldOnEventE: Event * Dom U String . Array String -> Event a
@@ -1850,8 +1894,7 @@ F.extractValueOnEventB = function (triggerE, domObj) {
  * @param {F.EventStream=} triggerE
  * @returns {!F.Behavior}
  */
-F.dom_.extractValueStaticB = function (domObj, triggerE) {
-  
+F.dom_.extractValueStaticB = function (domObj, triggerE) { 
   var objD;
   try {
     objD = F.dom_.getObj(domObj);

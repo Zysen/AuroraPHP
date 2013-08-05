@@ -521,7 +521,7 @@ var Behavior = function(eventStream, initialValue, downstreamTransformation, ups
 		}
 		behave.sendBehavior(value);			
 	}
-	else{
+	else if(eventStream.sendEvent!=undefined){
         	eventStream.sendEvent(value);
         }
         
