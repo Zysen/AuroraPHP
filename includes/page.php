@@ -4,6 +4,7 @@ function getPageData($pageId){
     global $current_user;
     global $settings;
     global $path;
+
     $pageData = $current_user->canAccessPage($pageId);
     if($pageData==-1){
         $pageData = getNoPageTemplate($pageId);

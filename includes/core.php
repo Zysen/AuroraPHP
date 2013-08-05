@@ -1,14 +1,14 @@
 <?php
 function getURL() {
- $pageURL = 'http';
- if (array_key_exists("HTTPS", $_SERVER)&&$_SERVER["HTTPS"] == "on") {$pageURL .= "s";}
- $pageURL .= "://";
- if ($_SERVER["SERVER_PORT"] != "80") {
-  $pageURL .= $_SERVER["SERVER_NAME"].":".$_SERVER["SERVER_PORT"]."/";//.$_SERVER["REQUEST_URI"];
+ $prefix = 'http';
+ if (array_key_exists("HTTPS", $_SERVER)&&$_SERVER["HTTPS"] == "on") {$prefix .= "s";}
+ $prefix .= "://";
+ if ($_SERVER["SERVER_PORT"] != "80" && $_SERVER["SERVER_PORT"] != "443") {
+  $pageURL = $_SERVER["SERVER_NAME"].":".$_SERVER["SERVER_PORT"]."/";//.$_SERVER["REQUEST_URI"];
  } else {
-  $pageURL .= $_SERVER["SERVER_NAME"]."/";//.$_SERVER["REQUEST_URI"];
+  $pageURL = $_SERVER["SERVER_NAME"]."/";//.$_SERVER["REQUEST_URI"];
  }
- return $pageURL;
+ return array("prefix"=>$prefix, "server"=>$pageURL, "request"=>$_SERVER["REQUEST_URI"], "url"=>$prefix.$pageURL.$_SERVER["REQUEST_URI"]);
 }
 function aurora_recompile(){
     global $scriptPath;
@@ -144,7 +144,7 @@ function compareAndDeleteRows($table, $matchingColumnName, $matchingColumnIndex,
             foreach($existingArray as $i => $existingVal){
             	$match = false;
             	foreach($newArray as $c => $newVal){
-                	if($newArray[$matchingColumnIndex]==$existingVal[$matchingColumnIndex]){
+                	if($newVal[$matchingColumnIndex]==$existingVal[$matchingColumnIndex]){
                         $match = true;
                         break;
                     }    
@@ -449,6 +449,20 @@ function deleteDir($path)
     return is_file($path) ?
             @unlink($path) :
             array_map(__FUNCTION__, glob($path.'/*')) == @rmdir($path);
+}
+function startsWith($haystack, $needle)
+{
+    return !strncmp($haystack, $needle, strlen($needle));
+}
+
+function endsWith($haystack, $needle)
+{
+    $length = strlen($needle);
+    if ($length == 0) {
+        return true;
+    }
+
+    return (substr($haystack, -$length) === $needle);
 }
 
 ?>
